@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unit 6: Exponential Functions</title>
+<style>
+:root{
+  --paper:#f7f9fc; --grid:#e3eaf3; --card:#ffffff; --ink:#14233a; --muted:#566883; --line:#d5deea;
+  --blue:#4B9CD3; --blue-d:#1d6aa5; --blue-soft:#e6f2fa; --orange:#F56600; --orange-d:#c24f00; --orange-soft:#fff0e5;
+  --math:"Cambria Math","STIX Two Text","Latin Modern Math",Cambria,Georgia,"Times New Roman",serif;
+  --ui:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#0f1824; --grid:#17263a; --card:#16222f; --ink:#e8eef7; --muted:#9db0c8; --line:#2b3d55;
+    --blue:#6bb3e3; --blue-d:#8cc6ee; --blue-soft:#183249; --orange:#ff8a3d; --orange-d:#ffa766; --orange-soft:#3a2415; color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:var(--ui); color:var(--ink); background-color:var(--paper); line-height:1.45;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px;
+}
+:focus-visible{outline:3px solid var(--orange); outline-offset:2px}
+h1,h2,h3,p{margin:0}
+.wrap{max-width:860px; margin:0 auto; padding:0 18px 60px}
+header{display:grid; grid-template-columns:1fr minmax(180px,300px); gap:24px; align-items:end; padding:56px 0 30px}
+header h1{font:700 clamp(2.1rem,6.5vw,3.4rem)/1.08 var(--math)}
+header p{color:var(--muted); margin-top:10px; font-size:1.05rem}
+header svg{width:100%; height:auto; margin-bottom:6px}
+.curve{fill:none; stroke:var(--orange); stroke-width:5; stroke-linecap:round}
+.line{fill:none; stroke:var(--blue); stroke-width:5; stroke-linecap:round}
+.dot-o{fill:var(--orange)} .dot-b{fill:var(--blue)}
+.lesson{display:grid; grid-template-columns:4.2rem 1fr; gap:6px 18px; padding:22px 0; border-top:1.5px solid var(--line)}
+.num{font:700 2.6rem/1 var(--math); color:var(--orange-d); text-align:right; white-space:nowrap}
+.lesson h2{font:700 1.35rem var(--math); align-self:end}
+.acts{grid-column:2; display:grid; gap:10px; margin-top:6px}
+.act{display:flex; align-items:center; gap:16px; background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:14px 16px}
+.act .txt{flex:1; min-width:0}
+.act h3{font-size:1.08rem}
+.act p{color:var(--muted); font-size:.95rem; margin-top:2px}
+.go{flex:none; text-decoration:none; background:var(--blue-d); color:#fff; font-weight:650; border-radius:10px; padding:10px 18px}
+.go:hover{filter:brightness(1.08)}
+.tlink{display:inline-block; margin-top:6px; font-size:.85rem; color:var(--muted)}
+footer{border-top:1.5px solid var(--line); padding-top:18px; color:var(--muted); font-size:.9rem}
+@media (max-width:640px){
+  header{grid-template-columns:1fr; padding-top:36px} header svg{width:200px; order:-1}
+  .lesson{grid-template-columns:3.4rem 1fr; gap:4px 12px}
+  .num{font-size:1.7rem}
+  .act{flex-wrap:wrap}
+  .go{width:100%; text-align:center}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><h1>Unit 6: Exponential Functions</h1>
+    <p>Honors Math 1, Ballantyne Ridge. Pick the activity your teacher tells you to open.</p></div>
+    <svg viewBox="0 0 340 170" aria-hidden="true">
+      <polyline class="line" points="10,140 330,92"/>
+      <path class="curve" d="M10,158 C150,158 230,150 270,110 S318,30 330,8"/>
+      <circle class="dot-b" cx="10" cy="140" r="7"/><circle class="dot-o" cx="10" cy="158" r="7"/>
+    </svg>
+  </header>
+  <main id="list"></main>
+  <footer>Your teacher will give you a 4-letter class code once you open an activity.</footer>
+</div>
+<script>
+/* =====================================================================
+   ACTIVITIES
+   To add a new activity, copy one { ... } line and edit it.
+   - lesson: the workbook lesson number
+   - url: a file in this repo ("shake.html") or a full link to another site
+   Activities are grouped by lesson automatically.
+   ===================================================================== */
+const LESSONS = {
+  1: 'Properties of Exponents',
+  2: 'Growing and Growing',
+  3: 'Growth and Decay',
+  4: 'Visualizing Decay',
+  6: 'Exponential Situations as Functions',
+  7: 'Reasoning and Exponential Graphs',
+  8: 'Interpreting Rates of Functions Involving Percent Change',
+  9: 'Modeling with Exponentials',
+  10: 'Mathematical Modeling'
+};
+const ACTIVITIES = [
+  { lesson: 1, title: 'Discover the Exponent Properties', desc: 'Expand, spot the pattern, and write each rule yourself.', url: 'https://matthewcrouch-cms.github.io/ExponentRules-Intro-Discovery/' },
+  { lesson: 1, title: 'Find the Missing Exponent', desc: 'Practice using several exponent properties at once.', url: 'https://matthewcrouch-cms.github.io/ExponentRules-Intro-Discovery/exponent-practice/' },
+  { lesson: 2, title: 'The Genie’s Offer', desc: 'Purse A or purse B? Vote, predict, calculate, then watch the race.', url: 'genie.html' },
+  { lesson: 3, title: 'Shake It Up', desc: 'A class simulation of exponential growth and decay.', url: 'shake.html', alsoLessons: [4] }
+];
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const withTeacher = u => u + (u.includes('?') ? '&' : '?') + 'teacher';
+const byLesson = {};
+ACTIVITIES.forEach(a => (byLesson[a.lesson] = byLesson[a.lesson] || []).push(a));
+document.getElementById('list').innerHTML = Object.keys(byLesson).map(Number).sort((a, b) => a - b).map(n => {
+  const acts = byLesson[n];
+  const extra = [...new Set(acts.flatMap(a => a.alsoLessons || []))];
+  const title = esc(LESSONS[n] || '') + extra.map(x => ' / ' + esc(LESSONS[x] || 'Lesson ' + x)).join('');
+  const label = 'Lesson ' + [n, ...extra].join(' and ');
+  return `<section class="lesson" aria-label="${label}">
+    <div class="num">${[n, ...extra].join('–')}</div><h2>${title}</h2>
+    <div class="acts">${acts.map(a => `
+      <div class="act"><div class="txt"><h3>${esc(a.title)}</h3><p>${esc(a.desc)}</p>
+        <a class="tlink" href="${esc(withTeacher(a.url))}">Teacher view</a></div>
+        <a class="go" href="${esc(a.url)}">Open</a></div>`).join('')}
+    </div></section>`;
+}).join('');
+</script>
+</body>
+</html>

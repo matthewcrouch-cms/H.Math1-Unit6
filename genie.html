@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Genie’s Offer</title>
+<style>
+:root{
+  --paper:#f7f9fc; --grid:#e3eaf3; --card:#ffffff; --ink:#14233a; --muted:#566883; --line:#d5deea;
+  --blue:#4B9CD3; --blue-d:#1d6aa5; --blue-soft:#e6f2fa; --orange:#F56600; --orange-d:#c24f00; --orange-soft:#fff0e5;
+  --good:#17805a; --good-soft:#e2f5ec; --bad:#b83a2b; --bad-soft:#fbeae7; --gold:#d79b14;
+  --math:"Cambria Math","STIX Two Text","Latin Modern Math",Cambria,Georgia,"Times New Roman",serif;
+  --ui:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#0f1824; --grid:#17263a; --card:#16222f; --ink:#e8eef7; --muted:#9db0c8; --line:#2b3d55;
+    --blue:#6bb3e3; --blue-d:#8cc6ee; --blue-soft:#183249; --orange:#ff8a3d; --orange-d:#ffa766; --orange-soft:#3a2415;
+    --good:#4fcf9b; --good-soft:#12352a; --bad:#ff8c7d; --bad-soft:#3a1c18; --gold:#f0bf4c; color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:var(--ui); color:var(--ink); background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px; line-height:1.45; -webkit-text-size-adjust:100%;
+}
+.math{font-family:var(--math); white-space:nowrap}
+.math i{font-style:italic}
+sup{font-size:.74em; line-height:0}
+button{font:inherit; cursor:pointer}
+:focus-visible{outline:3px solid var(--orange); outline-offset:2px}
+h1,h2,h3,p{margin:0}
+.card{background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:20px}
+.btn{border:0; border-radius:10px; padding:11px 20px; font-weight:650; background:var(--blue-d); color:#fff}
+.btn:hover{filter:brightness(1.08)}
+.btn[disabled]{opacity:.45; cursor:not-allowed}
+.btn.alt{background:var(--orange-d); color:#fff}
+.ghost{background:transparent; color:var(--ink); border:1.5px solid var(--line); border-radius:10px; padding:8px 14px; font-weight:600}
+.ghost:hover:not([disabled]){border-color:var(--blue)}
+.ghost[disabled]{opacity:.45; cursor:not-allowed}
+.ghost.on{border-color:var(--blue-d); background:var(--blue-soft); color:var(--blue-d)}
+.ghost.danger{color:var(--bad)}
+.banner{background:var(--orange-soft); border:1.5px solid var(--orange); color:var(--ink); border-radius:10px; padding:9px 14px; font-size:.9rem; margin-bottom:14px}
+.err{color:var(--bad); font-weight:600; min-height:1.4em; margin-top:8px}
+.muted{color:var(--muted)}
+input.txt,select.txt{width:100%; font:1.05rem var(--ui); padding:12px; border:2px solid var(--line); border-radius:10px; background:var(--card); color:var(--ink)}
+input.txt:focus,select.txt:focus{border-color:var(--blue); outline:none}
+.row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+
+/* landing */
+.landing{max-width:520px; margin:0 auto; padding:9vh 18px 40px}
+.landing h1{font:700 clamp(1.9rem,6vw,2.6rem)/1.15 var(--math); margin-bottom:8px}
+.landing .sub{color:var(--muted); margin-bottom:22px}
+.landing label{display:block; font-weight:600; margin:14px 0 6px}
+.landing .row{margin-top:20px}
+.code-in{text-transform:uppercase; letter-spacing:.35em; font-weight:700; text-align:center}
+.teacher-link{margin-top:26px; font-size:.92rem; color:var(--muted)}
+.teacher-link button{background:none; border:0; color:var(--blue-d); text-decoration:underline; padding:0}
+
+/* frames */
+.s-wrap{max-width:760px; margin:0 auto; padding:14px 14px 80px}
+.s-top{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap}
+.s-top .who{color:var(--muted); font-size:.92rem}
+.s-top .who button{background:none; border:0; color:var(--muted); text-decoration:underline; padding:0 0 0 8px; font-size:.85rem}
+.s-title{font:700 1.6rem var(--math); margin:2px 0 10px}
+.t-wrap{max-width:1500px; margin:0 auto; padding:14px 18px 40px}
+.t-top{display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:14px}
+.brand{font:700 1.25rem var(--math)}
+.join{font-size:1.02rem}
+.join .code{font:700 1.5rem var(--ui); letter-spacing:.2em; background:var(--orange-d); color:#fff; padding:2px 12px; border-radius:8px; margin-left:4px}
+.t-tools{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.pill{display:inline-block; font-size:.82rem; font-weight:600; padding:3px 11px; border-radius:99px; background:var(--blue-soft); color:var(--blue-d)}
+.steps{display:flex; gap:6px; flex-wrap:wrap}
+.steps button{border:1.5px solid var(--line); background:var(--card); color:var(--ink); border-radius:99px; padding:7px 14px; font-weight:600}
+.steps button.cur{background:var(--blue-d); border-color:var(--blue-d); color:#fff}
+table.data{border-collapse:separate; border-spacing:0; width:100%; font-variant-numeric:tabular-nums}
+table.data th{font-size:.82rem; color:var(--muted); text-align:right; padding:4px 10px; font-weight:600; position:sticky; top:0; z-index:1; background:var(--card); box-shadow:0 1px 0 var(--line)}
+table.data th:first-child,table.data td:first-child{text-align:left}
+table.data td{text-align:right; padding:6px 10px; border-top:1px solid var(--line)}
+table.data tr.now td{background:var(--blue-soft); font-weight:700}
+.scroll{max-height:46vh; overflow:auto}
+.hint{font-size:.85rem; color:var(--muted)}
+@media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} }
+/* ---------- genie race ---------- */
+.story{font-size:1.08rem; max-width:46rem}
+.story p+p{margin-top:8px}
+.purses{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:16px 0}
+.purse{position:relative; border:2px solid var(--line); border-radius:16px; padding:16px 18px; background:var(--card); text-align:left; color:var(--ink)}
+.purse.a{border-top:8px solid var(--blue)}
+.purse.b{border-top:8px solid var(--orange)}
+.purse h3{font:700 1.3rem var(--math)}
+.purse .rule{color:var(--muted); font-size:.95rem; margin-top:2px}
+.purse .amt{font:700 clamp(1.6rem,4.4vw,3.2rem)/1.1 var(--ui); font-variant-numeric:tabular-nums; margin-top:10px; overflow-wrap:anywhere}
+.purse.a .amt{color:var(--blue-d)} .purse.b .amt{color:var(--orange-d)}
+.purse .lead{position:absolute; top:12px; right:12px; font-size:.8rem; font-weight:700; padding:2px 10px; border-radius:99px; background:var(--good-soft); color:var(--good)}
+button.purse{cursor:pointer; width:100%}
+button.purse:hover{border-color:var(--blue)}
+button.purse.sel{border-color:var(--blue-d); box-shadow:0 0 0 3px var(--blue-soft)}
+button.purse.b.sel{border-color:var(--orange-d); box-shadow:0 0 0 3px var(--orange-soft)}
+.purse .pick{display:inline-block; margin-top:10px; font-weight:700; font-size:.9rem}
+.day{font:700 clamp(2rem,5vw,3.6rem)/1 var(--math)}
+.day small{font:600 1rem var(--ui); color:var(--muted); margin-left:10px}
+.race-ctrl{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:12px 0}
+.race-ctrl input[type=range]{flex:1 1 200px; accent-color:var(--orange)}
+.chart-box{border:1.5px solid var(--line); border-radius:12px; background:var(--card); padding:6px; margin-top:6px}
+.chart-box svg{display:block; width:100%; height:auto}
+.ax{stroke:var(--line)} .axt{fill:var(--muted); font:12px var(--ui)}
+.la{stroke:var(--blue); fill:none} .lb{stroke:var(--orange); fill:none}
+.pa{fill:var(--blue)} .pb{fill:var(--orange)}
+.xl{stroke:var(--good); stroke-dasharray:5 5; stroke-width:2} .xt{fill:var(--good); font:700 13px var(--ui)}
+.chg-a{color:var(--blue-d); font-weight:600} .chg-b{color:var(--orange-d); font-weight:600}
+.layout{display:grid; grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr); gap:16px; align-items:start}
+.bars .bar{display:grid; grid-template-columns:6.5rem 1fr 2.6rem; gap:10px; align-items:center; margin:10px 0; font-size:1.15rem}
+.bars .track{height:34px; background:var(--grid); border-radius:8px; overflow:hidden}
+.bars .fill{height:100%; transition:width .4s}
+.bars .fill.a{background:var(--blue)} .bars .fill.b{background:var(--orange)}
+.bars .n{font-weight:700; font-size:1.4rem}
+.big-q{font:700 1.35rem var(--math); margin-bottom:6px}
+.qlist{margin:10px 0 0; padding-left:1.2rem; font-size:1.05rem} .qlist li{margin:6px 0}
+.calc{display:grid; grid-template-columns:auto 1fr 1fr; gap:8px 12px; align-items:center; margin-top:10px}
+.calc .h{font-size:.85rem; color:var(--muted); font-weight:600}
+.calc input{font:600 1.05rem var(--ui); width:100%; padding:9px 10px; border:2px solid var(--line); border-radius:9px; background:var(--card); color:var(--ink)}
+.calc input.ok{border-color:var(--good); background:var(--good-soft)}
+.calc input.no{border-color:var(--bad); background:var(--bad-soft)}
+.mark{font-weight:700; font-size:.85rem; margin-left:4px}
+.mark.ok{color:var(--good)} .mark.no{color:var(--bad)}
+.tally td .bar2{display:inline-block; height:10px; border-radius:5px; background:var(--good); vertical-align:middle; margin-right:6px}
+.notice{border-left:5px solid var(--orange); background:var(--orange-soft); padding:10px 14px; border-radius:0 10px 10px 0; margin-top:12px}
+@media (max-width:900px){ .layout{grid-template-columns:1fr} }
+@media (max-width:520px){ .purses{grid-template-columns:1fr} }
+.pn{fill:var(--muted)}
+@media (max-width:600px){ .chart-box .axt{font-size:13px} }
+.hidebox{text-align:center; border:2px dashed var(--line); border-radius:14px; padding:26px 16px; margin-top:12px}
+.hidebox .big{font:700 3.2rem/1 var(--ui)} .hidebox .big span{font-size:1.4rem; color:var(--muted); font-weight:600}
+.hidebox p{margin:6px 0 14px}
+.resp{border:1.5px solid var(--line); border-left:4px solid var(--blue); border-radius:0 10px 10px 0; padding:9px 12px; margin-bottom:8px; background:var(--card); font-size:1.05rem}
+.resp small{display:block; color:var(--muted); font-weight:600}
+.rform label{display:block; font-weight:600; margin:14px 0 6px}
+.rform textarea.txt{width:100%; font:1rem var(--ui); padding:10px 12px; border:2px solid var(--line); border-radius:10px; background:var(--card); color:var(--ink); resize:vertical}
+.rform textarea.txt:focus{border-color:var(--blue); outline:none}
+a.calc-link{color:var(--blue-d)}
+a.ghost.calc-link{color:var(--ink)}
+iframe.desmos{display:block; width:100%; height:500px; margin-top:4px; border:1.5px solid var(--line); border-radius:12px; background:#fff}
+@media (max-width:520px){ iframe.desmos{height:420px} }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+const APP = { id: 'genie' };
+/* =====================================================================
+   1. FIREBASE SETUP
+   This is the same Firebase project as your Exponent Rules discovery app.
+   Leave databaseURL empty to run in PRACTICE MODE: the teacher view and
+   student view then sync between tabs of the same browser only.
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDkuZVoCbhVotMLGi_iI8wGYCrRKie8ex8",
+  authDomain: "exponentproperties-7198b.firebaseapp.com",
+  databaseURL: "https://exponentproperties-7198b-default-rtdb.firebaseio.com",
+  projectId: "exponentproperties-7198b",
+  appId: "1:189445254765:web:3e6f1c783f9b6fdfa85964"
+};
+
+/* =====================================================================
+   2. TINY DATABASE LAYER (Firebase, or localStorage for practice mode)
+   ===================================================================== */
+const DB = (() => {
+  let live = !!FIREBASE_CONFIG.databaseURL && typeof firebase !== 'undefined';
+  if (live) {
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      const fdb = firebase.database();
+      return {
+        mode: 'live',
+        set: (p, v) => fdb.ref(p).set(v),
+        update: (p, v) => fdb.ref(p).update(v),
+        remove: p => fdb.ref(p).remove(),
+        once: p => fdb.ref(p).once('value').then(s => s.val()),
+        on: (p, cb) => { const r = fdb.ref(p); const h = r.on('value', s => cb(s.val())); return () => r.off('value', h); }
+      };
+    } catch (e) { live = false; }
+  }
+  const KEY = APP.id + ':tree', subs = [];
+  const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
+  const get = (t, p) => { const v = p.split('/').reduce((o, k) => (o == null ? null : o[k]), t); return v === undefined ? null : v; };
+  const clone = v => (v == null ? null : JSON.parse(JSON.stringify(v)));
+  const notify = () => { const t = read(); subs.slice().forEach(s => s.cb(clone(get(t, s.p)))); };
+  window.addEventListener('storage', e => { if (e.key === KEY) notify(); });
+  function put(t, p, v) {
+    const ks = p.split('/'); let o = t;
+    ks.slice(0, -1).forEach(k => { if (typeof o[k] !== 'object' || o[k] === null) o[k] = {}; o = o[k]; });
+    if (v === null) delete o[ks[ks.length - 1]]; else o[ks[ks.length - 1]] = clone(v);
+  }
+  const save = t => { try { localStorage.setItem(KEY, JSON.stringify(t)); } catch (e) {} notify(); };
+  return {
+    mode: 'local',
+    set: (p, v) => { const t = read(); put(t, p, v); save(t); return Promise.resolve(); },
+    update: (p, obj) => { const t = read(); Object.keys(obj).forEach(k => put(t, p + '/' + k, obj[k])); save(t); return Promise.resolve(); },
+    remove: p => { const t = read(); put(t, p, null); save(t); return Promise.resolve(); },
+    once: p => Promise.resolve(clone(get(read(), p))),
+    on: (p, cb) => { const s = { p, cb }; subs.push(s); setTimeout(() => { if (subs.includes(s)) cb(clone(get(read(), p))); }, 0); return () => { const i = subs.indexOf(s); if (i >= 0) subs.splice(i, 1); }; }
+  };
+})();
+
+/* =====================================================================
+   3. HELPERS
+   ===================================================================== */
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const $ = (s, r = document) => r.querySelector(s);
+const ls = { get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }, del: k => { try { localStorage.removeItem(k); } catch (e) {} } };
+const unsubs = {};
+function watch(key, path, cb) { if (unsubs[key]) unsubs[key](); unsubs[key] = DB.on(path, cb); }
+function unwatchAll() { Object.keys(unsubs).forEach(k => { unsubs[k](); delete unsubs[k]; }); }
+const genCode = () => Array.from({ length: 4 }, () => 'ABCDEFGHJKMNPQRSTUVWXYZ'[Math.floor(Math.random() * 23)]).join('');
+const S = { role: null, code: null, sid: null, name: '' };
+const base = () => `sessions/${S.code}`;
+const H = {};  // click handlers: data-act="name"
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  const f = H[b.dataset.act]; if (f) f(b, e);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.matches('#code,#name')) H.join();
+});
+const NAMES = ['Ava','Mateo','Jada','Liam','Priya','Noah','Mai','Diego','Han','Clare','Elena','Kiran','Tyler','Andre','Lin','Jayden','Sofia','Omar','Zoe','Isaiah','Camila','Ethan','Nia','Leo'];
+
+/* =====================================================================
+   4. LANDING, JOIN, SESSIONS
+   ===================================================================== */
+function renderLanding(msg, teacherOpen) {
+  unwatchAll();
+  const saved = ls.get(APP.id + ':student') || {};
+  const tsaved = ls.get(APP.id + ':teacher');
+  const qp = new URLSearchParams(location.search);
+  const qcode = (qp.get('code') || saved.code || '').toUpperCase();
+  const showT = teacherOpen || qp.has('teacher');
+  $('#app').innerHTML = `<div class="landing">
+    <h1>${esc(APP.title)}</h1>
+    <p class="sub">${esc(APP.sub)}</p>
+    ${DB.mode === 'local' ? `<div class="banner"><b>Practice mode.</b> Firebase isn’t connected, so this only syncs between tabs of this browser.</div>` : ''}
+    ${showT ? `
+      <div class="card">
+        <h2 style="font-size:1.2rem;margin-bottom:12px">Teacher</h2>
+        <div class="row" style="margin-top:0">
+          <button class="btn" data-act="newsession">Start a new session</button>
+          ${tsaved ? `<button class="ghost" data-act="resume">Resume ${esc(tsaved.code)}</button>` : ''}
+        </div>
+        <p class="err" id="err">${esc(msg || '')}</p>
+        <p class="teacher-link"><button data-act="studentpanel">I’m a student</button></p>
+      </div>` : `
+      <div class="card">
+        <label for="code" style="margin-top:0">Class code</label>
+        <input id="code" class="txt code-in" maxlength="4" autocomplete="off" value="${esc(qcode)}" placeholder="ABCD">
+        <label for="name">Your first name</label>
+        <input id="name" class="txt" maxlength="20" autocomplete="off" value="${esc(saved.name || '')}" placeholder="First name">
+        <div class="row"><button class="btn" data-act="join">Join class</button></div>
+        <p class="err" id="err">${esc(msg || '')}</p>
+      </div>
+      <p class="teacher-link">Teacher? <button data-act="teacherpanel">Open teacher controls</button></p>`}
+  </div>`;
+}
+H.teacherpanel = () => renderLanding('', true);
+H.studentpanel = () => { history.replaceState(null, '', location.pathname); renderLanding('', false); };
+H.newsession = async () => {
+  try {
+    let code;
+    for (let i = 0; i < 12; i++) { code = genCode(); if (!(await DB.once(`sessions/${code}/app`))) break; }
+    await DB.set(`sessions/${code}`, { app: APP.id, state: APP.initialState(), created: Date.now() });
+    ls.set(APP.id + ':teacher', { code });
+    S.role = 'teacher'; S.code = code; APP.startTeacher();
+  } catch (e) { renderLanding('Could not reach Firebase. Check your config and database rules.', true); }
+};
+H.resume = async () => {
+  const t = ls.get(APP.id + ':teacher'); if (!t) return;
+  try {
+    const a = await DB.once(`sessions/${t.code}/app`);
+    if (a !== APP.id) { ls.del(APP.id + ':teacher'); return renderLanding('That session no longer exists.', true); }
+    S.role = 'teacher'; S.code = t.code; APP.startTeacher();
+  } catch (e) { renderLanding('Could not reach Firebase.', true); }
+};
+H.end = async () => {
+  if (!confirm('End this session for everyone? Student data will be deleted.')) return;
+  await DB.set(`${base()}/ended`, true);
+  setTimeout(() => DB.remove(base()), 1500);
+  ls.del(APP.id + ':teacher'); renderLanding('', true);
+};
+H.join = async () => {
+  const code = ($('#code').value || '').trim().toUpperCase(), name = ($('#name').value || '').trim().slice(0, 20);
+  if (code.length !== 4) return ($('#err').textContent = 'Enter the 4-letter class code.');
+  if (!name) return ($('#err').textContent = 'Enter your first name.');
+  try {
+    const a = await DB.once(`sessions/${code}/app`);
+    if (a !== APP.id) return ($('#err').textContent = 'No session with that code. Check the code on the board.');
+    const saved = ls.get(APP.id + ':student') || {};
+    const sid = saved.code === code && saved.sid ? saved.sid : 's' + Math.random().toString(36).slice(2, 10);
+    S.role = 'student'; S.code = code; S.sid = sid; S.name = name;
+    ls.set(APP.id + ':student', { code, sid, name });
+    await APP.joinStudent();
+    APP.startStudent();
+  } catch (e) { $('#err').textContent = 'Could not reach the class. Check your internet connection.'; }
+};
+H.leave = () => { unwatchAll(); ls.del(APP.id + ':student'); renderLanding('', false); };
+function endedScreen() {
+  unwatchAll();
+  $('#app').innerHTML = `<div class="s-wrap"><div class="card" style="margin-top:18vh;text-align:center"><h2 class="s-title">This session has ended</h2><p>Thanks for joining. You can close this page.</p><div class="row" style="justify-content:center;margin-top:16px"><button class="ghost" data-act="leave">Join another</button></div></div></div>`;
+}
+function teacherTop(extraTools) {
+  const url = location.origin + location.pathname;
+  return `<div class="t-top">
+    <div><div class="brand">${esc(APP.title)}</div>
+      <div class="join">Join at <b>${esc(url.replace(/^https?:\/\//, ''))}</b> with code <span class="code">${esc(S.code)}</span>
+      <span class="muted" id="joined"></span></div></div>
+    <div class="t-tools">${extraTools || ''}<button class="ghost danger" data-act="end">End session</button></div>
+  </div>${DB.mode === 'local' ? `<div class="banner"><b>Practice mode.</b> Open a second tab of this page to try the student view.</div>` : ''}`;
+}
+async function boot() {
+  const t = ls.get(APP.id + ':teacher'), s = ls.get(APP.id + ':student');
+  const qp = new URLSearchParams(location.search);
+  if (qp.has('teacher') && t) return H.resume();
+  if (!qp.has('teacher') && s && s.code && s.sid) {
+    try {
+      const a = await DB.once(`sessions/${s.code}/app`);
+      if (a === APP.id) { Object.assign(S, { role: 'student', code: s.code, sid: s.sid, name: s.name }); await APP.joinStudent(); return APP.startStudent(); }
+    } catch (e) {}
+  }
+  renderLanding('', false);
+}
+/* =====================================================================
+   5. THE GENIE'S OFFER  (Unit 6, Lesson 2, Activities 1-2)
+   Purse A: $1,000 today, +$200 each day.  Purse B: $0.01 today, x2 each day.
+   ===================================================================== */
+const STEPS = [
+  { id: 'poll', label: 'Vote' },
+  { id: 'predict', label: 'Predict' },
+  { id: 'calc', label: 'Calculate' },
+  { id: 'race', label: 'Race' },
+  { id: 'repoll', label: 'Vote again' }
+];
+const MAXD = 30;
+const A = (d, bonus) => 1000 + (bonus ? 250000 : 200) * d;
+const B = d => 0.01 * Math.pow(2, d);
+const crossDay = bonus => { for (let d = 0; d <= 60; d++) if (B(d) > A(d, bonus)) return d; return null; };
+const money = v => '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const short = v => v >= 1e6 ? '$' + +(v / 1e6).toFixed(v >= 1e7 ? 0 : 1) + 'M' : v >= 1e3 ? '$' + +(v / 1e3).toFixed(v >= 1e4 ? 0 : 1) + 'k' : '$' + +v.toFixed(2);
+const QS = [
+  { k: 'a7', label: 'After 1 week (day 7)', d: 7, p: 'A' }, { k: 'b7', d: 7, p: 'B' },
+  { k: 'a14', label: 'After 2 weeks (day 14)', d: 14, p: 'A' }, { k: 'b14', d: 14, p: 'B' },
+  { k: 'a21', label: 'After 3 weeks (day 21)', d: 21, p: 'A' }, { k: 'b21', d: 21, p: 'B' }
+];
+const truth = q => (q.p === 'A' ? A(q.d, false) : B(q.d));
+const parseMoney = s => { const v = parseFloat(String(s).replace(/[$,\s]/g, '')); return isFinite(v) ? v : null; };
+const isRight = (q, s) => { const v = parseMoney(s); return v != null && Math.abs(v - truth(q)) < 0.006; };
+
+const RQS = [
+  { k: 'q1', text: 'What is the vertical intercept of each graph? What does it mean?' },
+  { k: 'q2', text: 'When does purse B become the better choice? How do you know?' },
+  { k: 'q3', text: 'Why does purse A make a line but purse B makes a curve?' }
+];
+const DESMOS = { graphing: 'https://www.desmos.com/testing/northcarolina/graphing', scientific: 'https://www.desmos.com/testing/northcarolina/scientific' };
+const G = { st: { phase: 'poll', bonus: false }, students: {}, votes: {}, answers: {}, resp: {}, mine: {}, myAns: {}, myResp: {}, showNames: false,
+            race: { day: 0, playing: false, mode: 'auto', timer: null } };
+
+const APP_SPEC = {
+  id: 'genie',
+  title: 'The Genie’s Offer',
+  sub: 'Pick a purse, then watch the two purses race for 30 days.',
+  initialState: () => ({ phase: 'poll', bonus: false, t: Date.now() }),
+  joinStudent: async () => { await DB.set(`${base()}/students/${S.sid}`, { name: S.name, t: Date.now() }); },
+  startTeacher, startStudent
+};
+Object.assign(APP, APP_SPEC);
+
+/* ---------- graph ---------- */
+function niceStep(max) { const raw = max / 5, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p; }
+function chartSVG(day, bonus, mode, compact) {
+  const W = compact ? 440 : 720, Hh = compact ? 340 : 400, L = compact ? 58 : 74, R = 16, T = 34, Bm = 42;
+  const span = mode === 'auto' ? Math.max(day, 3) : MAXD;
+  let ymax = 0; for (let d = 0; d <= span; d++) ymax = Math.max(ymax, A(d, bonus), B(d));
+  ymax *= 1.12; const step = niceStep(ymax); ymax = Math.ceil(ymax / step) * step;
+  const X = d => L + (d / MAXD) * (W - L - R), Y = v => Hh - Bm - (v / ymax) * (Hh - T - Bm);
+  let g = '';
+  for (let v = 0; v <= ymax + 1e-9; v += step) g += `<line class="ax" x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/><text class="axt" x="${L - 8}" y="${Y(v) + 4}" text-anchor="end">${short(v)}</text>`;
+  for (let d = 0; d <= MAXD; d += 5) g += `<text class="axt" x="${X(d)}" y="${Hh - Bm + 18}" text-anchor="middle">${d}</text>`;
+  g += `<text class="axt" x="${(L + W - R) / 2}" y="${Hh - 6}" text-anchor="middle">Day</text>`;
+  const cx = crossDay(bonus);
+  if (cx != null && day >= cx && cx <= MAXD) { const flip = cx > (compact ? 14 : 22); g += `<line class="xl" x1="${X(cx)}" x2="${X(cx)}" y1="${T - 6}" y2="${Hh - Bm}"/><text class="xt" x="${X(cx) + (flip ? -6 : 6)}" y="${T + 10}" text-anchor="${flip ? 'end' : 'start'}">Day ${cx}: ${compact ? 'B' : 'purse B'} pulls ahead</text>`; }
+  const pa = [], pb = [];
+  for (let d = 0; d <= day; d++) { pa.push(`${X(d)},${Math.max(T - 20, Y(A(d, bonus)))}`); pb.push(`${X(d)},${Math.max(T - 20, Y(B(d)))}`); }
+  g += `<polyline class="la" stroke-width="2.5" opacity=".55" points="${pa.join(' ')}"/><polyline class="lb" stroke-width="2.5" opacity=".55" points="${pb.join(' ')}"/>`;
+  for (let d = 0; d <= day; d++) {
+    const r = d === day ? 7 : 4.5, ya = Y(A(d, bonus)), yb = Y(B(d));
+    if (ya >= T - 20) g += `<circle class="pa" cx="${X(d)}" cy="${ya}" r="${r}"/>`;
+    if (yb >= T - 20) g += `<rect class="pb" x="${X(d) - r}" y="${yb - r}" width="${2 * r}" height="${2 * r}" rx="2"/>`;
+  }
+  g += `<circle class="pa" cx="${L + 8}" cy="14" r="6"/><text class="axt" x="${L + 20}" y="18">Purse A (+$${bonus ? (compact ? '250k' : '250,000') : '200'}${compact ? '/day' : ' a day'})</text>
+        <rect class="pb" x="${L + (compact ? 178 : 236)}" y="8" width="12" height="12" rx="2"/><text class="axt" x="${L + (compact ? 196 : 254)}" y="18">Purse B (×2${compact ? '/day' : ' a day'})</text>`;
+  return `<svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Graph of both purses through day ${day}">${g}</svg>`;
+}
+
+/* ---------- the race (shared by teacher and student) ---------- */
+function raceHTML(compact) {
+  const r = G.race, bonus = !!G.st.bonus, a = A(r.day, bonus), b = B(r.day);
+  const lead = a === b ? '' : a > b ? 'a' : 'b';
+  let rows = '';
+  for (let d = 0; d <= r.day; d++) rows += `<tr class="${d === r.day ? 'now' : ''}"><td>${d}</td><td>${money(A(d, bonus))}</td><td class="chg-a">${d ? '+$' + (bonus ? '250,000' : '200') : ''}</td><td>${money(B(d))}</td><td class="chg-b">${d ? '×2' : ''}</td></tr>`;
+  return `<div class="row" style="justify-content:space-between">
+      <div class="day">Day ${r.day}<small>${r.day === 0 ? 'today' : r.day === 1 ? 'tomorrow' : ''}</small></div>
+      <div class="row"><button class="ghost ${r.mode === 'auto' ? 'on' : ''}" data-act="mode" data-m="auto">Zoom to today</button><button class="ghost ${r.mode === 'full' ? 'on' : ''}" data-act="mode" data-m="full">Whole month</button></div>
+    </div>
+    <div class="purses">
+      <div class="purse a">${lead === 'a' ? '<span class="lead">Ahead</span>' : ''}<h3>Purse A</h3><div class="rule">Starts at $1,000. Adds $${bonus ? '250,000' : '200'} each day.</div><div class="amt">${money(a)}</div></div>
+      <div class="purse b">${lead === 'b' ? '<span class="lead">Ahead</span>' : ''}<h3>Purse B</h3><div class="rule">Starts at 1 penny. Doubles each day.</div><div class="amt">${money(b)}</div></div>
+    </div>
+    <div class="race-ctrl">
+      <button class="ghost" data-act="r0" aria-label="Back to day 0">Day 0</button>
+      <button class="ghost" data-act="rprev" aria-label="Previous day" ${r.day === 0 ? 'disabled' : ''}>−1 day</button>
+      <button class="btn alt" data-act="rplay">${r.playing ? 'Pause' : r.day >= MAXD ? 'Replay' : 'Play'}</button>
+      <button class="ghost" data-act="rnext" aria-label="Next day" ${r.day >= MAXD ? 'disabled' : ''}>+1 day</button>
+      <input type="range" min="0" max="${MAXD}" value="${r.day}" id="rslide" aria-label="Day">
+    </div>
+    <div class="chart-box">${chartSVG(r.day, bonus, r.mode, compact)}</div>
+    <details style="margin-top:12px" ${compact ? '' : 'open'}><summary class="hint">Table of values</summary>
+      <div class="scroll" id="rtable" style="max-height:${compact ? 260 : 220}px"><table class="data"><tr><th>Day</th><th>Purse A</th><th></th><th>Purse B</th><th></th></tr>${rows}</table></div></details>`;
+}
+function setDay(d) { G.race.day = Math.max(0, Math.min(MAXD, d)); drawRace(); }
+function drawRace() {
+  const box = $('#race'); if (!box) return;
+  const open = box.querySelector('details') ? box.querySelector('details').open : null;
+  box.innerHTML = raceHTML(S.role === 'student');
+  if (open != null) box.querySelector('details').open = open;
+  const t = $('#rtable'); if (t) t.scrollTop = t.scrollHeight;
+  if (S.role === 'teacher') drawSide();
+}
+function stopPlay() { clearInterval(G.race.timer); G.race.timer = null; G.race.playing = false; }
+H.r0 = () => { stopPlay(); setDay(0); };
+H.rprev = () => { stopPlay(); setDay(G.race.day - 1); };
+H.rnext = () => { stopPlay(); setDay(G.race.day + 1); };
+H.mode = b => { G.race.mode = b.dataset.m; drawRace(); };
+H.rplay = () => {
+  if (G.race.playing) { stopPlay(); return drawRace(); }
+  if (G.race.day >= MAXD) G.race.day = 0;
+  G.race.playing = true;
+  G.race.timer = setInterval(() => { if (G.race.day >= MAXD) { stopPlay(); drawRace(); } else setDay(G.race.day + 1); }, 650);
+  drawRace();
+};
+document.addEventListener('input', e => { if (e.target.id === 'rslide') { stopPlay(); G.race.day = +e.target.value; drawRace(); $('#rslide') && $('#rslide').focus(); } });
+
+/* =====================================================================
+   6. TEACHER
+   ===================================================================== */
+function startTeacher() {
+  watch('state', `${base()}/state`, st => { if (!st) return; const ch = st.phase !== G.st.phase || !$('#stage'); G.st = st; ch ? renderTeacher() : (drawRace(), drawStage(), drawSide()); });
+  watch('students', `${base()}/students`, v => { G.students = v || {}; drawSide(); drawStage(); joined(); });
+  watch('votes', `${base()}/votes`, v => { G.votes = v || {}; drawSide(); drawStage(); });
+  watch('answers', `${base()}/answers`, v => { G.answers = v || {}; drawStage(); });
+  watch('resp', `${base()}/responses`, v => { G.resp = v || {}; drawSide(); });
+}
+const setState = patch => DB.set(`${base()}/state`, Object.assign({}, G.st, patch, { t: Date.now() }));
+function joined() { const n = Object.keys(G.students).length; const el = $('#joined'); if (el) el.textContent = ` · ${n} joined`; }
+function renderTeacher() {
+  const hasBots = Object.keys(G.students).some(k => k.startsWith('bot'));
+  $('#app').innerHTML = `<div class="t-wrap">${teacherTop(`
+      <button class="ghost ${G.st.bonus ? 'on' : ''}" data-act="bonus" title="Are You Ready For More?">Bonus offer: +$250,000 a day ${G.st.bonus ? 'on' : 'off'}</button>
+      <button class="ghost" data-act="bots">${hasBots ? 'Remove sample class' : 'Add sample class'}</button>`)}
+    <div class="row" style="margin-bottom:14px"><div class="steps">${STEPS.map((s, i) => `<button class="${s.id === G.st.phase ? 'cur' : ''}" data-act="phase" data-p="${s.id}">${i + 1}. ${s.label}</button>`).join('')}</div></div>
+    <div class="layout"><section class="card" id="stage"></section><aside class="card" id="side"></aside></div></div>`;
+  joined(); drawStage(); drawSide();
+}
+H.phase = b => { stopPlay(); if (b.dataset.p === 'race') G.race.day = 0; setState({ phase: b.dataset.p }); };
+H.bonus = () => setState({ bonus: !G.st.bonus }).then(renderTeacher);
+H.bots = async () => {
+  const bots = Object.keys(G.students).filter(k => k.startsWith('bot'));
+  if (bots.length) { const u = {}; bots.forEach(k => { u['students/' + k] = null; u['votes/' + k] = null; u['answers/' + k] = null; u['responses/' + k] = null; }); await DB.update(base(), u); return renderTeacher(); }
+  const u = {};
+  for (let i = 0; i < 20; i++) {
+    const k = 'bot' + i; u['students/' + k] = { name: NAMES[i], bot: true };
+    const first = Math.random() < 0.72 ? 'A' : 'B';
+    const guess = Math.random() < 0.18 ? 'never' : Math.max(1, Math.min(30, Math.round(12 + (Math.random() - 0.5) * 22)));
+    u['votes/' + k] = { first, guess, second: Math.random() < 0.9 ? 'B' : 'A' };
+    const ans = {}; QS.forEach(q => { ans[q.k] = Math.random() < 0.7 ? String(truth(q)) : String(truth(q) * (q.p === 'B' ? 2 : 1.1)); });
+    u['answers/' + k] = ans;
+    u['responses/' + k] = { q1: ['It starts at $1,000 for A and $0.01 for B. That is day 0.', 'A is 1000 and B is 0.01', '(0, 1000) and (0, 0.01), the money on day 0'][i % 3],
+      q2: ['Day 19, because that is when the orange passes the blue.', 'After day 19 B has more', 'around day 18 or 19'][i % 3],
+      q3: ['A adds the same amount every day so it is straight. B multiplies so it grows faster and faster.', 'B doubles so it curves up', 'adding vs multiplying'][i % 3] };
+  }
+  await DB.update(base(), u); renderTeacher();
+};
+const STORY = `<div class="story"><p>You’re walking along a beach when your toe hits a lamp. You brush off the sand and, poof, a genie appears. To thank you, he offers one of two magic purses.</p></div>
+  <div class="purses">
+    <div class="purse a"><h3>Purse A</h3><div class="rule">Contains $1,000 today, $1,200 tomorrow, $1,400 the next day. It gains $200 every day.</div></div>
+    <div class="purse b"><h3>Purse B</h3><div class="rule">Contains one penny today, two pennies tomorrow, four the next day. It doubles every day.</div></div>
+  </div>`;
+function tally(key) { let a = 0, b = 0; Object.keys(G.votes).forEach(k => { if (!G.students[k]) return; const v = G.votes[k][key]; if (v === 'A') a++; if (v === 'B') b++; }); return { a, b, n: a + b }; }
+function barsHTML(t) {
+  const m = Math.max(1, t.a, t.b);
+  return `<div class="bars"><div class="bar"><span>Purse A</span><div class="track"><div class="fill a" style="width:${100 * t.a / m}%"></div></div><span class="n">${t.a}</span></div>
+    <div class="bar"><span>Purse B</span><div class="track"><div class="fill b" style="width:${100 * t.b / m}%"></div></div><span class="n">${t.b}</span></div></div>`;
+}
+function guessPlot(showAnswer) {
+  const W = 560, Hh = 170, L = 16, R = 70, base_ = 130, X = d => L + (d - 1) / 29 * (W - L - R);
+  const counts = {}; let never = 0, n = 0;
+  Object.keys(G.votes).forEach(k => { if (!G.students[k]) return; const g = G.votes[k].guess; if (g == null || g === '') return; n++; if (g === 'never') never++; else counts[g] = (counts[g] || 0) + 1; });
+  let s = `<line class="ax" x1="${L}" x2="${W - R + 10}" y1="${base_}" y2="${base_}"/>`;
+  for (let d = 1; d <= 30; d++) { if (d % 5 === 0 || d === 1) s += `<text class="axt" x="${X(d)}" y="${base_ + 18}" text-anchor="middle">${d}</text>`; for (let i = 0; i < (counts[d] || 0); i++) s += `<circle class="pb" cx="${X(d)}" cy="${base_ - 8 - i * 14}" r="6"/>`; }
+  for (let i = 0; i < never; i++) s += `<circle class="pn" cx="${W - 28}" cy="${base_ - 8 - i * 14}" r="6"/>`;
+  s += `<text class="axt" x="${W - 28}" y="${base_ + 18}" text-anchor="middle">Never</text>`;
+  const cx = crossDay(!!G.st.bonus);
+  if (showAnswer && cx != null && cx <= 30) s += `<line class="xl" x1="${X(cx)}" x2="${X(cx)}" y1="10" y2="${base_}"/><text class="xt" x="${X(cx) + (cx > 22 ? -6 : 6)}" y="20" text-anchor="${cx > 22 ? 'end' : 'start'}">Actual: day ${cx}</text>`;
+  return `<h3 class="big-q" style="font-size:1.05rem">When will purse B have more than purse A?</h3><p class="hint">${n} prediction${n === 1 ? '' : 's'}</p>
+    <div class="chart-box"><svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Dot plot of class predictions">${s}</svg></div>`;
+}
+function hiddenBox(n, total, what, key, label) {
+  return `<div class="hidebox"><div class="big">${n} <span>of ${total}</span></div><p class="muted">${what}</p>
+    <button class="btn alt" data-act="reveal" data-k="${key}" ${n ? '' : 'disabled'}>${label}</button></div>`;
+}
+function guessCount() { return Object.keys(G.votes).filter(k => G.students[k] && G.votes[k].guess != null && G.votes[k].guess !== '').length; }
+function drawStage() {
+  const el = $('#stage'); if (!el) return;
+  const ph = G.st.phase, nS = Object.keys(G.students).length;
+  if (ph === 'poll') {
+    const t = tally('first');
+    el.innerHTML = STORY + `<h3 class="big-q">Which purse would you choose?</h3>` +
+      (G.st.revealVote ? `<p class="hint">${t.n} of ${nS} voted</p>${barsHTML(t)}<div class="row"><button class="ghost" data-act="hide" data-k="revealVote">Hide votes</button></div>` : hiddenBox(t.n, nS, 'students have voted', 'revealVote', 'Reveal votes'));
+  } else if (ph === 'predict') {
+    const n = guessCount();
+    el.innerHTML = `<h3 class="big-q">On what day will purse B first have more money than purse A?</h3>
+      <p class="story">Make a prediction on your device. Don’t calculate yet. Just use your instinct.</p>` +
+      (G.st.revealPredict ? `<div style="margin-top:12px">${guessPlot(false)}</div><div class="row" style="margin-top:10px"><button class="ghost" data-act="hide" data-k="revealPredict">Hide predictions</button></div>` : hiddenBox(n, nS, 'students have made predictions', 'revealPredict', 'Reveal predictions'));
+  } else if (ph === 'calc') {
+    let rows = '';
+    QS.forEach(q => {
+      let right = 0, ans = 0; Object.keys(G.answers).forEach(k => { if (!G.students[k]) return; const v = G.answers[k][q.k]; if (v == null || v === '') return; ans++; if (isRight(q, v)) right++; });
+      rows += `<tr><td>${q.label || ''}</td><td style="text-align:left">Purse ${q.p}</td><td style="text-align:left"><span class="bar2" style="width:${ans ? 90 * right / ans : 0}px"></span>${right} of ${ans} correct</td></tr>`;
+    });
+    el.innerHTML = `<h3 class="big-q">How much money will be in each purse?</h3>
+      <p class="story">Work with your partner. Use any method: keep adding or multiplying, make a table, or write an expression. Enter your answers to check them.</p>
+      <table class="data tally" style="margin-top:14px"><tr><th>When</th><th style="text-align:left">Purse</th><th style="text-align:left">Class progress</th></tr>${rows}</table>
+      <div class="notice"><b>Discuss:</b> how is the work for purse A like the work for purse B? How is it different? What expression gives the amount in purse B on any day?</div>`;
+  } else if (ph === 'race') {
+    if (!el.querySelector('#race')) el.innerHTML = `<div id="race"></div>`;
+    drawRace(); return;
+  } else {
+    const t1 = tally('first'), t2 = tally('second');
+    el.innerHTML = `<h3 class="big-q">Knowing what you know now, which purse would you choose?</h3>
+      <div class="row" style="align-items:flex-start;gap:28px;margin-top:10px"><div style="flex:1 1 260px"><p class="hint">Before the race</p>${barsHTML(t1)}</div>
+      <div style="flex:1 1 260px">${G.st.revealVote2 ? `<p class="hint">Now (${t2.n} of ${nS} voted)</p>${barsHTML(t2)}` : hiddenBox(t2.n, nS, 'students have voted', 'revealVote2', 'Reveal votes')}</div></div>`;
+  }
+}
+function waitingList(test, verb) {
+  const w = Object.keys(G.students).filter(k => !test(k)).map(k => G.students[k].name);
+  return `<p class="hint" style="margin-top:14px">${w.length ? `Still ${verb}: ` + w.map(esc).join(', ') : 'Everyone is done.'}</p>`;
+}
+function respPanel() {
+  const q = RQS.find(r => r.k === (G.st.respQ || 'q1')), ids = Object.keys(G.students).filter(k => G.resp[k] && (G.resp[k][q.k] || '').trim());
+  const nS = Object.keys(G.students).length;
+  let h = `<h3 class="big-q" style="font-size:1.05rem;margin-top:18px">Student responses</h3>
+    <div class="steps" style="margin:6px 0 10px">${RQS.map((r, i) => `<button class="${r.k === q.k ? 'cur' : ''}" data-act="respq" data-q="${r.k}">Question ${i + 1}</button>`).join('')}</div>
+    <p style="font-weight:600">${esc(q.text)}</p>
+    <div class="row" style="justify-content:space-between;margin:8px 0"><span class="hint">${ids.length} of ${nS} answered</span>
+      <span class="row"><button class="ghost" data-act="names">Names ${G.showNames ? 'shown' : 'hidden'}</button>
+      <button class="ghost ${G.st.showResp ? 'on' : ''}" data-act="${G.st.showResp ? 'hide' : 'reveal'}" data-k="showResp" ${ids.length || G.st.showResp ? '' : 'disabled'}>${G.st.showResp ? 'Hide responses' : 'Show responses'}</button></span></div>`;
+  if (G.st.showResp) h += `<div class="scroll" style="max-height:40vh">${ids.map(k => `<div class="resp">${G.showNames ? `<small>${esc(G.students[k].name)}</small>` : ''}${esc(G.resp[k][q.k])}</div>`).join('') || '<p class="hint">No responses yet.</p>'}</div>`;
+  return h;
+}
+function drawSide() {
+  const el = $('#side'); if (!el) return;
+  const ph = G.st.phase;
+  const sc = el.querySelector('.scroll'), keep = sc ? sc.scrollTop : 0;
+  let html = '';
+  if (ph === 'poll') html = `<h3 class="big-q" style="font-size:1.05rem">Votes stay hidden until you reveal them</h3>` + waitingList(k => G.votes[k] && G.votes[k].first, 'voting');
+  else if (ph === 'predict') html = `<h3 class="big-q" style="font-size:1.05rem">Predictions stay hidden until you reveal them</h3>` + waitingList(k => G.votes[k] && G.votes[k].guess, 'predicting');
+  else if (ph === 'calc') html = `<h3 class="big-q" style="font-size:1.05rem">On student screens</h3><p>Both purse descriptions, answer boxes for days 7, 14 and 21, and buttons for the NC Desmos graphing and scientific calculators.</p>` + (G.st.revealPredict ? `<div style="margin-top:14px">${guessPlot(false)}</div>` : '');
+  else if (ph === 'race') { const reached = G.race.day >= (crossDay(!!G.st.bonus) || 99); html = guessPlot(reached) + respPanel(); }
+  else html = guessPlot(true) + waitingList(k => G.votes[k] && G.votes[k].second, 'voting');
+  el.innerHTML = html;
+  const sc2 = el.querySelector('.scroll'); if (sc2) sc2.scrollTop = keep;
+}
+H.reveal = b => setState({ [b.dataset.k]: true });
+H.hide = b => setState({ [b.dataset.k]: false });
+H.respq = b => setState({ respQ: b.dataset.q });
+H.names = () => { G.showNames = !G.showNames; drawSide(); };
+
+/* =====================================================================
+   7. STUDENT
+   ===================================================================== */
+function startStudent() {
+  watch('ended', `${base()}/ended`, v => { if (v) endedScreen(); });
+  watch('state', `${base()}/state`, st => { if (!st) return; const ch = st.phase !== G.st.phase || st.bonus !== G.st.bonus || !$('#sbody'); G.st = st; if (ch) { stopPlay(); G.race.day = 0; renderStudent(); } });
+  watch('mine', `${base()}/votes/${S.sid}`, v => { G.mine = v || {}; if (['poll', 'predict', 'repoll'].includes(G.st.phase)) renderStudent(); });
+  watch('myAns', `${base()}/answers/${S.sid}`, v => { G.myAns = v || {}; });
+  watch('myResp', `${base()}/responses/${S.sid}`, v => {
+    G.myResp = v || {};
+    RQS.forEach(q => { const t = $('#r-' + q.k); if (t && !t.value && document.activeElement !== t && G.myResp[q.k]) t.value = G.myResp[q.k]; });
+  });
+}
+const PURSES = STORY.slice(STORY.indexOf('<div class="purses">'));
+function renderStudent() {
+  const ph = G.st.phase, step = STEPS.findIndex(s => s.id === ph);
+  let body = '';
+  if (ph === 'poll' || ph === 'repoll') {
+    const key = ph === 'poll' ? 'first' : 'second', v = G.mine[key];
+    body = (ph === 'poll' ? STORY.split('<div class="purses">')[0] : `<p class="story">You’ve seen the race. Knowing what you know now, which purse would you choose?</p>`) +
+      `<h3 class="big-q">Which purse would you choose?</h3>
+      <div class="purses">
+        <button class="purse a ${v === 'A' ? 'sel' : ''}" data-act="vote" data-v="A"><h3>Purse A</h3><div class="rule">$1,000 today, $1,200 tomorrow, $1,400 the next day. Gains $200 every day.</div><span class="pick">${v === 'A' ? 'Your pick' : 'Choose A'}</span></button>
+        <button class="purse b ${v === 'B' ? 'sel' : ''}" data-act="vote" data-v="B"><h3>Purse B</h3><div class="rule">One penny today, two tomorrow, four the next day. Doubles every day.</div><span class="pick">${v === 'B' ? 'Your pick' : 'Choose B'}</span></button>
+      </div>
+      <p class="hint" style="margin-top:12px">${v ? 'Vote saved. You can change it until your teacher moves on.' : 'Tap a purse to vote.'}</p>`;
+  } else if (ph === 'predict') {
+    body = PURSES + `<label for="guess" class="big-q" style="display:block;margin:6px 0 8px">On what day will purse B first have more money than purse A?</label>
+      <p class="hint" style="margin-bottom:8px">Don’t calculate yet. Make your best guess.</p>
+      <select id="guess" class="txt" style="max-width:240px"><option value="">Pick a day</option>${Array.from({ length: 30 }, (_, i) => `<option value="${i + 1}" ${String(G.mine.guess) === String(i + 1) ? 'selected' : ''}>Day ${i + 1}</option>`).join('')}<option value="never" ${G.mine.guess === 'never' ? 'selected' : ''}>Never</option></select>
+      <p class="hint" style="margin-top:12px">${G.mine.guess ? 'Prediction saved. You can change it until your teacher moves on.' : ''}</p>`;
+  } else if (ph === 'calc') {
+    body = `<h3 class="big-q">How much money will be in each purse?</h3>${PURSES}
+      <iframe class="desmos" src="${DESMOS.scientific}" title="NC Desmos scientific calculator" allowfullscreen></iframe>
+      <p class="hint" style="margin-top:6px">Calculator not showing? <a class="calc-link" href="${DESMOS.scientific}" target="_blank" rel="noopener">Open it in a new tab</a>.</p>
+      <p class="story" style="margin-top:12px">Day 0 is today. Use any method you like, then check your answers.</p>
+      <div class="calc"><span></span><span class="h">Purse A</span><span class="h">Purse B</span>
+      ${[7, 14, 21].map(d => { const qa = QS.find(q => q.k === 'a' + d), qb = QS.find(q => q.k === 'b' + d);
+        return `<span style="font-weight:600">${esc(qa.label)}</span>${[qa, qb].map(q => `<span><input id="in-${q.k}" inputmode="decimal" placeholder="$" value="${esc(G.myAns[q.k] || '')}" aria-label="${esc(qa.label)}, purse ${q.p}"><span class="mark" id="mk-${q.k}"></span></span>`).join('')}`; }).join('')}
+      </div><div class="row" style="margin-top:14px"><button class="btn" data-act="check">Check my answers</button><span class="hint" id="chk"></span></div>`;
+  } else {
+    body = `<div id="race"></div>${G.st.bonus ? `<div class="notice"><b>New offer!</b> The genie says purse A now grows by $250,000 every day. Does that change your choice?</div>` : ''}
+      <div class="rform"><h3 class="big-q" style="margin-top:20px">Use the race to answer these</h3>
+      ${RQS.map((q, i) => `<label for="r-${q.k}">${i + 1}. ${esc(q.text)}</label><textarea id="r-${q.k}" class="txt" rows="3">${esc(G.myResp[q.k] || '')}</textarea>`).join('')}
+      <div class="row" style="margin-top:12px"><button class="btn" data-act="saveresp">Save my answers</button><span class="hint" id="rsaved"></span></div></div>`;
+  }
+  $('#app').innerHTML = `<div class="s-wrap"><div class="s-top"><span class="pill">${step + 1}. ${STEPS[step].label}</span><div class="who">${esc(S.name)} <button data-act="leave">Leave</button></div></div><section class="card" id="sbody">${body}</section></div>`;
+  if (ph === 'race') drawRace();
+  if (ph === 'calc') markAll(false);
+}
+function saveResp(msg) {
+  const r = {}; RQS.forEach(q => { const t = $('#r-' + q.k); r[q.k] = t ? t.value.trim().slice(0, 600) : ''; });
+  G.myResp = r; DB.set(`${base()}/responses/${S.sid}`, r);
+  const el = $('#rsaved'); if (el) el.textContent = msg;
+}
+H.saveresp = () => saveResp('Saved. You can edit and save again.');
+document.addEventListener('focusout', e => { if (S.role === 'student' && e.target.id && e.target.id.startsWith('r-q')) saveResp('Saved automatically.'); });
+H.vote = b => { const key = G.st.phase === 'poll' ? 'first' : 'second'; DB.update(`${base()}/votes/${S.sid}`, { [key]: b.dataset.v }); };
+document.addEventListener('change', e => { if (e.target.id === 'guess' && S.role === 'student') DB.update(`${base()}/votes/${S.sid}`, { guess: e.target.value || null }); });
+function markAll(showEmpty) {
+  let right = 0;
+  QS.forEach(q => {
+    const inp = $('#in-' + q.k), mk = $('#mk-' + q.k); if (!inp) return;
+    const v = inp.value.trim(); inp.classList.remove('ok', 'no'); mk.className = 'mark'; mk.textContent = '';
+    if (!v) return;
+    if (isRight(q, v)) { right++; inp.classList.add('ok'); mk.classList.add('ok'); mk.textContent = 'Correct'; }
+    else { inp.classList.add('no'); mk.classList.add('no'); mk.textContent = 'Try again'; }
+  });
+  const c = $('#chk'); if (c && showEmpty) c.textContent = right === QS.length ? 'All six are correct. Which purse has more after 30 days?' : `${right} of ${QS.length} correct.`;
+}
+H.check = () => {
+  const ans = {}; QS.forEach(q => { const v = ($('#in-' + q.k) || {}).value; ans[q.k] = v ? v.trim() : ''; });
+  G.myAns = ans; DB.set(`${base()}/answers/${S.sid}`, ans); markAll(true);
+};
+boot();
+</script>
+</body>
+</html>
