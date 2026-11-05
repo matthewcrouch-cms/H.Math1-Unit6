@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paper Folding Tower</title>
+<style>
+:root{
+  --paper:#f7f9fc; --grid:#e3eaf3; --card:#ffffff; --ink:#14233a; --muted:#566883; --line:#d5deea;
+  --blue:#4B9CD3; --blue-d:#1d6aa5; --blue-soft:#e6f2fa; --orange:#F56600; --orange-d:#c24f00; --orange-soft:#fff0e5;
+  --good:#17805a; --good-soft:#e2f5ec; --bad:#b83a2b; --bad-soft:#fbeae7; --gold:#d79b14;
+  --math:"Cambria Math","STIX Two Text","Latin Modern Math",Cambria,Georgia,"Times New Roman",serif;
+  --ui:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#0f1824; --grid:#17263a; --card:#16222f; --ink:#e8eef7; --muted:#9db0c8; --line:#2b3d55;
+    --blue:#6bb3e3; --blue-d:#8cc6ee; --blue-soft:#183249; --orange:#ff8a3d; --orange-d:#ffa766; --orange-soft:#3a2415;
+    --good:#4fcf9b; --good-soft:#12352a; --bad:#ff8c7d; --bad-soft:#3a1c18; --gold:#f0bf4c; color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:var(--ui); color:var(--ink); background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px; line-height:1.45; -webkit-text-size-adjust:100%;
+}
+.math{font-family:var(--math); white-space:nowrap}
+.math i{font-style:italic}
+sup{font-size:.74em; line-height:0}
+button{font:inherit; cursor:pointer}
+:focus-visible{outline:3px solid var(--orange); outline-offset:2px}
+h1,h2,h3,p{margin:0}
+.card{background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:20px}
+.btn{border:0; border-radius:10px; padding:11px 20px; font-weight:650; background:var(--blue-d); color:#fff}
+.btn:hover{filter:brightness(1.08)}
+.btn[disabled]{opacity:.45; cursor:not-allowed}
+.btn.alt{background:var(--orange-d); color:#fff}
+.ghost{background:transparent; color:var(--ink); border:1.5px solid var(--line); border-radius:10px; padding:8px 14px; font-weight:600}
+.ghost:hover:not([disabled]){border-color:var(--blue)}
+.ghost[disabled]{opacity:.45; cursor:not-allowed}
+.ghost.on{border-color:var(--blue-d); background:var(--blue-soft); color:var(--blue-d)}
+.ghost.danger{color:var(--bad)}
+.banner{background:var(--orange-soft); border:1.5px solid var(--orange); color:var(--ink); border-radius:10px; padding:9px 14px; font-size:.9rem; margin-bottom:14px}
+.err{color:var(--bad); font-weight:600; min-height:1.4em; margin-top:8px}
+.muted{color:var(--muted)}
+input.txt,select.txt{width:100%; font:1.05rem var(--ui); padding:12px; border:2px solid var(--line); border-radius:10px; background:var(--card); color:var(--ink)}
+input.txt:focus,select.txt:focus{border-color:var(--blue); outline:none}
+.row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+
+/* landing */
+.landing{max-width:520px; margin:0 auto; padding:9vh 18px 40px}
+.landing h1{font:700 clamp(1.9rem,6vw,2.6rem)/1.15 var(--math); margin-bottom:8px}
+.landing .sub{color:var(--muted); margin-bottom:22px}
+.landing label{display:block; font-weight:600; margin:14px 0 6px}
+.landing .row{margin-top:20px}
+.code-in{text-transform:uppercase; letter-spacing:.35em; font-weight:700; text-align:center}
+.teacher-link{margin-top:26px; font-size:.92rem; color:var(--muted)}
+.teacher-link button{background:none; border:0; color:var(--blue-d); text-decoration:underline; padding:0}
+
+/* frames */
+.s-wrap{max-width:760px; margin:0 auto; padding:14px 14px 80px}
+.s-top{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap}
+.s-top .who{color:var(--muted); font-size:.92rem}
+.s-top .who button{background:none; border:0; color:var(--muted); text-decoration:underline; padding:0 0 0 8px; font-size:.85rem}
+.s-title{font:700 1.6rem var(--math); margin:2px 0 10px}
+.t-wrap{max-width:1500px; margin:0 auto; padding:14px 18px 40px}
+.t-top{display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:14px}
+.brand{font:700 1.25rem var(--math)}
+.join{font-size:1.02rem}
+.join .code{font:700 1.5rem var(--ui); letter-spacing:.2em; background:var(--orange-d); color:#fff; padding:2px 12px; border-radius:8px; margin-left:4px}
+.t-tools{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.pill{display:inline-block; font-size:.82rem; font-weight:600; padding:3px 11px; border-radius:99px; background:var(--blue-soft); color:var(--blue-d)}
+.steps{display:flex; gap:6px; flex-wrap:wrap}
+.steps button{border:1.5px solid var(--line); background:var(--card); color:var(--ink); border-radius:99px; padding:7px 14px; font-weight:600}
+.steps button.cur{background:var(--blue-d); border-color:var(--blue-d); color:#fff}
+table.data{border-collapse:separate; border-spacing:0; width:100%; font-variant-numeric:tabular-nums}
+table.data th{font-size:.82rem; color:var(--muted); text-align:right; padding:4px 10px; font-weight:600; position:sticky; top:0; z-index:1; background:var(--card); box-shadow:0 1px 0 var(--line)}
+table.data th:first-child,table.data td:first-child{text-align:left}
+table.data td{text-align:right; padding:6px 10px; border-top:1px solid var(--line)}
+table.data tr.now td{background:var(--blue-soft); font-weight:700}
+.scroll{max-height:46vh; overflow:auto}
+.hint{font-size:.85rem; color:var(--muted)}
+@media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} }
+/* ---------- shared kit ---------- */
+.layout{display:grid; grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr); gap:16px; align-items:start}
+.big-q{font:700 1.3rem var(--math); margin-bottom:6px}
+.side-h{font:700 1.05rem var(--math); margin:16px 0 6px}
+.side-h:first-child{margin-top:0}
+.story{font-size:1.06rem; max-width:46rem}
+.hidebox{text-align:center; border:2px dashed var(--line); border-radius:14px; padding:24px 16px; margin-top:12px}
+.hidebox .big{font:700 3.2rem/1 var(--ui)} .hidebox .big span{font-size:1.4rem; color:var(--muted); font-weight:600}
+.hidebox p{margin:6px 0 14px}
+.resp{border:1.5px solid var(--line); border-left:4px solid var(--blue); border-radius:0 10px 10px 0; padding:9px 12px; margin-bottom:8px; background:var(--card); font-size:1.05rem}
+.resp small{display:block; color:var(--muted); font-weight:600}
+.rlabel{display:block; font-weight:600; margin:16px 0 6px}
+textarea.rbox{width:100%; font:1rem var(--ui); padding:10px 12px; border:2px solid var(--line); border-radius:10px; background:var(--card); color:var(--ink); resize:vertical}
+textarea.rbox:focus{border-color:var(--blue); outline:none}
+.rsave{margin-top:6px}
+.rsave .ghost{padding:5px 12px; font-size:.9rem}
+.ckwrap{display:inline-flex; flex-direction:column; gap:2px; vertical-align:top}
+input.ck{font:600 1.05rem var(--ui); width:7.5em; padding:8px 10px; border:2px solid var(--line); border-radius:9px; background:var(--card); color:var(--ink)}
+input.ck:focus{border-color:var(--blue); outline:none}
+input.ck.ok{border-color:var(--good); background:var(--good-soft)}
+input.ck.no{border-color:var(--bad); background:var(--bad-soft)}
+.mark{font-weight:700; font-size:.82rem; max-width:16rem}
+.ckwrap .mark:empty{display:none}
+.mark.ok{color:var(--good)} .mark.no{color:var(--bad)}
+.qrow{display:flex; gap:10px 16px; align-items:flex-start; flex-wrap:wrap; margin:12px 0}
+.qrow > span:first-child{flex:1 1 260px; font-weight:600; padding-top:8px}
+.tally td .bar2{display:inline-block; height:10px; border-radius:5px; background:var(--good); vertical-align:middle; margin-right:6px}
+.notice{border-left:5px solid var(--orange); background:var(--orange-soft); padding:10px 14px; border-radius:0 10px 10px 0; margin-top:12px}
+.chart-box{border:1.5px solid var(--line); border-radius:12px; background:var(--card); padding:6px; margin-top:8px}
+.chart-box svg{display:block; width:100%; height:auto}
+.ax{stroke:var(--line)} .axt{fill:var(--muted); font:12px var(--ui)} .ax0{stroke:var(--muted); stroke-width:1.5}
+@media (max-width:900px){ .layout{grid-template-columns:1fr} }
+/* ---------- paper folding ---------- */
+.foldn{font:700 clamp(2rem,5vw,3.4rem)/1 var(--math)}
+.thick{font:700 1.5rem var(--ui); color:var(--orange-d); margin-top:4px; font-variant-numeric:tabular-nums}
+.formula{font-family:var(--math); color:var(--muted); margin-top:2px}
+.stack{fill:#fffdf7; stroke:var(--ink); stroke-width:1.5}
+.layer{stroke:var(--line); stroke-width:1}
+.lm{fill:var(--blue-soft); stroke:var(--blue); stroke-width:1.5}
+.lmt{fill:var(--ink); font:600 12px var(--ui)} .lmt2{fill:var(--muted); font:12px var(--ui)}
+.tower svg{max-height:62vh}
+.cv-o{fill:none; stroke:var(--orange); stroke-width:3} .cv-b{fill:none; stroke:var(--blue); stroke-width:3}
+.dt-o{fill:var(--orange)} .dt-b{fill:var(--blue)}
+.xl{stroke:var(--good); stroke-dasharray:5 5; stroke-width:2} .xt{fill:var(--good); font:700 12px var(--ui)}
+.ghostp{fill:none; stroke:var(--line); stroke-width:2; stroke-dasharray:6 5}
+.paper{fill:#fffdf7; stroke:var(--ink); stroke-width:2}
+.paperbox{flex:0 0 200px; max-width:200px}
+.plist{margin:8px 0 0; padding-left:1.2rem; font-size:1.05rem} .plist li{margin:5px 0}
+select.fsel{max-width:240px}
+.eqline{display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; font-size:1.3rem}
+.eqline > .math, .eqline > sup{padding-top:8px}
+.ref{stroke:var(--good); stroke-width:2; stroke-dasharray:6 5} .reft{fill:var(--good); font:700 12px var(--ui)}
+.eqline input.ck{width:5.5em}
+.eqline .mark{max-width:7rem}
+.eqline .grp{display:inline-flex; align-items:flex-start; gap:6px}
+.eqline .grp > .math{padding-top:8px; white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+const APP = { id: 'fold' };
+/* =====================================================================
+   1. FIREBASE SETUP
+   This is the same Firebase project as your Exponent Rules discovery app.
+   Leave databaseURL empty to run in PRACTICE MODE: the teacher view and
+   student view then sync between tabs of the same browser only.
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDkuZVoCbhVotMLGi_iI8wGYCrRKie8ex8",
+  authDomain: "exponentproperties-7198b.firebaseapp.com",
+  databaseURL: "https://exponentproperties-7198b-default-rtdb.firebaseio.com",
+  projectId: "exponentproperties-7198b",
+  appId: "1:189445254765:web:3e6f1c783f9b6fdfa85964"
+};
+
+/* =====================================================================
+   2. TINY DATABASE LAYER (Firebase, or localStorage for practice mode)
+   ===================================================================== */
+const DB = (() => {
+  let live = !!FIREBASE_CONFIG.databaseURL && typeof firebase !== 'undefined';
+  if (live) {
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      const fdb = firebase.database();
+      return {
+        mode: 'live',
+        set: (p, v) => fdb.ref(p).set(v),
+        update: (p, v) => fdb.ref(p).update(v),
+        remove: p => fdb.ref(p).remove(),
+        once: p => fdb.ref(p).once('value').then(s => s.val()),
+        on: (p, cb) => { const r = fdb.ref(p); const h = r.on('value', s => cb(s.val())); return () => r.off('value', h); }
+      };
+    } catch (e) { live = false; }
+  }
+  const KEY = APP.id + ':tree', subs = [];
+  const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
+  const get = (t, p) => { const v = p.split('/').reduce((o, k) => (o == null ? null : o[k]), t); return v === undefined ? null : v; };
+  const clone = v => (v == null ? null : JSON.parse(JSON.stringify(v)));
+  const notify = () => { const t = read(); subs.slice().forEach(s => s.cb(clone(get(t, s.p)))); };
+  window.addEventListener('storage', e => { if (e.key === KEY) notify(); });
+  function put(t, p, v) {
+    const ks = p.split('/'); let o = t;
+    ks.slice(0, -1).forEach(k => { if (typeof o[k] !== 'object' || o[k] === null) o[k] = {}; o = o[k]; });
+    if (v === null) delete o[ks[ks.length - 1]]; else o[ks[ks.length - 1]] = clone(v);
+  }
+  const save = t => { try { localStorage.setItem(KEY, JSON.stringify(t)); } catch (e) {} notify(); };
+  return {
+    mode: 'local',
+    set: (p, v) => { const t = read(); put(t, p, v); save(t); return Promise.resolve(); },
+    update: (p, obj) => { const t = read(); Object.keys(obj).forEach(k => put(t, p + '/' + k, obj[k])); save(t); return Promise.resolve(); },
+    remove: p => { const t = read(); put(t, p, null); save(t); return Promise.resolve(); },
+    once: p => Promise.resolve(clone(get(read(), p))),
+    on: (p, cb) => { const s = { p, cb }; subs.push(s); setTimeout(() => { if (subs.includes(s)) cb(clone(get(read(), p))); }, 0); return () => { const i = subs.indexOf(s); if (i >= 0) subs.splice(i, 1); }; }
+  };
+})();
+
+/* =====================================================================
+   3. HELPERS
+   ===================================================================== */
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const $ = (s, r = document) => r.querySelector(s);
+const ls = { get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }, del: k => { try { localStorage.removeItem(k); } catch (e) {} } };
+const unsubs = {};
+function watch(key, path, cb) { if (unsubs[key]) unsubs[key](); unsubs[key] = DB.on(path, cb); }
+function unwatchAll() { Object.keys(unsubs).forEach(k => { unsubs[k](); delete unsubs[k]; }); }
+const genCode = () => Array.from({ length: 4 }, () => 'ABCDEFGHJKMNPQRSTUVWXYZ'[Math.floor(Math.random() * 23)]).join('');
+const S = { role: null, code: null, sid: null, name: '' };
+const base = () => `sessions/${S.code}`;
+const H = {};  // click handlers: data-act="name"
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  const f = H[b.dataset.act]; if (f) f(b, e);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.matches('#code,#name')) H.join();
+});
+const NAMES = ['Ava','Mateo','Jada','Liam','Priya','Noah','Mai','Diego','Han','Clare','Elena','Kiran','Tyler','Andre','Lin','Jayden','Sofia','Omar','Zoe','Isaiah','Camila','Ethan','Nia','Leo'];
+
+/* =====================================================================
+   4. LANDING, JOIN, SESSIONS
+   ===================================================================== */
+function renderLanding(msg, teacherOpen) {
+  unwatchAll();
+  const saved = ls.get(APP.id + ':student') || {};
+  const tsaved = ls.get(APP.id + ':teacher');
+  const qp = new URLSearchParams(location.search);
+  const qcode = (qp.get('code') || saved.code || '').toUpperCase();
+  const showT = teacherOpen || qp.has('teacher');
+  $('#app').innerHTML = `<div class="landing">
+    <h1>${esc(APP.title)}</h1>
+    <p class="sub">${esc(APP.sub)}</p>
+    ${DB.mode === 'local' ? `<div class="banner"><b>Practice mode.</b> Firebase isn’t connected, so this only syncs between tabs of this browser.</div>` : ''}
+    ${showT ? `
+      <div class="card">
+        <h2 style="font-size:1.2rem;margin-bottom:12px">Teacher</h2>
+        <div class="row" style="margin-top:0">
+          <button class="btn" data-act="newsession">Start a new session</button>
+          ${tsaved ? `<button class="ghost" data-act="resume">Resume ${esc(tsaved.code)}</button>` : ''}
+        </div>
+        <p class="err" id="err">${esc(msg || '')}</p>
+        <p class="teacher-link"><button data-act="studentpanel">I’m a student</button></p>
+      </div>` : `
+      <div class="card">
+        <label for="code" style="margin-top:0">Class code</label>
+        <input id="code" class="txt code-in" maxlength="4" autocomplete="off" value="${esc(qcode)}" placeholder="ABCD">
+        <label for="name">Your first name</label>
+        <input id="name" class="txt" maxlength="20" autocomplete="off" value="${esc(saved.name || '')}" placeholder="First name">
+        <div class="row"><button class="btn" data-act="join">Join class</button></div>
+        <p class="err" id="err">${esc(msg || '')}</p>
+      </div>
+      <p class="teacher-link">Teacher? <button data-act="teacherpanel">Open teacher controls</button></p>`}
+  </div>`;
+}
+H.teacherpanel = () => renderLanding('', true);
+H.studentpanel = () => { history.replaceState(null, '', location.pathname); renderLanding('', false); };
+H.newsession = async () => {
+  try {
+    let code;
+    for (let i = 0; i < 12; i++) { code = genCode(); if (!(await DB.once(`sessions/${code}/app`))) break; }
+    await DB.set(`sessions/${code}`, { app: APP.id, state: APP.initialState(), created: Date.now() });
+    ls.set(APP.id + ':teacher', { code });
+    S.role = 'teacher'; S.code = code; APP.startTeacher();
+  } catch (e) { renderLanding('Could not reach Firebase. Check your config and database rules.', true); }
+};
+H.resume = async () => {
+  const t = ls.get(APP.id + ':teacher'); if (!t) return;
+  try {
+    const a = await DB.once(`sessions/${t.code}/app`);
+    if (a !== APP.id) { ls.del(APP.id + ':teacher'); return renderLanding('That session no longer exists.', true); }
+    S.role = 'teacher'; S.code = t.code; APP.startTeacher();
+  } catch (e) { renderLanding('Could not reach Firebase.', true); }
+};
+H.end = async () => {
+  if (!confirm('End this session for everyone? Student data will be deleted.')) return;
+  await DB.set(`${base()}/ended`, true);
+  setTimeout(() => DB.remove(base()), 1500);
+  ls.del(APP.id + ':teacher'); renderLanding('', true);
+};
+H.join = async () => {
+  const code = ($('#code').value || '').trim().toUpperCase(), name = ($('#name').value || '').trim().slice(0, 20);
+  if (code.length !== 4) return ($('#err').textContent = 'Enter the 4-letter class code.');
+  if (!name) return ($('#err').textContent = 'Enter your first name.');
+  try {
+    const a = await DB.once(`sessions/${code}/app`);
+    if (a !== APP.id) return ($('#err').textContent = 'No session with that code. Check the code on the board.');
+    const saved = ls.get(APP.id + ':student') || {};
+    const sid = saved.code === code && saved.sid ? saved.sid : 's' + Math.random().toString(36).slice(2, 10);
+    S.role = 'student'; S.code = code; S.sid = sid; S.name = name;
+    ls.set(APP.id + ':student', { code, sid, name });
+    await APP.joinStudent();
+    APP.startStudent();
+  } catch (e) { $('#err').textContent = 'Could not reach the class. Check your internet connection.'; }
+};
+H.leave = () => { unwatchAll(); ls.del(APP.id + ':student'); renderLanding('', false); };
+function endedScreen() {
+  unwatchAll();
+  $('#app').innerHTML = `<div class="s-wrap"><div class="card" style="margin-top:18vh;text-align:center"><h2 class="s-title">This session has ended</h2><p>Thanks for joining. You can close this page.</p><div class="row" style="justify-content:center;margin-top:16px"><button class="ghost" data-act="leave">Join another</button></div></div></div>`;
+}
+function teacherTop(extraTools) {
+  const url = location.origin + location.pathname;
+  return `<div class="t-top">
+    <div><div class="brand">${esc(APP.title)}</div>
+      <div class="join">Join at <b>${esc(url.replace(/^https?:\/\//, ''))}</b> with code <span class="code">${esc(S.code)}</span>
+      <span class="muted" id="joined"></span></div></div>
+    <div class="t-tools">${extraTools || ''}<button class="ghost danger" data-act="end">End session</button></div>
+  </div>${DB.mode === 'local' ? `<div class="banner"><b>Practice mode.</b> Open a second tab of this page to try the student view.</div>` : ''}`;
+}
+async function boot() {
+  const t = ls.get(APP.id + ':teacher'), s = ls.get(APP.id + ':student');
+  const qp = new URLSearchParams(location.search);
+  if (qp.has('teacher') && t) return H.resume();
+  if (!qp.has('teacher') && s && s.code && s.sid) {
+    try {
+      const a = await DB.once(`sessions/${s.code}/app`);
+      if (a === APP.id) { Object.assign(S, { role: 'student', code: s.code, sid: s.sid, name: s.name }); await APP.joinStudent(); return APP.startStudent(); }
+    } catch (e) {}
+  }
+  renderLanding('', false);
+}
+/* =====================================================================
+   4b. SHARED KIT: written responses, checked answers, reveal panels
+   ===================================================================== */
+const parseNum = s => {
+  s = String(s == null ? '' : s).trim().replace(/[$,\s]/g, '');
+  if (!s) return null;
+  const m = s.match(/^(-?\d*\.?\d+)\/(-?\d*\.?\d+)$/);
+  if (m) return +m[2] === 0 ? null : +m[1] / +m[2];
+  const v = Number(s); return isFinite(v) ? v : null;
+};
+const near = (v, t, tol) => v != null && Math.abs(v - t) <= (tol != null ? tol : Math.max(1e-6, Math.abs(t) * 1e-6));
+const KIT = { resp: {}, checks: {}, myResp: {}, myChecks: {}, showNames: false };
+
+/* --- student side --- */
+// A response box: <textarea data-rk="key">. Saves when the student clicks away or taps Save.
+function respBox(key, label) {
+  return `<label class="rlabel" for="rk-${key}">${label}</label>
+    <textarea id="rk-${key}" class="txt rbox" data-rk="${key}" rows="3">${esc(KIT.myResp[key] || '')}</textarea>
+    <div class="row rsave"><button class="ghost" data-act="saverk" data-k="${key}">Save</button><span class="hint" id="rs-${key}">${KIT.myResp[key] ? 'Saved.' : ''}</span></div>`;
+}
+function saveRk(key, how) {
+  const t = $('#rk-' + key); if (!t) return;
+  const v = t.value.trim().slice(0, 800);
+  if (v === (KIT.myResp[key] || '')) { const s = $('#rs-' + key); if (s && v) s.textContent = 'Saved.'; return; }
+  KIT.myResp[key] = v; DB.set(`${base()}/responses/${S.sid}/${key}`, v || null);
+  const s = $('#rs-' + key); if (s) s.textContent = how || 'Saved.';
+}
+H.saverk = b => saveRk(b.dataset.k, 'Saved. You can edit and save again.');
+document.addEventListener('focusout', e => { if (S.role === 'student' && e.target.dataset && e.target.dataset.rk) saveRk(e.target.dataset.rk, 'Saved automatically.'); });
+function watchMine() {
+  watch('myResp', `${base()}/responses/${S.sid}`, v => {
+    KIT.myResp = v || {};
+    document.querySelectorAll('textarea[data-rk]').forEach(t => { const k = t.dataset.rk; if (!t.value && document.activeElement !== t && KIT.myResp[k]) t.value = KIT.myResp[k]; });
+  });
+  watch('myChecks', `${base()}/checks/${S.sid}`, v => { KIT.myChecks = v || {}; });
+}
+// A checked number box: <input data-ck="key">. CHECKS[key] = { ans: number, tol, hint(v) -> string|null }
+function ckBox(key, ph) {
+  const prev = KIT.myChecks[key];
+  const cls = prev ? (prev.ok ? 'ok' : 'no') : '';
+  return `<span class="ckwrap"><input class="ck ${cls}" id="ck-${key}" data-ck="${key}" inputmode="decimal" autocomplete="off" placeholder="${esc(ph || '')}" value="${esc(prev ? prev.v : '')}"><span class="mark ${cls}" id="mk-${key}">${prev ? (prev.ok ? 'Correct' : 'Try again') : ''}</span></span>`;
+}
+function runChecks(keys) {
+  const out = {}; let right = 0;
+  keys.forEach(k => {
+    const inp = $('#ck-' + k), mk = $('#mk-' + k), spec = CHECKS[k]; if (!inp || !spec) return;
+    const raw = inp.value.trim(); inp.classList.remove('ok', 'no'); mk.className = 'mark'; mk.textContent = '';
+    if (!raw) return;
+    const v = parseNum(raw), ok = spec.ok ? spec.ok(v, raw) : near(v, spec.ans, spec.tol);
+    out[k] = { v: raw, ok, tag: !ok && spec.tag ? (spec.tag(v, raw) || null) : null, t: Date.now() }; if (ok) right++;
+    inp.classList.add(ok ? 'ok' : 'no'); mk.classList.add(ok ? 'ok' : 'no');
+    mk.textContent = ok ? 'Correct' : ((spec.hint && spec.hint(v, raw)) || 'Try again');
+  });
+  Object.assign(KIT.myChecks, out);
+  DB.update(`${base()}/checks/${S.sid}`, out);
+  return right;
+}
+
+/* --- teacher side --- */
+function hiddenBox(n, total, what, key, label) {
+  return `<div class="hidebox"><div class="big">${n} <span>of ${total}</span></div><p class="muted">${what}</p>
+    <button class="btn alt" data-act="reveal" data-k="${key}" ${n ? '' : 'disabled'}>${label}</button></div>`;
+}
+function ckTally(students, keys) {
+  return keys.map(k => { let ans = 0, ok = 0; Object.keys(students).forEach(s => { const c = KIT.checks[s] && KIT.checks[s][k]; if (c) { ans++; if (c.ok) ok++; } }); return { k, ans, ok }; });
+}
+function ckTable(students, rows) {
+  const t = ckTally(students, rows.map(r => r.k));
+  return `<table class="data tally"><tr><th>Question</th><th style="text-align:left">Class progress</th></tr>${rows.map((r, i) =>
+    `<tr><td>${r.label}</td><td style="text-align:left"><span class="bar2" style="width:${t[i].ans ? 90 * t[i].ok / t[i].ans : 0}px"></span>${t[i].ok} of ${t[i].ans} correct</td></tr>`).join('')}</table>`;
+}
+// Response viewer. qs = [{k, text}]. st = app state (respQ, showResp).
+function respViewer(students, qs, st) {
+  if (!qs.length) return '';
+  const q = qs.find(r => r.k === st.respQ) || qs[0];
+  const ids = Object.keys(students).filter(k => KIT.resp[k] && (KIT.resp[k][q.k] || '').trim());
+  const nS = Object.keys(students).length;
+  return `<h3 class="side-h">Student responses</h3>
+    ${qs.length > 1 ? `<div class="steps" style="margin:6px 0 10px">${qs.map((r, i) => `<button class="${r.k === q.k ? 'cur' : ''}" data-act="respq" data-q="${r.k}">${esc(r.short || 'Question ' + (i + 1))}</button>`).join('')}</div>` : ''}
+    <p style="font-weight:600">${q.text}</p>
+    <div class="row" style="justify-content:space-between;margin:8px 0"><span class="hint">${ids.length} of ${nS} answered</span>
+      <span class="row"><button class="ghost" data-act="names">Names ${KIT.showNames ? 'shown' : 'hidden'}</button>
+      <button class="ghost ${st.showResp ? 'on' : ''}" data-act="${st.showResp ? 'hide' : 'reveal'}" data-k="showResp" ${ids.length || st.showResp ? '' : 'disabled'}>${st.showResp ? 'Hide responses' : 'Show responses'}</button></span></div>
+    ${st.showResp ? `<div class="scroll" style="max-height:44vh">${ids.map(k => `<div class="resp">${KIT.showNames ? `<small>${esc(students[k].name)}</small>` : ''}${esc(KIT.resp[k][q.k])}</div>`).join('') || '<p class="hint">No responses yet.</p>'}</div>` : ''}`;
+}
+H.reveal = b => APP.setState({ [b.dataset.k]: true });
+H.hide = b => APP.setState({ [b.dataset.k]: false });
+H.respq = b => APP.setState({ respQ: b.dataset.q });
+H.names = () => { KIT.showNames = !KIT.showNames; APP.redraw(); };
+function watchClassWork(after) {
+  watch('resp', `${base()}/responses`, v => { KIT.resp = v || {}; after(); });
+  watch('checks', `${base()}/checks`, v => { KIT.checks = v || {}; after(); });
+}
+/* =====================================================================
+   5. PAPER FOLDING TOWER  (Unit 6, Lesson 6, Activity 4)
+   Thickness: T(n) = 0.05 · 2^n mm.   Visible area: A(n) = 93.5 · (1/2)^n sq in.
+   ===================================================================== */
+const STEPS = [
+  { id: 'folds', label: 'Fold real paper' },
+  { id: 'predict', label: 'Predict' },
+  { id: 'tower', label: 'The tower' },
+  { id: 'graph', label: 'Graph it' },
+  { id: 'area', label: 'Area' }
+];
+const T = n => 0.05 * Math.pow(2, n);
+const MAXF = 45;
+const LANDMARKS = [
+  { k: 'phone', name: 'A phone', h: 8 },
+  { k: 'door', name: 'A classroom door', h: 2030 },
+  { k: 'tower', name: 'Bank of America Corporate Center', h: 265500 },
+  { k: 'mitchell', name: 'Mount Mitchell', h: 2037000 },
+  { k: 'moon', name: 'The Moon', h: 384400e6 }
+];
+const need = h => { let n = 0; while (T(n) <= h) n++; return n; };
+const PRED = ['door', 'tower', 'moon'];
+const lm = k => LANDMARKS.find(l => l.k === k);
+function fmtLen(mm) {
+  const r = (v, d) => v.toLocaleString('en-US', { maximumFractionDigits: d });
+  if (mm < 10) return r(mm, 2) + ' mm';
+  if (mm < 1000) return r(mm / 10, 1) + ' cm';
+  if (mm < 1e6) return r(mm / 1000, mm < 1e4 ? 2 : 0) + ' m';
+  return r(mm / 1e6, 0) + ' km';
+}
+const RQ_GRAPH = [
+  { k: 'rep', short: 'What is 0.05?', text: 'In T(n) = 0.05 · 2ⁿ, what does the 0.05 represent?' },
+  { k: 'crit', short: 'Fix the explanation', text: 'A student said: “It takes 4.5 folds because I looked at the line and the graph.” Write a clearer, more complete, and more correct explanation.' }
+];
+const RQ_AREA = [
+  { k: 'negn', short: 'Negative n?', text: 'In this situation, can n take negative values? Explain your reasoning.' },
+  { k: 'nega', short: 'Negative A?', text: 'Can A(n) take negative values? Explain your reasoning.' }
+];
+const CHECKS = {
+  mm1: { ans: 5, hint: v => v === 4.5 ? 'Folds come in whole numbers. Check 4 and 5 folds.' : v === 4 ? 'At 4 folds it’s 0.8 mm. Not more than 1 mm yet.' : null },
+  cm1: { ans: 8, hint: v => v === 7 ? 'At 7 folds it’s 6.4 mm. 1 cm is 10 mm.' : v === 5 ? 'That’s for 1 mm. 1 cm is 10 mm.' : null },
+  a1: { ans: 46.75, tol: 0.011 }, a2: { ans: 23.375, tol: 0.011 }, a3: { ans: 11.6875, tol: 0.011 },
+  ea: { ans: 93.5, tol: 0.001, hint: v => v === 46.75 ? 'That’s after 1 fold. What is the area before any folds?' : null },
+  eb: { ans: 0.5, tol: 0.001, hint: v => v === 2 ? 'A factor of 2 makes the area grow. What fraction of the area is left after each fold?' : v != null && v < 0 ? 'Use the factor you multiply by, not the amount subtracted.' : null }
+};
+const F = { st: { phase: 'folds' }, students: {}, entries: {}, mine: {}, n: 0, view: null, anim: null, gwin: 12, dots: true, an: 0 };
+
+Object.assign(APP, {
+  id: 'fold',
+  title: 'Paper Folding Tower',
+  sub: 'How many folds would it take to reach the Moon?',
+  initialState: () => ({ phase: 'folds', t: Date.now() }),
+  joinStudent: async () => { await DB.update(`${base()}/students/${S.sid}`, { name: S.name, t: Date.now() }); },
+  setState: patch => DB.set(`${base()}/state`, Object.assign({}, F.st, patch, { t: Date.now() })),
+  redraw: () => S.role === 'teacher' && drawAll(),
+  startTeacher, startStudent
+});
+
+/* ---------- the tower ---------- */
+function towerSVG(n, viewTop, big) {
+  const W = big ? 640 : 420, Hh = big ? 520 : 420, G = Hh - 34, top = 28, px = (G - top) / viewTop;
+  const stackX = big ? 90 : 56, stackW = big ? 90 : 64;
+  let s = `<line class="ax0" x1="10" x2="${W - 10}" y1="${G}" y2="${G}"/>`;
+  // landmarks
+  const shown = LANDMARKS.filter(l => l.h <= viewTop);
+  const above = LANDMARKS.find(l => l.h > viewTop);
+  const visible = shown.filter(l => l.h * px >= 3).slice(-3), tiny = shown.filter(l => l.h * px < 3);
+  const slots = [0.48, 0.64, 0.8].slice(3 - visible.length);
+  visible.forEach((l, i) => {
+    const x = W * slots[i], h = l.h * px, w = big ? 70 : 52;
+    s += `<rect class="lm" x="${x - w / 2}" y="${G - h}" width="${w}" height="${h}" rx="3"/>
+      <text class="lmt" x="${x}" y="${Math.max(top + 12, G - h - 8)}" text-anchor="middle">${esc(l.name.replace('Bank of America Corporate Center', 'BofA tower'))}</text>
+      <text class="lmt2" x="${x}" y="${Math.max(top + 26, G - h + 8) + (h > 30 ? 10 : 0)}" text-anchor="middle">${fmtLen(l.h)}</text>`;
+  });
+  if (tiny.length) s += `<text class="lmt2" x="10" y="${top + 20}">Too small to see now: ${tiny.map(l => esc(l.name.replace('Bank of America Corporate Center', 'the BofA tower').replace(/^A /, 'a ').replace(/^The /, 'the '))).join(', ')}</text>`;
+  if (above) s += `<text class="lmt" x="${W - 14}" y="${top - 8}" text-anchor="end">Next: ${esc(above.name)} (${fmtLen(above.h)}) ↑</text>`;
+  // stack
+  const sh = Math.max(1, T(n) * px);
+  s += `<rect class="stack" x="${stackX}" y="${G - sh}" width="${stackW}" height="${sh}"/>`;
+  const layers = Math.pow(2, n);
+  if (layers > 1 && sh / layers >= 4) for (let i = 1; i < layers; i++) s += `<line class="layer" x1="${stackX}" x2="${stackX + stackW}" y1="${G - sh * i / layers}" y2="${G - sh * i / layers}"/>`;
+  s += `<text class="lmt" x="${stackX + stackW / 2}" y="${Math.max(top + 12, G - sh - 8)}" text-anchor="middle">Paper</text>`;
+  // scale
+  s += `<text class="axt" x="10" y="${top + 4}">${fmtLen(viewTop)}</text><line class="ax" x1="10" x2="${W - 10}" y1="${top}" y2="${top}" stroke-dasharray="4 4"/>`;
+  return `<svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Paper stack after ${n} folds: ${fmtLen(T(n))}">${s}</svg>`;
+}
+const targetView = n => Math.max(T(n) * 1.55, 12);
+function towerHTML(big) {
+  const n = F.n, next = LANDMARKS.find(l => T(n) <= l.h);
+  return `<div class="row" style="justify-content:space-between;align-items:flex-end">
+      <div><div class="foldn">${n} fold${n === 1 ? '' : 's'}</div><div class="thick">${fmtLen(T(n))} thick</div>
+        <div class="formula">0.05 · 2<sup>${n}</sup> = ${T(n).toLocaleString('en-US', { maximumFractionDigits: 2 })} mm</div></div>
+      <div class="row"><button class="ghost" data-act="f0">Start over</button><button class="ghost" data-act="fminus" ${n ? '' : 'disabled'}>Unfold</button>
+        <button class="btn alt" data-act="fplus" ${n >= MAXF ? 'disabled' : ''}>Fold</button></div></div>
+    ${next ? `<p class="hint" style="margin-top:6px">${esc(next.name)} (${fmtLen(next.h)}) is passed at fold ${need(next.h)}.</p>` : `<p class="hint" style="margin-top:6px">You passed the Moon!</p>`}
+    <div class="chart-box tower" id="tsvg">${towerSVG(n, F.view || targetView(n), big)}</div>`;
+}
+function drawTower() {
+  const box = $('#tower'); if (!box) return;
+  box.innerHTML = towerHTML(S.role === 'teacher');
+  if (S.role === 'teacher') drawSide();
+}
+function animateTo(n) {
+  const from = F.view || targetView(F.n), to = targetView(n);
+  F.n = n; cancelAnimationFrame(F.anim);
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { F.view = to; return drawTower(); }
+  const t0 = performance.now(), dur = 650, la = Math.log(from), lb = Math.log(to);
+  drawTower();
+  const step = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); F.view = Math.exp(la + (lb - la) * e);
+    const el = $('#tsvg'); if (el) el.innerHTML = towerSVG(F.n, F.view, S.role === 'teacher'); if (k < 1) F.anim = requestAnimationFrame(step); };
+  F.anim = requestAnimationFrame(step);
+}
+H.fplus = () => animateTo(Math.min(MAXF, F.n + 1));
+H.fminus = () => animateTo(Math.max(0, F.n - 1));
+H.f0 = () => animateTo(0);
+
+/* ---------- graph of T(n) or A(n) ---------- */
+function fnGraph(kind) {
+  const W = S.role === 'teacher' ? 620 : 420, Hh = S.role === 'teacher' ? 340 : 320, L = 58, R = 16, Tp = 30, B = 40;
+  const xmax = kind === 'T' ? F.gwin : 8, f = kind === 'T' ? T : n => 93.5 * Math.pow(0.5, n);
+  let ymax = kind === 'T' ? T(xmax) * 1.08 : 100;
+  const raw = ymax / 5, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p, step = (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p;
+  ymax = Math.ceil(ymax / step) * step;
+  const X = x => L + x / xmax * (W - L - R), Y = y => Hh - B - y / ymax * (Hh - Tp - B);
+  let s = '';
+  for (let v = 0; v <= ymax + 1e-9; v += step) s += `<line class="ax" x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/><text class="axt" x="${L - 8}" y="${Y(v) + 4}" text-anchor="end">${+v.toFixed(3)}</text>`;
+  for (let x = 0; x <= xmax; x++) s += `<text class="axt" x="${X(x)}" y="${Hh - B + 18}" text-anchor="middle">${x}</text>`;
+  s += `<text class="axt" x="${(L + W) / 2}" y="${Hh - 6}" text-anchor="middle">Number of folds, n</text><text class="axt" x="${L - 8}" y="14" text-anchor="end">${kind === 'T' ? 'mm' : 'sq in'}</text>`;
+  if (kind === 'T') [[1, '1 mm'], [10, '1 cm']].forEach(([v, t]) => { if (v < ymax && !(v === 1 && F.gwin === 12)) s += `<line class="ref" x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/><text class="reft" x="${W - R - 4}" y="${Y(v) - 5}" text-anchor="end">${t}</text>`; });
+  if (!F.dots) { const pts = []; for (let x = 0; x <= xmax; x += xmax / 200) pts.push(`${X(x)},${Y(f(x))}`); s += `<polyline class="${kind === 'T' ? 'cv-o' : 'cv-b'}" points="${pts.join(' ')}"/>`; }
+  for (let x = 0; x <= xmax; x++) s += `<circle class="${kind === 'T' ? 'dt-o' : 'dt-b'}" cx="${X(x)}" cy="${Y(f(x))}" r="5"><title>(${x}, ${+f(x).toFixed(4)})</title></circle>`;
+  let rows = ''; for (let x = 0; x <= xmax; x++) rows += `<tr><td>${x}</td><td>${f(x).toLocaleString('en-US', { maximumFractionDigits: 4 })}</td></tr>`;
+  return `<div class="row" style="justify-content:space-between">
+      <div class="row">${kind === 'T' ? `<button class="ghost ${F.gwin === 6 ? 'on' : ''}" data-act="gwin" data-w="6">0 to 6 folds</button><button class="ghost ${F.gwin === 12 ? 'on' : ''}" data-act="gwin" data-w="12">0 to 12 folds</button>` : ''}</div>
+      <div class="row"><button class="ghost ${F.dots ? 'on' : ''}" data-act="dots" data-d="1">Dots</button><button class="ghost ${F.dots ? '' : 'on'}" data-act="dots" data-d="0">Connected</button></div></div>
+    <div class="chart-box"><svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Graph of ${kind === 'T' ? 'thickness' : 'visible area'} by number of folds">${s}</svg></div>
+    <details style="margin-top:8px"><summary class="hint">Table of values</summary><div class="scroll" style="max-height:220px"><table class="data"><tr><th>Folds, n</th><th>${kind === 'T' ? 'Thickness (mm)' : 'Visible area (sq in)'}</th></tr>${rows}</table></div></details>`;
+}
+H.gwin = b => { F.gwin = +b.dataset.w; redrawGraph(); };
+H.dots = b => { F.dots = b.dataset.d === '1'; redrawGraph(); };
+function redrawGraph() { const g = $('#fgraph'); if (g) g.innerHTML = fnGraph(F.st.phase === 'area' ? 'A' : 'T'); }
+
+/* ---------- shrinking paper ---------- */
+function paperSVG(n) {
+  let w = 8.5, h = 11; for (let i = 0; i < n; i++) { if (h >= w) h /= 2; else w /= 2; }
+  const k = 22, X = 20, Y = 16;
+  return `<svg viewBox="0 0 230 280" role="img" aria-label="Paper after ${n} folds"><rect class="ghostp" x="${X}" y="${Y}" width="${8.5 * k}" height="${11 * k}"/>
+    <rect class="paper" x="${X}" y="${Y}" width="${w * k}" height="${h * k}"/>
+    <text class="lmt" x="${X + 4}" y="${Y + 11 * k + 18}">${+(w).toFixed(3)} in × ${+(h).toFixed(3)} in</text></svg>`;
+}
+function areaVis() {
+  const n = F.an, a = 93.5 * Math.pow(0.5, n);
+  return `<div class="row" style="align-items:flex-start;gap:18px"><div class="paperbox">${paperSVG(n)}</div>
+    <div><div class="foldn">${n} fold${n === 1 ? '' : 's'}</div><div class="thick">${a.toLocaleString('en-US', { maximumFractionDigits: 4 })} sq in visible</div>
+    <div class="row" style="margin-top:10px"><button class="ghost" data-act="a0">Start over</button><button class="ghost" data-act="aminus" ${n ? '' : 'disabled'}>Unfold</button><button class="btn alt" data-act="aplus" ${n >= 8 ? 'disabled' : ''}>Fold</button></div></div></div>`;
+}
+H.aplus = () => { F.an = Math.min(8, F.an + 1); const v = $('#avis'); if (v) v.innerHTML = areaVis(); };
+H.aminus = () => { F.an = Math.max(0, F.an - 1); const v = $('#avis'); if (v) v.innerHTML = areaVis(); };
+H.a0 = () => { F.an = 0; const v = $('#avis'); if (v) v.innerHTML = areaVis(); };
+
+/* ---------- dot strip for class data ---------- */
+function dotStrip(vals, lo, hi, mark, label) {
+  const W = 560, Hh = 120, L = 16, R = 16, base_ = 88, X = v => L + (v - lo) / (hi - lo) * (W - L - R);
+  const c = {}; vals.forEach(v => { c[v] = (c[v] || 0) + 1; });
+  let s = `<line class="ax" x1="${L}" x2="${W - R}" y1="${base_}" y2="${base_}"/>`;
+  const stepT = hi - lo > 30 ? 10 : hi - lo > 12 ? 5 : 1;
+  for (let v = lo; v <= hi; v++) if ((v - lo) % stepT === 0 || v === hi) s += `<text class="axt" x="${X(v)}" y="${base_ + 18}" text-anchor="middle">${v}</text>`;
+  Object.keys(c).forEach(v => { for (let i = 0; i < c[v]; i++) s += `<circle class="dt-o" cx="${X(+v)}" cy="${base_ - 7 - i * 12}" r="5.5"/>`; });
+  if (mark != null) s += `<line class="xl" x1="${X(mark)}" x2="${X(mark)}" y1="6" y2="${base_}"/><text class="xt" x="${X(mark) + (mark > (lo + hi) * 0.7 ? -6 : 6)}" y="16" text-anchor="${mark > (lo + hi) * 0.7 ? 'end' : 'start'}">Actual: ${mark}</text>`;
+  return `${label ? `<p style="font-weight:600;margin-top:10px">${label}</p>` : ''}<div class="chart-box"><svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="${esc(label || 'Dot plot')}">${s}</svg></div>`;
+}
+const median = a => { if (!a.length) return null; const b = a.slice().sort((x, y) => x - y), m = Math.floor(b.length / 2); return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
+
+/* =====================================================================
+   6. TEACHER
+   ===================================================================== */
+function startTeacher() {
+  watch('state', `${base()}/state`, st => { if (!st) return; const ch = st.phase !== F.st.phase || !$('#stage'); F.st = st; ch ? renderTeacher() : drawAll(); });
+  watch('students', `${base()}/students`, v => { F.students = v || {}; drawAll(); joined(); });
+  watch('entries', `${base()}/entries`, v => { F.entries = v || {}; drawAll(); });
+  watchClassWork(() => drawAll());
+}
+function joined() { const el = $('#joined'); if (el) el.textContent = ` · ${Object.keys(F.students).length} joined`; }
+function drawAll() { drawStage(); drawSide(); }
+function renderTeacher() {
+  const hasBots = Object.keys(F.students).some(k => k.startsWith('bot'));
+  $('#app').innerHTML = `<div class="t-wrap">${teacherTop(`<button class="ghost" data-act="bots">${hasBots ? 'Remove sample class' : 'Add sample class'}</button>`)}
+    <div class="row" style="margin-bottom:14px"><div class="steps">${STEPS.map((s, i) => `<button class="${s.id === F.st.phase ? 'cur' : ''}" data-act="phase" data-p="${s.id}">${i + 1}. ${s.label}</button>`).join('')}</div></div>
+    <div class="layout"><section class="card" id="stage"></section><aside class="card" id="side"></aside></div></div>`;
+  joined(); drawAll();
+}
+H.phase = b => APP.setState({ phase: b.dataset.p, showResp: false, respQ: null });
+const vals = key => Object.keys(F.entries).filter(k => F.students[k] && F.entries[k][key] != null && F.entries[k][key] !== '').map(k => +F.entries[k][key]).filter(v => isFinite(v));
+function drawStage() {
+  const el = $('#stage'); if (!el) return;
+  const ph = F.st.phase, nS = Object.keys(F.students).length;
+  if (ph === 'folds') {
+    const f = vals('folds');
+    el.innerHTML = `<h3 class="big-q">How many times can you fold a sheet of paper in half?</h3>
+      <p class="story">Fold it in half, then in half again, as many times as you can. Then enter how many folds you made and how thick you think the folded paper is.</p>` +
+      (F.st.revealFolds ? dotStrip(f, 0, 12, null, 'Folds the class made') +
+        `<p class="story" style="margin-top:12px">Median thickness guess: <b>${median(vals('thick')) == null ? 'none' : fmtLen(median(vals('thick')))}</b>. A sheet of paper is about 0.05 mm thick.</p>
+        <div class="row" style="margin-top:10px"><button class="ghost" data-act="hide" data-k="revealFolds">Hide results</button></div>`
+        : hiddenBox(f.length, nS, 'students have entered their folds', 'revealFolds', 'Reveal results'));
+  } else if (ph === 'predict') {
+    const n = Object.keys(F.entries).filter(k => F.students[k] && PRED.every(p => F.entries[k][p])).length;
+    el.innerHTML = `<h3 class="big-q">How many folds would it take for the paper to be thicker than…</h3>
+      <ul class="plist">${PRED.map(p => `<li><b>${esc(lm(p).name)}</b> (${fmtLen(lm(p).h)})</li>`).join('')}</ul>` +
+      (F.st.revealPredict ? PRED.map(p => dotStrip(vals(p), 0, 60, null, lm(p).name)).join('') + `<div class="row" style="margin-top:10px"><button class="ghost" data-act="hide" data-k="revealPredict">Hide predictions</button></div>`
+        : hiddenBox(n, nS, 'students have made all three predictions', 'revealPredict', 'Reveal predictions'));
+  } else if (ph === 'tower') {
+    if (!el.querySelector('#tower')) el.innerHTML = `<div id="tower"></div>`;
+    drawTower(); return;
+  } else if (ph === 'graph') {
+    if (!el.querySelector('#fgraph')) el.innerHTML = `<h3 class="big-q">T(n) = 0.05 · 2<sup>n</sup></h3><p class="story">The thickness in millimeters after <i>n</i> folds.</p><div id="fgraph"></div><div id="gtally"></div>`;
+    redrawGraph();
+    $('#gtally').innerHTML = `<h3 class="side-h" style="margin-top:16px">Class progress</h3>` + ckTable(F.students, [{ k: 'mm1', label: 'Folds to be more than 1 mm thick' }, { k: 'cm1', label: 'Folds to be more than 1 cm thick' }]);
+  } else {
+    if (!el.querySelector('#avis')) el.innerHTML = `<h3 class="big-q">The shrinking paper</h3><p class="story">A sheet of paper is 8.5 by 11 inches, so its area is 93.5 square inches. Each fold covers up half of what was showing.</p><div id="avis"></div><div id="fgraph"></div><div id="atally"></div>`;
+    $('#avis').innerHTML = areaVis(); redrawGraph();
+    $('#atally').innerHTML = `<h3 class="side-h" style="margin-top:16px">Class progress</h3>` + ckTable(F.students, [{ k: 'a1', label: 'Area after 1 fold' }, { k: 'a2', label: 'Area after 2 folds' }, { k: 'a3', label: 'Area after 3 folds' }, { k: 'ea', label: 'Equation: starting value' }, { k: 'eb', label: 'Equation: factor' }]);
+  }
+}
+function waiting(test, verb) {
+  const w = Object.keys(F.students).filter(k => !test(k)).map(k => F.students[k].name);
+  return `<p class="hint" style="margin-top:12px">${w.length ? `Still ${verb}: ` + w.map(esc).join(', ') : 'Everyone is done.'}</p>`;
+}
+function drawSide() {
+  const el = $('#side'); if (!el) return;
+  const ph = F.st.phase, sc = el.querySelector('.scroll'), keep = sc ? sc.scrollTop : 0;
+  let h = '';
+  if (ph === 'folds') h = `<h3 class="side-h">Results stay hidden until you reveal them</h3>` + waiting(k => F.entries[k] && F.entries[k].folds != null, 'entering');
+  else if (ph === 'predict') h = `<h3 class="side-h">Predictions stay hidden until you reveal them</h3>` + waiting(k => F.entries[k] && PRED.every(p => F.entries[k][p]), 'predicting');
+  else if (ph === 'tower') {
+    h = `<h3 class="side-h">Predictions vs. reality</h3><table class="data"><tr><th>Thicker than</th><th>Actual folds</th><th>Class median guess</th></tr>${LANDMARKS.map(l => {
+      const v = PRED.includes(l.k) ? median(vals(l.k)) : null, passed = F.n >= need(l.h);
+      return `<tr class="${passed ? 'now' : ''}"><td>${esc(l.name)}</td><td>${passed ? need(l.h) : '?'}</td><td>${v == null ? '' : v}</td></tr>`; }).join('')}</table>
+      <p class="hint" style="margin-top:8px">The actual number appears once the stack passes each landmark.</p>
+      <h3 class="side-h" style="margin-top:18px">Ask the class</h3><ul class="plist"><li>What do you multiply by each fold?</li><li>Why did it take so few folds to go from the tower to the Moon?</li><li>Why could no one fold real paper more than about 7 times?</li></ul>`;
+  } else if (ph === 'graph') h = respViewer(F.students, RQ_GRAPH, F.st);
+  else h = respViewer(F.students, RQ_AREA, F.st);
+  el.innerHTML = h;
+  const sc2 = el.querySelector('.scroll'); if (sc2) sc2.scrollTop = keep;
+}
+H.bots = async () => {
+  const bots = Object.keys(F.students).filter(k => k.startsWith('bot')), u = {};
+  if (bots.length) { bots.forEach(k => { ['students', 'entries', 'responses', 'checks'].forEach(n => { u[n + '/' + k] = null; }); }); await DB.update(base(), u); return renderTeacher(); }
+  const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  for (let i = 0; i < 20; i++) {
+    const k = 'bot' + i;
+    u['students/' + k] = { name: NAMES[i], bot: true };
+    u['entries/' + k] = { folds: ri(5, 8), thick: [2, 5, 10, 3, 1, 20][i % 6], door: ri(8, 50), tower: ri(15, 60), moon: ri(25, 60) };
+    u['checks/' + k] = { mm1: { v: '', ok: Math.random() < .7 }, cm1: { v: '', ok: Math.random() < .6 }, a1: { v: '', ok: true }, a2: { v: '', ok: Math.random() < .85 }, a3: { v: '', ok: Math.random() < .7 }, ea: { v: '', ok: Math.random() < .8 }, eb: { v: '', ok: Math.random() < .6 } };
+    u['responses/' + k] = {
+      rep: ['The thickness of one sheet of paper, 0.05 mm.', 'how thick the paper is before you fold it', 'the starting value'][i % 3],
+      crit: ['It takes 5 folds. At 4 folds it is 0.8 mm and at 5 folds it is 1.6 mm, so 5 is the first fold over 1 mm.', 'you cant fold 4.5 times so it is 5', 'The line y = 1 crosses between 4 and 5 so you need 5 whole folds'][i % 3],
+      negn: ['No, you can’t fold a negative number of times.', 'no because n is folds', 'No. n is a count of folds so it starts at 0.'][i % 3],
+      nega: ['No, area can’t be negative. It gets close to 0 but never goes below.', 'no it just gets smaller', 'No, you always have some paper showing.'][i % 3]
+    };
+  }
+  await DB.update(base(), u); renderTeacher();
+};
+
+/* =====================================================================
+   7. STUDENT
+   ===================================================================== */
+function startStudent() {
+  watch('ended', `${base()}/ended`, v => { if (v) endedScreen(); });
+  watch('state', `${base()}/state`, st => { if (!st) return; const ch = st.phase !== F.st.phase || !$('#sbody'); F.st = st; if (ch) renderStudent(); });
+  watch('mine', `${base()}/entries/${S.sid}`, v => { F.mine = v || {}; });
+  watchMine();
+}
+function sel(id, lo, hi, v, ph) {
+  return `<select id="${id}" class="txt fsel" data-ent="${id.replace('e-', '')}"><option value="">${ph}</option>${Array.from({ length: hi - lo + 1 }, (_, i) => lo + i).map(x => `<option value="${x}" ${String(v) === String(x) ? 'selected' : ''}>${x}</option>`).join('')}</select>`;
+}
+function renderStudent() {
+  const ph = F.st.phase, step = STEPS.findIndex(s => s.id === ph), m = F.mine;
+  let body = '';
+  if (ph === 'folds') {
+    body = `<h3 class="big-q">How many times can you fold a sheet of paper in half?</h3>
+      <p class="story">Fold your paper in half, then in half again, as many times as you can.</p>
+      <label class="rlabel" for="e-folds">How many folds did you make?</label>${sel('e-folds', 0, 12, m.folds, 'Pick a number')}
+      <label class="rlabel" for="e-thick">About how thick is your folded paper, in millimeters?</label>
+      <input id="e-thick" class="txt" data-ent="thick" inputmode="decimal" style="max-width:200px" value="${esc(m.thick || '')}" placeholder="mm">
+      <p class="hint" style="margin-top:6px">For reference, a credit card is about 1 mm thick.</p><p class="hint" id="esaved"></p>`;
+  } else if (ph === 'predict') {
+    body = `<h3 class="big-q">Imagine you could keep folding forever.</h3><p class="story">Each fold doubles the thickness. How many folds would it take for the paper to be thicker than…</p>
+      ${PRED.map(p => `<label class="rlabel" for="e-${p}">${esc(lm(p).name)} (${fmtLen(lm(p).h)})</label>${sel('e-' + p, 1, 60, m[p], 'Number of folds')}`).join('')}
+      <p class="hint" id="esaved" style="margin-top:10px"></p>`;
+  } else if (ph === 'tower') {
+    body = `<div id="tower"></div><p class="hint" style="margin-top:8px">Your predictions: door ${m.door || '?'}, tower ${m.tower || '?'}, Moon ${m.moon || '?'} folds.</p>`;
+  } else if (ph === 'graph') {
+    body = `<h3 class="big-q">T(n) = 0.05 · 2<sup>n</sup></h3><p class="story">The function T gives the thickness, in millimeters, of a sheet of paper after it is folded <i>n</i> times.</p>
+      ${respBox('rep', '1. What does the 0.05 represent?')}
+      <div id="fgraph" style="margin-top:16px"></div>
+      <div class="qrow"><span>2. How many folds before the paper is more than 1 mm thick?</span>${ckBox('mm1', 'folds')}</div>
+      <div class="qrow"><span>3. How many folds before it is more than 1 cm thick?</span>${ckBox('cm1', 'folds')}</div>
+      <div class="row"><button class="btn" data-act="ckg">Check my answers</button></div>
+      ${respBox('crit', '4. A student said: “It takes 4.5 folds because I looked at the line and the graph.” Write a clearer, more complete, and more correct explanation.')}`;
+  } else {
+    body = `<h3 class="big-q">The shrinking paper</h3><p class="story">A sheet of paper is 8.5 by 11 inches, so its area is 93.5 square inches. Each fold covers up half of what was showing.</p>
+      <div id="avis"></div>
+      <p style="font-weight:600;margin-top:14px">1. Find the visible area (square inches) after…</p>
+      <div class="qrow"><span>1 fold</span>${ckBox('a1', 'sq in')}</div><div class="qrow"><span>2 folds</span>${ckBox('a2', 'sq in')}</div><div class="qrow"><span>3 folds</span>${ckBox('a3', 'sq in')}</div>
+      <p style="font-weight:600;margin-top:14px">2. Write a rule for the visible area A after n folds.</p>
+      <div class="eqline"><span class="math"><i>A</i>(<i>n</i>) =</span> ${ckBox('ea', 'start')} <span class="grp"><span class="math">· (</span>${ckBox('eb', 'factor')}<span class="math">)<sup><i>n</i></sup></span></span></div>
+      <div class="row" style="margin-top:12px"><button class="btn" data-act="cka">Check my answers</button></div>
+      <div id="fgraph" style="margin-top:16px"></div>
+      ${respBox('negn', '3. Can n take negative values in this situation? Explain your reasoning.')}
+      ${respBox('nega', '4. Can A(n) take negative values? Explain your reasoning.')}`;
+  }
+  $('#app').innerHTML = `<div class="s-wrap"><div class="s-top"><span class="pill">${step + 1}. ${STEPS[step].label}</span><div class="who">${esc(S.name)} <button data-act="leave">Leave</button></div></div><section class="card" id="sbody">${body}</section></div>`;
+  if (ph === 'tower') { F.view = null; drawTower(); }
+  if (ph === 'graph' || ph === 'area') redrawGraph();
+  if (ph === 'area') $('#avis').innerHTML = areaVis();
+}
+H.ckg = () => runChecks(['mm1', 'cm1']);
+H.cka = () => runChecks(['a1', 'a2', 'a3', 'ea', 'eb']);
+function saveEntry(el) {
+  const k = el.dataset.ent; let v = el.value.trim();
+  if (k === 'thick') { const n = parseNum(v); v = n == null ? null : n; } else v = v === '' ? null : +v;
+  F.mine[k] = v; DB.update(`${base()}/entries/${S.sid}`, { [k]: v });
+  const s = $('#esaved'); if (s) s.textContent = 'Saved. You can change it until your teacher moves on.';
+}
+document.addEventListener('change', e => { if (S.role === 'student' && e.target.dataset && e.target.dataset.ent) saveEntry(e.target); });
+boot();
+</script>
+</body>
+</html>

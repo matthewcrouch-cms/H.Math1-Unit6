@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Graph Detective</title>
+<style>
+:root{
+  --paper:#f7f9fc; --grid:#e3eaf3; --card:#ffffff; --ink:#14233a; --muted:#566883; --line:#d5deea;
+  --blue:#4B9CD3; --blue-d:#1d6aa5; --blue-soft:#e6f2fa; --orange:#F56600; --orange-d:#c24f00; --orange-soft:#fff0e5;
+  --good:#17805a; --good-soft:#e2f5ec; --bad:#b83a2b; --bad-soft:#fbeae7; --gold:#d79b14;
+  --math:"Cambria Math","STIX Two Text","Latin Modern Math",Cambria,Georgia,"Times New Roman",serif;
+  --ui:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#0f1824; --grid:#17263a; --card:#16222f; --ink:#e8eef7; --muted:#9db0c8; --line:#2b3d55;
+    --blue:#6bb3e3; --blue-d:#8cc6ee; --blue-soft:#183249; --orange:#ff8a3d; --orange-d:#ffa766; --orange-soft:#3a2415;
+    --good:#4fcf9b; --good-soft:#12352a; --bad:#ff8c7d; --bad-soft:#3a1c18; --gold:#f0bf4c; color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:var(--ui); color:var(--ink); background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px; line-height:1.45; -webkit-text-size-adjust:100%;
+}
+.math{font-family:var(--math); white-space:nowrap}
+.math i{font-style:italic}
+sup{font-size:.74em; line-height:0}
+button{font:inherit; cursor:pointer}
+:focus-visible{outline:3px solid var(--orange); outline-offset:2px}
+h1,h2,h3,p{margin:0}
+.card{background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:20px}
+.btn{border:0; border-radius:10px; padding:11px 20px; font-weight:650; background:var(--blue-d); color:#fff}
+.btn:hover{filter:brightness(1.08)}
+.btn[disabled]{opacity:.45; cursor:not-allowed}
+.btn.alt{background:var(--orange-d); color:#fff}
+.ghost{background:transparent; color:var(--ink); border:1.5px solid var(--line); border-radius:10px; padding:8px 14px; font-weight:600}
+.ghost:hover:not([disabled]){border-color:var(--blue)}
+.ghost[disabled]{opacity:.45; cursor:not-allowed}
+.ghost.on{border-color:var(--blue-d); background:var(--blue-soft); color:var(--blue-d)}
+.ghost.danger{color:var(--bad)}
+.banner{background:var(--orange-soft); border:1.5px solid var(--orange); color:var(--ink); border-radius:10px; padding:9px 14px; font-size:.9rem; margin-bottom:14px}
+.err{color:var(--bad); font-weight:600; min-height:1.4em; margin-top:8px}
+.muted{color:var(--muted)}
+input.txt,select.txt{width:100%; font:1.05rem var(--ui); padding:12px; border:2px solid var(--line); border-radius:10px; background:var(--card); color:var(--ink)}
+input.txt:focus,select.txt:focus{border-color:var(--blue); outline:none}
+.row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+
+/* landing */
+.landing{max-width:520px; margin:0 auto; padding:9vh 18px 40px}
+.landing h1{font:700 clamp(1.9rem,6vw,2.6rem)/1.15 var(--math); margin-bottom:8px}
+.landing .sub{color:var(--muted); margin-bottom:22px}
+.landing label{display:block; font-weight:600; margin:14px 0 6px}
+.landing .row{margin-top:20px}
+.code-in{text-transform:uppercase; letter-spacing:.35em; font-weight:700; text-align:center}
+.teacher-link{margin-top:26px; font-size:.92rem; color:var(--muted)}
+.teacher-link button{background:none; border:0; color:var(--blue-d); text-decoration:underline; padding:0}
+
+/* frames */
+.s-wrap{max-width:760px; margin:0 auto; padding:14px 14px 80px}
+.s-top{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap}
+.s-top .who{color:var(--muted); font-size:.92rem}
+.s-top .who button{background:none; border:0; color:var(--muted); text-decoration:underline; padding:0 0 0 8px; font-size:.85rem}
+.s-title{font:700 1.6rem var(--math); margin:2px 0 10px}
+.t-wrap{max-width:1500px; margin:0 auto; padding:14px 18px 40px}
+.t-top{display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:14px}
+.brand{font:700 1.25rem var(--math)}
+.join{font-size:1.02rem}
+.join .code{font:700 1.5rem var(--ui); letter-spacing:.2em; background:var(--orange-d); color:#fff; padding:2px 12px; border-radius:8px; margin-left:4px}
+.t-tools{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.pill{display:inline-block; font-size:.82rem; font-weight:600; padding:3px 11px; border-radius:99px; background:var(--blue-soft); color:var(--blue-d)}
+.steps{display:flex; gap:6px; flex-wrap:wrap}
+.steps button{border:1.5px solid var(--line); background:var(--card); color:var(--ink); border-radius:99px; padding:7px 14px; font-weight:600}
+.steps button.cur{background:var(--blue-d); border-color:var(--blue-d); color:#fff}
+table.data{border-collapse:separate; border-spacing:0; width:100%; font-variant-numeric:tabular-nums}
+table.data th{font-size:.82rem; color:var(--muted); text-align:right; padding:4px 10px; font-weight:600; position:sticky; top:0; z-index:1; background:var(--card); box-shadow:0 1px 0 var(--line)}
+table.data th:first-child,table.data td:first-child{text-align:left}
+table.data td{text-align:right; padding:6px 10px; border-top:1px solid var(--line)}
+table.data tr.now td{background:var(--blue-soft); font-weight:700}
+.scroll{max-height:46vh; overflow:auto}
+.hint{font-size:.85rem; color:var(--muted)}
+@media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} }
+/* ---------- shared kit ---------- */
+.layout{display:grid; grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr); gap:16px; align-items:start}
+.big-q{font:700 1.3rem var(--math); margin-bottom:6px}
+.side-h{font:700 1.05rem var(--math); margin:16px 0 6px}
+.side-h:first-child{margin-top:0}
+.story{font-size:1.06rem; max-width:46rem}
+.hidebox{text-align:center; border:2px dashed var(--line); border-radius:14px; padding:24px 16px; margin-top:12px}
+.hidebox .big{font:700 3.2rem/1 var(--ui)} .hidebox .big span{font-size:1.4rem; color:var(--muted); font-weight:600}
+.hidebox p{margin:6px 0 14px}
+.resp{border:1.5px solid var(--line); border-left:4px solid var(--blue); border-radius:0 10px 10px 0; padding:9px 12px; margin-bottom:8px; background:var(--card); font-size:1.05rem}
+.resp small{display:block; color:var(--muted); font-weight:600}
+.rlabel{display:block; font-weight:600; margin:16px 0 6px}
+textarea.rbox{width:100%; font:1rem var(--ui); padding:10px 12px; border:2px solid var(--line); border-radius:10px; background:var(--card); color:var(--ink); resize:vertical}
+textarea.rbox:focus{border-color:var(--blue); outline:none}
+.rsave{margin-top:6px}
+.rsave .ghost{padding:5px 12px; font-size:.9rem}
+.ckwrap{display:inline-flex; flex-direction:column; gap:2px; vertical-align:top}
+input.ck{font:600 1.05rem var(--ui); width:7.5em; padding:8px 10px; border:2px solid var(--line); border-radius:9px; background:var(--card); color:var(--ink)}
+input.ck:focus{border-color:var(--blue); outline:none}
+input.ck.ok{border-color:var(--good); background:var(--good-soft)}
+input.ck.no{border-color:var(--bad); background:var(--bad-soft)}
+.mark{font-weight:700; font-size:.82rem; max-width:16rem}
+.ckwrap .mark:empty{display:none}
+.mark.ok{color:var(--good)} .mark.no{color:var(--bad)}
+.qrow{display:flex; gap:10px 16px; align-items:flex-start; flex-wrap:wrap; margin:12px 0}
+.qrow > span:first-child{flex:1 1 260px; font-weight:600; padding-top:8px}
+.tally td .bar2{display:inline-block; height:10px; border-radius:5px; background:var(--good); vertical-align:middle; margin-right:6px}
+.notice{border-left:5px solid var(--orange); background:var(--orange-soft); padding:10px 14px; border-radius:0 10px 10px 0; margin-top:12px}
+.chart-box{border:1.5px solid var(--line); border-radius:12px; background:var(--card); padding:6px; margin-top:8px}
+.chart-box svg{display:block; width:100%; height:auto}
+.ax{stroke:var(--line)} .axt{fill:var(--muted); font:12px var(--ui)} .ax0{stroke:var(--muted); stroke-width:1.5}
+@media (max-width:900px){ .layout{grid-template-columns:1fr} }
+/* ---------- graph detective ---------- */
+.s-wrap.wide{max-width:860px}
+.ctabs{display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:12px}
+.ctab{flex:none; text-align:left; border:1.5px solid var(--line); background:var(--card); color:var(--ink); border-radius:12px; padding:8px 12px; font-weight:600; font-size:.92rem}
+.ctab span{display:block; font-size:.75rem; color:var(--muted); font-weight:600}
+.ctab.cur{border-color:var(--blue-d); background:var(--blue-soft)}
+.ctab.done{border-color:var(--good)} .ctab.done span{color:var(--good)}
+.eqs{display:flex; flex-wrap:wrap; gap:6px 22px; font:1.2rem var(--math); margin:10px 0}
+.eqs i{font-style:italic}
+.k1{color:#d0392b} .k2{color:#2e8b57} .k3{color:var(--blue-d)} .k4{color:var(--orange-d)}
+.cv{fill:none; stroke-width:3}
+.cv.c1{stroke:#d0392b} .cv.c2{stroke:#2e8b57} .cv.c3{stroke:var(--blue)} .cv.c4{stroke:var(--orange)}
+.cvl{font:700 15px var(--math)} .cvl.c1{fill:#d0392b} .cvl.c2{fill:#2e8b57} .cvl.c3{fill:var(--blue-d)} .cvl.c4{fill:var(--orange-d)}
+.cv.target{stroke:var(--blue)} .cv.solid{stroke:var(--ink)} .cv.dashed{stroke:var(--ink); stroke-dasharray:8 6}
+.cv.you{stroke:var(--ink); stroke-dasharray:7 5; stroke-width:2.5}
+.pt{fill:var(--orange)} .ptl{fill:var(--ink); font:600 13px var(--ui)}
+@media (prefers-color-scheme: dark){ .k1,.cvl.c1{color:#ff8a7a; fill:#ff8a7a} .cv.c1{stroke:#ff8a7a} .k2,.cvl.c2{color:#5fd39a; fill:#5fd39a} .cv.c2{stroke:#5fd39a} }
+.sliders{border:1.5px solid var(--line); border-radius:12px; padding:12px 14px; margin-top:10px; background:var(--card)}
+.sliders label{font-weight:600; font-size:1.1rem}
+.srow{display:flex; align-items:center; gap:12px; margin-top:8px; font-size:1.2rem}
+.srow input{flex:1; accent-color:var(--orange)}
+.eqline{display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; font-size:1.3rem; margin:8px 0}
+.eqline > .math{padding-top:8px}
+.eqline input.ck{width:5em}
+.eqline .mark{max-width:7rem}
+select.ck{font:600 1rem var(--ui); padding:8px 10px; border:2px solid var(--line); border-radius:9px; background:var(--card); color:var(--ink); max-width:100%}
+select.ck.ok{border-color:var(--good); background:var(--good-soft)} select.ck.no{border-color:var(--bad); background:var(--bad-soft)}
+.gridwrap{max-height:48vh}
+.pgrid th,.pgrid td{text-align:center} .pgrid th:first-child,.pgrid td:first-child{text-align:left}
+.cell{display:inline-block; min-width:4.5em; padding:3px 8px; border-radius:99px; font-size:.82rem; font-weight:700; color:var(--muted)}
+.cell.ok{background:var(--good-soft); color:var(--good)}
+.cell.part{background:var(--blue-soft); color:var(--blue-d)}
+.cell.stuck{background:var(--bad-soft); color:var(--bad)}
+.tags{list-style:none; padding:0; margin:6px 0 0; display:grid; gap:8px}
+.tags li{border:1.5px solid var(--line); border-radius:10px; padding:8px 12px; background:var(--card)}
+.tags li b{display:inline-block; min-width:1.6em; color:var(--bad); font-size:1.15rem}
+.tags small{display:block; color:var(--muted); margin-top:2px}
+.ckwrap{max-width:100%}
+.layout .chart-box svg{max-height:56vh}
+.eqline .grp{display:inline-flex; align-items:flex-start; gap:6px}
+.eqline .grp > .math{padding-top:8px; white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+const APP = { id: 'detective' };
+/* =====================================================================
+   1. FIREBASE SETUP
+   This is the same Firebase project as your Exponent Rules discovery app.
+   Leave databaseURL empty to run in PRACTICE MODE: the teacher view and
+   student view then sync between tabs of the same browser only.
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDkuZVoCbhVotMLGi_iI8wGYCrRKie8ex8",
+  authDomain: "exponentproperties-7198b.firebaseapp.com",
+  databaseURL: "https://exponentproperties-7198b-default-rtdb.firebaseio.com",
+  projectId: "exponentproperties-7198b",
+  appId: "1:189445254765:web:3e6f1c783f9b6fdfa85964"
+};
+
+/* =====================================================================
+   2. TINY DATABASE LAYER (Firebase, or localStorage for practice mode)
+   ===================================================================== */
+const DB = (() => {
+  let live = !!FIREBASE_CONFIG.databaseURL && typeof firebase !== 'undefined';
+  if (live) {
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      const fdb = firebase.database();
+      return {
+        mode: 'live',
+        set: (p, v) => fdb.ref(p).set(v),
+        update: (p, v) => fdb.ref(p).update(v),
+        remove: p => fdb.ref(p).remove(),
+        once: p => fdb.ref(p).once('value').then(s => s.val()),
+        on: (p, cb) => { const r = fdb.ref(p); const h = r.on('value', s => cb(s.val())); return () => r.off('value', h); }
+      };
+    } catch (e) { live = false; }
+  }
+  const KEY = APP.id + ':tree', subs = [];
+  const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
+  const get = (t, p) => { const v = p.split('/').reduce((o, k) => (o == null ? null : o[k]), t); return v === undefined ? null : v; };
+  const clone = v => (v == null ? null : JSON.parse(JSON.stringify(v)));
+  const notify = () => { const t = read(); subs.slice().forEach(s => s.cb(clone(get(t, s.p)))); };
+  window.addEventListener('storage', e => { if (e.key === KEY) notify(); });
+  function put(t, p, v) {
+    const ks = p.split('/'); let o = t;
+    ks.slice(0, -1).forEach(k => { if (typeof o[k] !== 'object' || o[k] === null) o[k] = {}; o = o[k]; });
+    if (v === null) delete o[ks[ks.length - 1]]; else o[ks[ks.length - 1]] = clone(v);
+  }
+  const save = t => { try { localStorage.setItem(KEY, JSON.stringify(t)); } catch (e) {} notify(); };
+  return {
+    mode: 'local',
+    set: (p, v) => { const t = read(); put(t, p, v); save(t); return Promise.resolve(); },
+    update: (p, obj) => { const t = read(); Object.keys(obj).forEach(k => put(t, p + '/' + k, obj[k])); save(t); return Promise.resolve(); },
+    remove: p => { const t = read(); put(t, p, null); save(t); return Promise.resolve(); },
+    once: p => Promise.resolve(clone(get(read(), p))),
+    on: (p, cb) => { const s = { p, cb }; subs.push(s); setTimeout(() => { if (subs.includes(s)) cb(clone(get(read(), p))); }, 0); return () => { const i = subs.indexOf(s); if (i >= 0) subs.splice(i, 1); }; }
+  };
+})();
+
+/* =====================================================================
+   3. HELPERS
+   ===================================================================== */
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const $ = (s, r = document) => r.querySelector(s);
+const ls = { get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }, del: k => { try { localStorage.removeItem(k); } catch (e) {} } };
+const unsubs = {};
+function watch(key, path, cb) { if (unsubs[key]) unsubs[key](); unsubs[key] = DB.on(path, cb); }
+function unwatchAll() { Object.keys(unsubs).forEach(k => { unsubs[k](); delete unsubs[k]; }); }
+const genCode = () => Array.from({ length: 4 }, () => 'ABCDEFGHJKMNPQRSTUVWXYZ'[Math.floor(Math.random() * 23)]).join('');
+const S = { role: null, code: null, sid: null, name: '' };
+const base = () => `sessions/${S.code}`;
+const H = {};  // click handlers: data-act="name"
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  const f = H[b.dataset.act]; if (f) f(b, e);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.matches('#code,#name')) H.join();
+});
+const NAMES = ['Ava','Mateo','Jada','Liam','Priya','Noah','Mai','Diego','Han','Clare','Elena','Kiran','Tyler','Andre','Lin','Jayden','Sofia','Omar','Zoe','Isaiah','Camila','Ethan','Nia','Leo'];
+
+/* =====================================================================
+   4. LANDING, JOIN, SESSIONS
+   ===================================================================== */
+function renderLanding(msg, teacherOpen) {
+  unwatchAll();
+  const saved = ls.get(APP.id + ':student') || {};
+  const tsaved = ls.get(APP.id + ':teacher');
+  const qp = new URLSearchParams(location.search);
+  const qcode = (qp.get('code') || saved.code || '').toUpperCase();
+  const showT = teacherOpen || qp.has('teacher');
+  $('#app').innerHTML = `<div class="landing">
+    <h1>${esc(APP.title)}</h1>
+    <p class="sub">${esc(APP.sub)}</p>
+    ${DB.mode === 'local' ? `<div class="banner"><b>Practice mode.</b> Firebase isn’t connected, so this only syncs between tabs of this browser.</div>` : ''}
+    ${showT ? `
+      <div class="card">
+        <h2 style="font-size:1.2rem;margin-bottom:12px">Teacher</h2>
+        <div class="row" style="margin-top:0">
+          <button class="btn" data-act="newsession">Start a new session</button>
+          ${tsaved ? `<button class="ghost" data-act="resume">Resume ${esc(tsaved.code)}</button>` : ''}
+        </div>
+        <p class="err" id="err">${esc(msg || '')}</p>
+        <p class="teacher-link"><button data-act="studentpanel">I’m a student</button></p>
+      </div>` : `
+      <div class="card">
+        <label for="code" style="margin-top:0">Class code</label>
+        <input id="code" class="txt code-in" maxlength="4" autocomplete="off" value="${esc(qcode)}" placeholder="ABCD">
+        <label for="name">Your first name</label>
+        <input id="name" class="txt" maxlength="20" autocomplete="off" value="${esc(saved.name || '')}" placeholder="First name">
+        <div class="row"><button class="btn" data-act="join">Join class</button></div>
+        <p class="err" id="err">${esc(msg || '')}</p>
+      </div>
+      <p class="teacher-link">Teacher? <button data-act="teacherpanel">Open teacher controls</button></p>`}
+  </div>`;
+}
+H.teacherpanel = () => renderLanding('', true);
+H.studentpanel = () => { history.replaceState(null, '', location.pathname); renderLanding('', false); };
+H.newsession = async () => {
+  try {
+    let code;
+    for (let i = 0; i < 12; i++) { code = genCode(); if (!(await DB.once(`sessions/${code}/app`))) break; }
+    await DB.set(`sessions/${code}`, { app: APP.id, state: APP.initialState(), created: Date.now() });
+    ls.set(APP.id + ':teacher', { code });
+    S.role = 'teacher'; S.code = code; APP.startTeacher();
+  } catch (e) { renderLanding('Could not reach Firebase. Check your config and database rules.', true); }
+};
+H.resume = async () => {
+  const t = ls.get(APP.id + ':teacher'); if (!t) return;
+  try {
+    const a = await DB.once(`sessions/${t.code}/app`);
+    if (a !== APP.id) { ls.del(APP.id + ':teacher'); return renderLanding('That session no longer exists.', true); }
+    S.role = 'teacher'; S.code = t.code; APP.startTeacher();
+  } catch (e) { renderLanding('Could not reach Firebase.', true); }
+};
+H.end = async () => {
+  if (!confirm('End this session for everyone? Student data will be deleted.')) return;
+  await DB.set(`${base()}/ended`, true);
+  setTimeout(() => DB.remove(base()), 1500);
+  ls.del(APP.id + ':teacher'); renderLanding('', true);
+};
+H.join = async () => {
+  const code = ($('#code').value || '').trim().toUpperCase(), name = ($('#name').value || '').trim().slice(0, 20);
+  if (code.length !== 4) return ($('#err').textContent = 'Enter the 4-letter class code.');
+  if (!name) return ($('#err').textContent = 'Enter your first name.');
+  try {
+    const a = await DB.once(`sessions/${code}/app`);
+    if (a !== APP.id) return ($('#err').textContent = 'No session with that code. Check the code on the board.');
+    const saved = ls.get(APP.id + ':student') || {};
+    const sid = saved.code === code && saved.sid ? saved.sid : 's' + Math.random().toString(36).slice(2, 10);
+    S.role = 'student'; S.code = code; S.sid = sid; S.name = name;
+    ls.set(APP.id + ':student', { code, sid, name });
+    await APP.joinStudent();
+    APP.startStudent();
+  } catch (e) { $('#err').textContent = 'Could not reach the class. Check your internet connection.'; }
+};
+H.leave = () => { unwatchAll(); ls.del(APP.id + ':student'); renderLanding('', false); };
+function endedScreen() {
+  unwatchAll();
+  $('#app').innerHTML = `<div class="s-wrap"><div class="card" style="margin-top:18vh;text-align:center"><h2 class="s-title">This session has ended</h2><p>Thanks for joining. You can close this page.</p><div class="row" style="justify-content:center;margin-top:16px"><button class="ghost" data-act="leave">Join another</button></div></div></div>`;
+}
+function teacherTop(extraTools) {
+  const url = location.origin + location.pathname;
+  return `<div class="t-top">
+    <div><div class="brand">${esc(APP.title)}</div>
+      <div class="join">Join at <b>${esc(url.replace(/^https?:\/\//, ''))}</b> with code <span class="code">${esc(S.code)}</span>
+      <span class="muted" id="joined"></span></div></div>
+    <div class="t-tools">${extraTools || ''}<button class="ghost danger" data-act="end">End session</button></div>
+  </div>${DB.mode === 'local' ? `<div class="banner"><b>Practice mode.</b> Open a second tab of this page to try the student view.</div>` : ''}`;
+}
+async function boot() {
+  const t = ls.get(APP.id + ':teacher'), s = ls.get(APP.id + ':student');
+  const qp = new URLSearchParams(location.search);
+  if (qp.has('teacher') && t) return H.resume();
+  if (!qp.has('teacher') && s && s.code && s.sid) {
+    try {
+      const a = await DB.once(`sessions/${s.code}/app`);
+      if (a === APP.id) { Object.assign(S, { role: 'student', code: s.code, sid: s.sid, name: s.name }); await APP.joinStudent(); return APP.startStudent(); }
+    } catch (e) {}
+  }
+  renderLanding('', false);
+}
+/* =====================================================================
+   4b. SHARED KIT: written responses, checked answers, reveal panels
+   ===================================================================== */
+const parseNum = s => {
+  s = String(s == null ? '' : s).trim().replace(/[$,\s]/g, '');
+  if (!s) return null;
+  const m = s.match(/^(-?\d*\.?\d+)\/(-?\d*\.?\d+)$/);
+  if (m) return +m[2] === 0 ? null : +m[1] / +m[2];
+  const v = Number(s); return isFinite(v) ? v : null;
+};
+const near = (v, t, tol) => v != null && Math.abs(v - t) <= (tol != null ? tol : Math.max(1e-6, Math.abs(t) * 1e-6));
+const KIT = { resp: {}, checks: {}, myResp: {}, myChecks: {}, showNames: false };
+
+/* --- student side --- */
+// A response box: <textarea data-rk="key">. Saves when the student clicks away or taps Save.
+function respBox(key, label) {
+  return `<label class="rlabel" for="rk-${key}">${label}</label>
+    <textarea id="rk-${key}" class="txt rbox" data-rk="${key}" rows="3">${esc(KIT.myResp[key] || '')}</textarea>
+    <div class="row rsave"><button class="ghost" data-act="saverk" data-k="${key}">Save</button><span class="hint" id="rs-${key}">${KIT.myResp[key] ? 'Saved.' : ''}</span></div>`;
+}
+function saveRk(key, how) {
+  const t = $('#rk-' + key); if (!t) return;
+  const v = t.value.trim().slice(0, 800);
+  if (v === (KIT.myResp[key] || '')) { const s = $('#rs-' + key); if (s && v) s.textContent = 'Saved.'; return; }
+  KIT.myResp[key] = v; DB.set(`${base()}/responses/${S.sid}/${key}`, v || null);
+  const s = $('#rs-' + key); if (s) s.textContent = how || 'Saved.';
+}
+H.saverk = b => saveRk(b.dataset.k, 'Saved. You can edit and save again.');
+document.addEventListener('focusout', e => { if (S.role === 'student' && e.target.dataset && e.target.dataset.rk) saveRk(e.target.dataset.rk, 'Saved automatically.'); });
+function watchMine() {
+  watch('myResp', `${base()}/responses/${S.sid}`, v => {
+    KIT.myResp = v || {};
+    document.querySelectorAll('textarea[data-rk]').forEach(t => { const k = t.dataset.rk; if (!t.value && document.activeElement !== t && KIT.myResp[k]) t.value = KIT.myResp[k]; });
+  });
+  watch('myChecks', `${base()}/checks/${S.sid}`, v => { KIT.myChecks = v || {}; });
+}
+// A checked number box: <input data-ck="key">. CHECKS[key] = { ans: number, tol, hint(v) -> string|null }
+function ckBox(key, ph) {
+  const prev = KIT.myChecks[key];
+  const cls = prev ? (prev.ok ? 'ok' : 'no') : '';
+  return `<span class="ckwrap"><input class="ck ${cls}" id="ck-${key}" data-ck="${key}" inputmode="decimal" autocomplete="off" placeholder="${esc(ph || '')}" value="${esc(prev ? prev.v : '')}"><span class="mark ${cls}" id="mk-${key}">${prev ? (prev.ok ? 'Correct' : 'Try again') : ''}</span></span>`;
+}
+function runChecks(keys) {
+  const out = {}; let right = 0;
+  keys.forEach(k => {
+    const inp = $('#ck-' + k), mk = $('#mk-' + k), spec = CHECKS[k]; if (!inp || !spec) return;
+    const raw = inp.value.trim(); inp.classList.remove('ok', 'no'); mk.className = 'mark'; mk.textContent = '';
+    if (!raw) return;
+    const v = parseNum(raw), ok = spec.ok ? spec.ok(v, raw) : near(v, spec.ans, spec.tol);
+    out[k] = { v: raw, ok, tag: !ok && spec.tag ? (spec.tag(v, raw) || null) : null, t: Date.now() }; if (ok) right++;
+    inp.classList.add(ok ? 'ok' : 'no'); mk.classList.add(ok ? 'ok' : 'no');
+    mk.textContent = ok ? 'Correct' : ((spec.hint && spec.hint(v, raw)) || 'Try again');
+  });
+  Object.assign(KIT.myChecks, out);
+  DB.update(`${base()}/checks/${S.sid}`, out);
+  return right;
+}
+
+/* --- teacher side --- */
+function hiddenBox(n, total, what, key, label) {
+  return `<div class="hidebox"><div class="big">${n} <span>of ${total}</span></div><p class="muted">${what}</p>
+    <button class="btn alt" data-act="reveal" data-k="${key}" ${n ? '' : 'disabled'}>${label}</button></div>`;
+}
+function ckTally(students, keys) {
+  return keys.map(k => { let ans = 0, ok = 0; Object.keys(students).forEach(s => { const c = KIT.checks[s] && KIT.checks[s][k]; if (c) { ans++; if (c.ok) ok++; } }); return { k, ans, ok }; });
+}
+function ckTable(students, rows) {
+  const t = ckTally(students, rows.map(r => r.k));
+  return `<table class="data tally"><tr><th>Question</th><th style="text-align:left">Class progress</th></tr>${rows.map((r, i) =>
+    `<tr><td>${r.label}</td><td style="text-align:left"><span class="bar2" style="width:${t[i].ans ? 90 * t[i].ok / t[i].ans : 0}px"></span>${t[i].ok} of ${t[i].ans} correct</td></tr>`).join('')}</table>`;
+}
+// Response viewer. qs = [{k, text}]. st = app state (respQ, showResp).
+function respViewer(students, qs, st) {
+  if (!qs.length) return '';
+  const q = qs.find(r => r.k === st.respQ) || qs[0];
+  const ids = Object.keys(students).filter(k => KIT.resp[k] && (KIT.resp[k][q.k] || '').trim());
+  const nS = Object.keys(students).length;
+  return `<h3 class="side-h">Student responses</h3>
+    ${qs.length > 1 ? `<div class="steps" style="margin:6px 0 10px">${qs.map((r, i) => `<button class="${r.k === q.k ? 'cur' : ''}" data-act="respq" data-q="${r.k}">${esc(r.short || 'Question ' + (i + 1))}</button>`).join('')}</div>` : ''}
+    <p style="font-weight:600">${q.text}</p>
+    <div class="row" style="justify-content:space-between;margin:8px 0"><span class="hint">${ids.length} of ${nS} answered</span>
+      <span class="row"><button class="ghost" data-act="names">Names ${KIT.showNames ? 'shown' : 'hidden'}</button>
+      <button class="ghost ${st.showResp ? 'on' : ''}" data-act="${st.showResp ? 'hide' : 'reveal'}" data-k="showResp" ${ids.length || st.showResp ? '' : 'disabled'}>${st.showResp ? 'Hide responses' : 'Show responses'}</button></span></div>
+    ${st.showResp ? `<div class="scroll" style="max-height:44vh">${ids.map(k => `<div class="resp">${KIT.showNames ? `<small>${esc(students[k].name)}</small>` : ''}${esc(KIT.resp[k][q.k])}</div>`).join('') || '<p class="hint">No responses yet.</p>'}</div>` : ''}`;
+}
+H.reveal = b => APP.setState({ [b.dataset.k]: true });
+H.hide = b => APP.setState({ [b.dataset.k]: false });
+H.respq = b => APP.setState({ respQ: b.dataset.q });
+H.names = () => { KIT.showNames = !KIT.showNames; APP.redraw(); };
+function watchClassWork(after) {
+  watch('resp', `${base()}/responses`, v => { KIT.resp = v || {}; after(); });
+  watch('checks', `${base()}/checks`, v => { KIT.checks = v || {}; after(); });
+}
+/* =====================================================================
+   5. GRAPH DETECTIVE  (Unit 6, Lesson 7: Reasoning about Exponential Graphs)
+   Self-paced case files built from the workbook's Activities 1-4.
+   ===================================================================== */
+const TAGS = {
+  diff: 'Used a difference instead of a multiplying factor',
+  twostep: 'Used the factor for 2 steps instead of 1',
+  growth: 'Mixed up growth and decay (factor on the wrong side of 1)',
+  linear: 'Assumed the same amount of change each step (linear thinking)',
+  start: 'Wrong starting value (a)',
+  mult: 'Multiplied by the exponent instead of repeated multiplication',
+  intercept: 'Matched the graphs by starting height instead of growth factor'
+};
+const fac = (want, opts) => ({
+  ans: want, tol: 0.0005,
+  tag: v => v == null ? null : opts.diff && opts.diff.some(d => near(v, d, 0.01)) ? 'diff' : opts.two != null && near(v, opts.two, 0.0005) ? 'twostep' : (want < 1 && v > 1) || (want > 1 && v < 1) ? 'growth' : null,
+  hint: v => {
+    if (v == null) return 'Enter a number or a fraction like 1/2.';
+    if (opts.diff && opts.diff.some(d => near(v, d, 0.01))) return 'That’s an amount of change. What do you multiply by each step?';
+    if (opts.two != null && near(v, opts.two, 0.0005)) return 'That’s the factor for 2 steps. What number times itself gives that?';
+    if (want < 1 && v > 1) return 'A factor greater than 1 makes the graph grow, but this one decays.';
+    if (want > 1 && v < 1) return 'A factor less than 1 makes the graph decay, but this one grows.';
+    return null;
+  }
+});
+const start = (want, x0hint) => ({ ans: want, tol: 0.0005, tag: () => 'start', hint: () => x0hint || 'What is the value when x = 0?' });
+const pick = (want, tag) => ({ ok: (v, raw) => raw === want, tag: tag ? () => tag : null });
+const CHECKS = {
+  bA: pick('q', 'intercept'), bB: pick('p', 'intercept'), bC: pick('n', 'intercept'), bD: pick('m', 'intercept'), fast: pick('f'),
+  cp: { ans: 400, tol: 0.5 },
+  c1: { ans: 200, tol: 0.5, tag: v => near(v, 250, 0.5) ? 'linear' : null, hint: v => near(v, 250, 0.5) ? '250 assumes the value drops by the same amount each year. Exponential decay multiplies by the same factor.' : null },
+  cf: fac(0.5, { diff: [-150, 150, -75, 75, 200, -200], two: 0.25 }),
+  ca: start(400), cb: fac(0.5, { diff: [-150, 150, -75, 75, -200, 200], two: 0.25 }),
+  c10: pick('no'),
+  ma: start(5), mb: fac(3, { diff: [10, 30], two: 9 }),
+  m5: { ans: 1215, tol: 0.5, tag: v => near(v, 75, 0.5) ? 'mult' : null, hint: v => near(v, 75, 0.5) ? 'The exponent means multiply by 3 five times, not multiply by 5.' : 'Use your equation with x = 5.' },
+  na: start(20, '40 is the value at x = −1. What is it at x = 0?'), nb: fac(0.5, { diff: [-20, 20, -15, 15, -7.5, 7.5], two: 0.25 }),
+  n5: { ans: 0.625, tol: 0.006, hint: () => 'Use your equation with x = 5.' },
+  moldA: pick('dashed', 'intercept'), moldMore: pick('A'), moldPQ: pick('both')
+};
+const CASES = [
+  { id: 'inv', title: 'The Investments', sub: 'How do a and b change the graph?', checks: [], resp: ['rb', 'ra'] },
+  { id: 'bank', title: 'The Bank Accounts', sub: 'Match each decay equation to its graph.', checks: ['bA', 'bB', 'bC', 'bD', 'fast'], resp: ['fastwhy'] },
+  { id: 'comp', title: 'The Computer', sub: 'What is it worth over time?', checks: ['cp', 'c1', 'cf', 'ca', 'cb', 'c10'], resp: [] },
+  { id: 'gm', title: 'Graph M', sub: 'Find the equation from the graph.', checks: ['ma', 'mb', 'm5'], resp: [] },
+  { id: 'gn', title: 'Graph N', sub: 'Find the equation from the graph.', checks: ['na', 'nb', 'n5'], resp: [] },
+  { id: 'mold', title: 'The Moldy Wall', sub: 'No numbers. Just reasoning.', checks: ['moldA', 'moldMore', 'moldPQ'], resp: ['moldwhy'] }
+];
+const RQS = [
+  { k: 'rb', short: 'Changing b', text: 'Investments: how does changing the value of b change the graph?' },
+  { k: 'ra', short: 'Changing a', text: 'Investments: how does changing the value of a change the graph?' },
+  { k: 'fastwhy', short: 'Decays faster', text: 'Bank accounts: which function decays more quickly, f(x) = 1,000 · (1/10)ˣ or g(x) = 1,000 · (9/10)ˣ? Explain.' },
+  { k: 'moldwhy', short: 'Moldy wall', text: 'Moldy wall: how did you decide which graph is mold A and which is mold B?' }
+];
+const D = { st: {}, students: {}, cur: 0, inv: 'b', a: 50, b: 2, proj: 'comp', tries: {} };
+
+Object.assign(APP, {
+  id: 'detective',
+  title: 'Graph Detective',
+  sub: 'Read the clues in each graph and crack the case.',
+  initialState: () => ({ showResp: false, t: Date.now() }),
+  joinStudent: async () => { await DB.update(`${base()}/students/${S.sid}`, { name: S.name, t: Date.now() }); },
+  setState: patch => DB.set(`${base()}/state`, Object.assign({}, D.st, patch, { t: Date.now() })),
+  redraw: () => S.role === 'teacher' && renderTeacher(),
+  startTeacher, startStudent
+});
+
+/* ---------- graphing ---------- */
+function plot(o) {
+  const narrow = S.role !== 'teacher' && window.innerWidth < 640, W = narrow ? 400 : 560, Hh = narrow ? 320 : 360;
+  const _u = 0, L = o.hideNums ? 30 : 52, R = 14, Tp = 14, B = o.hideNums ? 34 : 36;
+  const X = x => L + (x - o.xmin) / (o.xmax - o.xmin) * (W - L - R), Y = y => Hh - B - (y - o.ymin) / (o.ymax - o.ymin) * (Hh - Tp - B);
+  let s = `<defs><clipPath id="clip${o.id}"><rect x="${L}" y="${Tp}" width="${W - L - R}" height="${Hh - Tp - B}"/></clipPath></defs>`;
+  if (!o.hideNums) {
+    for (let y = o.ymin; y <= o.ymax + 1e-9; y += o.ystep) s += `<line class="ax" x1="${L}" x2="${W - R}" y1="${Y(y)}" y2="${Y(y)}"/><text class="axt" x="${L - 6}" y="${Y(y) + 4}" text-anchor="end">${y}</text>`;
+    for (let x = Math.ceil(o.xmin); x <= o.xmax; x += o.xstep || 1) s += `<line class="ax" x1="${X(x)}" x2="${X(x)}" y1="${Tp}" y2="${Hh - B}"/><text class="axt" x="${X(x)}" y="${Hh - B + 16}" text-anchor="middle">${x}</text>`;
+  }
+  if (o.xmin < 0) s += `<line class="ax0" x1="${X(0)}" x2="${X(0)}" y1="${Tp}" y2="${Hh - B}"/>`;
+  else s += `<line class="ax0" x1="${L}" x2="${L}" y1="${Tp}" y2="${Hh - B}"/>`;
+  s += `<line class="ax0" x1="${L}" x2="${W - R}" y1="${Y(0)}" y2="${Y(0)}"/>`;
+  if (o.xlab) s += `<text class="axt" x="${(L + W) / 2}" y="${Hh - 4}" text-anchor="middle">${esc(o.xlab)}</text>`;
+  if (o.ylab) s += `<text class="axt" x="12" y="${(Tp + Hh - B) / 2}" text-anchor="middle" transform="rotate(-90 12 ${(Tp + Hh - B) / 2})">${esc(o.ylab)}</text>`;
+  let g = '';
+  (o.curves || []).forEach(c => {
+    const pts = [], n = 240;
+    for (let i = 0; i <= n; i++) { const x = o.xmin + (o.xmax - o.xmin) * i / n, y = c.f(x); if (isFinite(y) && y < o.ymax * 4 + 50) pts.push(`${X(x).toFixed(1)},${Y(y).toFixed(1)}`); }
+    g += `<polyline class="cv ${c.cls || ''}" points="${pts.join(' ')}"/>`;
+    if (c.label) { const lx = c.lx, ly = c.f(lx); g += `<text class="cvl ${c.cls || ''}" x="${X(lx) + 6}" y="${Y(ly) - 6}">${esc(c.label)}</text>`; }
+  });
+  s += `<g clip-path="url(#clip${o.id})">${g}</g>`;
+  (o.points || []).forEach(p => { s += `<circle class="pt" cx="${X(p.x)}" cy="${Y(p.y)}" r="5"/><text class="ptl" x="${X(p.x) + (p.dx || 8)}" y="${Y(p.y) + (p.dy || -8)}" ${p.anchor ? `text-anchor="${p.anchor}"` : ''}>${esc(p.label)}</text>`; });
+  return `<svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="${esc(o.aria || 'Graph')}">${s}</svg>`;
+}
+const exp = (a, b) => x => a * Math.pow(b, x);
+function yourCurve(ka, kb) {
+  const a = parseNum(($('#ck-' + ka) || {}).value), b = parseNum(($('#ck-' + kb) || {}).value);
+  return a != null && b != null && b > 0 ? [{ f: exp(a, b), cls: 'you' }] : [];
+}
+function caseGraph(id, withYou) {
+  if (id === 'inv') {
+    const sets = D.inv === 'b'
+      ? [['f', 50, 2, 'c1'], ['g', 50, 3, 'c2'], ['h', 50, 1.5, 'c3'], ['j', 50, 0.5, 'c4']]
+      : [['p', 10, 4, 'c1'], ['q', 40, 4, 'c2'], ['r', 100, 4, 'c3']];
+    const curves = sets.map(([n, a, b, c]) => ({ f: exp(a, b), cls: c, label: n, lx: D.inv === 'b' ? ({ f: 2.6, g: 1.85, h: 2.85, j: -1.6 })[n] : ({ p: 2.6, q: 1.6, r: 0.85 })[n] }));
+    if (withYou) curves.push({ f: exp(D.a, D.b), cls: 'you' });
+    return plot({ id, xmin: -2, xmax: 3, ymin: 0, ymax: 1000, ystep: 200, xlab: 'Time (years)', ylab: 'Value (dollars)', curves, aria: 'Investment functions' });
+  }
+  if (id === 'bank') return plot({ id, xmin: 0, xmax: 8, ymin: 0, ymax: 200, ystep: 50, xlab: 'Time (years)', ylab: 'Balance (dollars)', aria: 'Four decay graphs labeled A to D',
+    curves: [{ f: exp(200, 7 / 8), cls: 'c1', label: 'A', lx: 2.2 }, { f: exp(200, 3 / 4), cls: 'c2', label: 'B', lx: 2.1 }, { f: exp(200, 1 / 2), cls: 'c3', label: 'C', lx: 2 }, { f: exp(200, 1 / 4), cls: 'c4', label: 'D', lx: 1.1 }] });
+  if (id === 'comp') return plot({ id, xmin: 0, xmax: 10, ymin: 0, ymax: 450, ystep: 50, xlab: 'Years since purchase', ylab: 'Value (dollars)', aria: 'Value of a computer',
+    curves: [{ f: exp(400, 0.5), cls: 'target' }].concat(withYou ? yourCurve('ca', 'cb') : []),
+    points: [{ x: 0, y: 400, label: '(0, 400)' }, { x: 2, y: 100, label: '(2, 100)' }, { x: 4, y: 25, label: '(4, 25)' }] });
+  if (id === 'gm') return plot({ id, xmin: -4, xmax: 4, ymin: 0, ymax: 60, ystep: 10, aria: 'Graph M',
+    curves: [{ f: exp(5, 3), cls: 'target' }].concat(withYou ? yourCurve('ma', 'mb') : []),
+    points: [{ x: 0, y: 5, label: '(0, 5)', dx: -54, dy: -6 }, { x: 1, y: 15, label: '(1, 15)' }, { x: 2, y: 45, label: '(2, 45)' }] });
+  if (id === 'gn') return plot({ id, xmin: -4, xmax: 4, ymin: 0, ymax: 60, ystep: 10, aria: 'Graph N',
+    curves: [{ f: exp(20, 0.5), cls: 'target' }].concat(withYou ? yourCurve('na', 'nb') : []),
+    points: [{ x: -1, y: 40, label: '(−1, 40)', dx: -64 }, { x: 0, y: 20, label: '(0, 20)' }, { x: 2, y: 5, label: '(2, 5)' }] });
+  const px = Math.log(4) / Math.log(1.5), py = 8 * Math.pow(2, px);
+  return plot({ id, xmin: 0, xmax: 5, ymin: 0, ymax: 200, ystep: 50, hideNums: true, xlab: 'Time (months)', ylab: 'Area (square inches)', aria: 'Two mold graphs, one solid and one dashed',
+    curves: [{ f: exp(2, 3), cls: 'solid' }, { f: exp(8, 2), cls: 'dashed' }], points: [{ x: px, y: py, label: '(p, q)', dx: 10, dy: 14 }] });
+}
+const selBox = (k, opts) => { const p = KIT.myChecks[k], cls = p ? (p.ok ? 'ok' : 'no') : '';
+  return `<span class="ckwrap"><select class="ck ${cls}" id="ck-${k}" data-ck="${k}"><option value="">Choose</option>${opts.map(([v, t]) => `<option value="${v}" ${p && p.v === v ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select><span class="mark ${cls}" id="mk-${k}">${p ? (p.ok ? 'Correct' : 'Try again') : ''}</span></span>`; };
+const eqLine = (ka, kb, fn) => `<div class="eqline"><span class="math">${fn}(<i>x</i>) =</span> ${ckBox(ka, 'a')} <span class="grp"><span class="math">· (</span>${ckBox(kb, 'b')}<span class="math">)<sup><i>x</i></sup></span></span></div>`;
+
+/* ---------- progress ---------- */
+const solvedFor = (checks, resp, c) => c.checks.every(k => checks && checks[k] && checks[k].ok) && c.resp.every(k => resp && (resp[k] || '').trim());
+const startedFor = (checks, resp, c) => c.checks.some(k => checks && checks[k]) || c.resp.some(k => resp && (resp[k] || '').trim());
+
+/* =====================================================================
+   6. STUDENT
+   ===================================================================== */
+function startStudent() {
+  watch('ended', `${base()}/ended`, v => { if (v) endedScreen(); });
+  watchMine();
+  renderStudent();
+  setTimeout(() => { if (!$('#sbody')) return; renderStudent(); }, 600);
+}
+function caseBody(c) {
+  let h = `<h3 class="big-q">Case ${CASES.indexOf(c) + 1}: ${esc(c.title)}</h3>`;
+  if (c.id === 'inv') {
+    h += `<p class="story">Each function gives the value of an investment, in dollars, after <i>x</i> years. Every one has the form <span class="math"><i>m</i>(<i>x</i>) = <i>a</i> · <i>b</i><sup><i>x</i></sup></span>.</p>
+      <div class="row" style="margin:12px 0 4px"><button class="ghost ${D.inv === 'b' ? 'on' : ''}" data-act="invset" data-s="b">Set 1: same a, different b</button><button class="ghost ${D.inv === 'a' ? 'on' : ''}" data-act="invset" data-s="a">Set 2: same b, different a</button></div>
+      <div class="eqs">${D.inv === 'b' ? '<span><b class="k1">f</b>(<i>x</i>) = 50 · 2<sup><i>x</i></sup></span><span><b class="k2">g</b>(<i>x</i>) = 50 · 3<sup><i>x</i></sup></span><span><b class="k3">h</b>(<i>x</i>) = 50 · (3/2)<sup><i>x</i></sup></span><span><b class="k4">j</b>(<i>x</i>) = 50 · (0.5)<sup><i>x</i></sup></span>'
+        : '<span><b class="k1">p</b>(<i>x</i>) = 10 · 4<sup><i>x</i></sup></span><span><b class="k2">q</b>(<i>x</i>) = 40 · 4<sup><i>x</i></sup></span><span><b class="k3">r</b>(<i>x</i>) = 100 · 4<sup><i>x</i></sup></span>'}</div>
+      <div class="chart-box" id="cg">${caseGraph('inv', true)}</div>
+      <div class="sliders"><label>Your function: <span class="math"><i>y</i> = <b id="av">${D.a}</b> · <b id="bv">${D.b}</b><sup><i>x</i></sup></span></label>
+        <div class="srow"><span class="math"><i>a</i></span><input type="range" id="sa" min="5" max="200" step="5" value="${D.a}" aria-label="a"></div>
+        <div class="srow"><span class="math"><i>b</i></span><input type="range" id="sb" min="0.1" max="4" step="0.05" value="${D.b}" aria-label="b"></div>
+        <p class="hint">Drag the sliders. Your function is the dashed black curve.</p></div>
+      ${respBox('rb', 'How does changing the value of b change the graph?')}${respBox('ra', 'How does changing the value of a change the graph?')}`;
+  } else if (c.id === 'bank') {
+    h += `<p class="story">Each function gives the balance of a bank account, in dollars, after <i>x</i> years.</p>
+      <div class="eqs"><span><b>m</b>(<i>x</i>) = 200 · (1/4)<sup><i>x</i></sup></span><span><b>n</b>(<i>x</i>) = 200 · (1/2)<sup><i>x</i></sup></span><span><b>p</b>(<i>x</i>) = 200 · (3/4)<sup><i>x</i></sup></span><span><b>q</b>(<i>x</i>) = 200 · (7/8)<sup><i>x</i></sup></span></div>
+      <div class="chart-box" id="cg">${caseGraph('bank')}</div>
+      <p style="font-weight:600;margin-top:12px">1. Match each graph with its equation.</p>
+      ${['A', 'B', 'C', 'D'].map(L => `<div class="qrow"><span>Graph ${L}</span>${selBox('b' + L, [['m', 'm(x)'], ['n', 'n(x)'], ['p', 'p(x)'], ['q', 'q(x)']])}</div>`).join('')}
+      <p style="font-weight:600;margin-top:12px">2. <span class="math"><i>f</i>(<i>x</i>) = 1,000 · (1/10)<sup><i>x</i></sup></span> and <span class="math"><i>g</i>(<i>x</i>) = 1,000 · (9/10)<sup><i>x</i></sup></span></p>
+      <div class="qrow"><span>Which function decays more quickly?</span>${selBox('fast', [['f', 'f(x)'], ['g', 'g(x)']])}</div>
+      <div class="row"><button class="btn" data-act="ckcase">Check my answers</button></div>
+      ${respBox('fastwhy', 'Explain how you know which one decays more quickly.')}`;
+  } else if (c.id === 'comp') {
+    h += `<p class="story">The function <i>f</i> gives the value of a computer, in dollars, <i>x</i> years after it was purchased.</p>
+      <div class="chart-box" id="cg">${caseGraph('comp', true)}</div>
+      <div class="qrow"><span>1. What was the purchase price?</span>${ckBox('cp', '$')}</div>
+      <div class="qrow"><span>2. What is <i>f</i>(1), the value after 1 year?</span>${ckBox('c1', '$')}</div>
+      <div class="qrow"><span>3. Each year, the value is multiplied by…</span>${ckBox('cf', 'factor')}</div>
+      <p style="font-weight:600;margin-top:10px">4. Write an equation that defines <i>f</i>.</p>${eqLine('ca', 'cb', '<i>f</i>')}
+      <div class="qrow"><span>5. Will the value of the computer reach $0 after 10 years?</span>${selBox('c10', [['yes', 'Yes'], ['no', 'No']])}</div>
+      <div class="row"><button class="btn" data-act="ckcase">Check my answers</button></div>
+      <p class="hint" style="margin-top:8px">After you check, your equation is drawn as a dashed black curve on the graph.</p>`;
+  } else if (c.id === 'gm' || c.id === 'gn') {
+    const m = c.id === 'gm', pre = m ? 'm' : 'n', F = m ? 'M' : 'N';
+    h += `<p class="story">Write an equation for the function, then find its value when <i>x</i> is 5.</p>
+      <div class="chart-box" id="cg">${caseGraph(c.id, true)}</div>
+      <p style="font-weight:600;margin-top:12px">1. Equation</p>${eqLine(pre + 'a', pre + 'b', F)}
+      <div class="qrow"><span>2. What is ${F}(5)?</span>${ckBox(pre + '5', '')}</div>
+      <div class="row"><button class="btn" data-act="ckcase">Check my answers</button></div>
+      <p class="hint" style="margin-top:8px">After you check, your equation is drawn as a dashed black curve on the graph.</p>`;
+  } else {
+    h += `<p class="story">Function <i>f</i>: the area of a wall covered by <b>mold A</b>, in square inches, <b>doubling</b> every month.<br>Function <i>g</i>: the area covered by <b>mold B</b>, in square inches, <b>tripling</b> every month.</p>
+      <div class="chart-box" id="cg">${caseGraph('mold')}</div><p class="hint">Solid curve and dashed curve. No numbers this time.</p>
+      <div class="qrow"><span>1. Which graph shows mold A (doubling)?</span>${selBox('moldA', [['solid', 'The solid curve'], ['dashed', 'The dashed curve']])}</div>
+      <div class="qrow"><span>2. When the mold was first measured, which mold covered more of the wall?</span>${selBox('moldMore', [['A', 'Mold A'], ['B', 'Mold B']])}</div>
+      <div class="qrow"><span>3. What does the point (p, q) tell us?</span>${selBox('moldPQ', [['sum', 'Together the molds cover q square inches'], ['both', 'After p months, both molds cover q square inches'], ['stop', 'The molds stop growing after p months'], ['swap', 'After q months, both molds cover p square inches']])}</div>
+      <div class="row"><button class="btn" data-act="ckcase">Check my answers</button></div>
+      ${respBox('moldwhy', 'How did you decide which graph is mold A and which is mold B?')}`;
+  }
+  const i = CASES.indexOf(c);
+  h += `<div class="row" style="justify-content:space-between;margin-top:20px">${i > 0 ? `<button class="ghost" data-act="gocase" data-i="${i - 1}">Previous case</button>` : '<span></span>'}${i < CASES.length - 1 ? `<button class="btn alt" data-act="gocase" data-i="${i + 1}">Next case</button>` : '<span class="hint">That’s the last case.</span>'}</div>`;
+  return h;
+}
+function tabsHTML() {
+  return `<div class="ctabs">${CASES.map((c, i) => { const done = solvedFor(KIT.myChecks, KIT.myResp, c);
+    return `<button class="ctab ${i === D.cur ? 'cur' : ''} ${done ? 'done' : ''}" data-act="gocase" data-i="${i}"><span>Case ${i + 1}</span>${esc(c.title)}${done ? ' ✓' : ''}</button>`; }).join('')}</div>`;
+}
+function scrollTab() { const t = $('.ctab.cur'); if (t && t.scrollIntoView) t.scrollIntoView({ block: 'nearest', inline: 'center' }); }
+function renderStudent() {
+  const c = CASES[D.cur];
+  $('#app').innerHTML = `<div class="s-wrap wide"><div class="s-top"><span class="pill">Graph Detective</span><div class="who">${esc(S.name)} <button data-act="leave">Leave</button></div></div>
+    ${tabsHTML()}<section class="card" id="sbody">${caseBody(c)}</section></div>`;
+  scrollTab();
+}
+H.gocase = b => { D.cur = +b.dataset.i; renderStudent(); window.scrollTo(0, 0); };
+H.invset = b => { D.inv = b.dataset.s; renderStudent(); };
+H.ckcase = () => {
+  const c = CASES[D.cur]; runChecks(c.checks);
+  const g = $('#cg'); if (g) g.innerHTML = caseGraph(c.id, true);
+  const t = $('.ctabs'); if (t) { t.outerHTML = tabsHTML(); scrollTab(); }
+};
+document.addEventListener('input', e => {
+  if (e.target.id === 'sa' || e.target.id === 'sb') {
+    D.a = +$('#sa').value; D.b = +$('#sb').value;
+    $('#av').textContent = D.a; $('#bv').textContent = D.b; $('#cg').innerHTML = caseGraph('inv', true);
+  }
+});
+document.addEventListener('focusout', e => { if (S.role === 'student' && e.target.dataset && e.target.dataset.rk) setTimeout(() => { const t = $('.ctabs'); if (t) t.outerHTML = tabsHTML(); }, 50); });
+
+/* =====================================================================
+   7. TEACHER
+   ===================================================================== */
+function startTeacher() {
+  watch('state', `${base()}/state`, st => { if (!st) return; D.st = st; renderTeacher(); });
+  watch('students', `${base()}/students`, v => { D.students = v || {}; renderTeacher(); });
+  watchClassWork(() => renderTeacher());
+}
+function renderTeacher() {
+  const ids = Object.keys(D.students), hasBots = ids.some(k => k.startsWith('bot'));
+  const side = $('#side .scroll'), keep = side ? side.scrollTop : 0;
+  const grid = `<div class="scroll gridwrap"><table class="data pgrid"><tr><th>Student</th>${CASES.map((c, i) => `<th title="${esc(c.title)}">Case ${i + 1}</th>`).join('')}</tr>
+    ${ids.map(k => `<tr><td>${esc(D.students[k].name)}</td>${CASES.map(c => {
+      const ch = KIT.checks[k] || {}, rs = KIT.resp[k] || {};
+      if (solvedFor(ch, rs, c)) return '<td><span class="cell ok">Solved</span></td>';
+      if (!startedFor(ch, rs, c)) return '<td><span class="cell">—</span></td>';
+      const n = c.checks.filter(x => ch[x] && ch[x].ok).length + c.resp.filter(x => (rs[x] || '').trim()).length, tot = c.checks.length + c.resp.length;
+      const stuck = c.checks.some(x => ch[x] && !ch[x].ok);
+      return `<td><span class="cell ${stuck ? 'stuck' : 'part'}">${n} of ${tot}</span></td>`; }).join('')}</tr>`).join('') || `<tr><td colspan="${CASES.length + 1}" class="hint">Waiting for students to join…</td></tr>`}</table></div>`;
+  const tags = {}; ids.forEach(k => Object.values(KIT.checks[k] || {}).forEach(c => { if (c && !c.ok && c.tag) (tags[c.tag] = tags[c.tag] || new Set()).add(k); }));
+  const tagHTML = Object.keys(tags).length ? `<ul class="tags">${Object.entries(tags).sort((a, b) => b[1].size - a[1].size).map(([t, set]) =>
+    `<li><b>${set.size}</b> ${esc(TAGS[t] || t)}${KIT.showNames ? `<small>${[...set].map(k => esc(D.students[k].name)).join(', ')}</small>` : ''}</li>`).join('')}</ul>` : '<p class="hint">No common mistakes yet. This lists wrong answers that show a specific misconception, like using a difference instead of a factor.</p>';
+  $('#app').innerHTML = `<div class="t-wrap">${teacherTop(`<button class="ghost" data-act="bots">${hasBots ? 'Remove sample class' : 'Add sample class'}</button>`)}
+    <div class="layout">
+      <section class="card"><h3 class="side-h">Class progress</h3><p class="hint" style="margin-bottom:8px">Students work at their own pace. “2 of 5” means two parts are correct. Red means a wrong answer they haven’t fixed yet.</p>${grid}
+        <h3 class="side-h" style="margin-top:18px">Common mistakes</h3>${tagHTML}
+        <h3 class="side-h" style="margin-top:18px">Project a case</h3>
+        <div class="steps" style="margin-bottom:8px">${CASES.map((c, i) => `<button class="${D.proj === c.id ? 'cur' : ''}" data-act="proj" data-c="${c.id}">${i + 1}. ${esc(c.title)}</button>`).join('')}</div>
+        <div class="chart-box">${D.proj === 'inv' ? caseGraph('inv', false) : caseGraph(D.proj)}</div></section>
+      <aside class="card" id="side">${respViewer(D.students, RQS, D.st)}</aside>
+    </div></div>`;
+  const sc = $('#side .scroll'); if (sc) sc.scrollTop = keep;
+  const el = $('#joined'); if (el) el.textContent = ` · ${ids.length} joined`;
+}
+H.proj = b => { D.proj = b.dataset.c; renderTeacher(); };
+H.bots = async () => {
+  const bots = Object.keys(D.students).filter(k => k.startsWith('bot')), u = {};
+  if (bots.length) { bots.forEach(k => ['students', 'responses', 'checks'].forEach(n => { u[n + '/' + k] = null; })); return DB.update(base(), u); }
+  const ans = { bA: 'q', bB: 'p', bC: 'n', bD: 'm', fast: 'f', cp: '400', c1: '200', cf: '1/2', ca: '400', cb: '0.5', c10: 'no', ma: '5', mb: '3', m5: '1215', na: '20', nb: '1/2', n5: '0.625', moldA: 'dashed', moldMore: 'A', moldPQ: 'both' };
+  const wrong = { bA: ['m', 'intercept'], cf: ['-150', 'diff'], cb: ['0.25', 'twostep'], c1: ['250', 'linear'], mb: ['10', 'diff'], m5: ['75', 'mult'], na: ['40', 'start'], nb: ['2', 'growth'], moldA: ['solid', 'intercept'] };
+  for (let i = 0; i < 20; i++) {
+    const k = 'bot' + i, reach = 1 + Math.floor(Math.random() * 6), ch = {}, rs = {};
+    CASES.slice(0, reach).forEach((c, ci) => {
+      c.checks.forEach(x => { const bad = wrong[x] && Math.random() < 0.18 && ci === reach - 1;
+        ch[x] = bad ? { v: wrong[x][0], ok: false, tag: wrong[x][1] } : { v: ans[x], ok: Math.random() < (ci === reach - 1 ? 0.6 : 1), tag: null }; });
+      c.resp.forEach(x => { if (ci < reach - 1 || Math.random() < .5) rs[x] = ({
+        rb: ['Bigger b makes it grow faster. If b is less than 1 it goes down.', 'b changes how steep it is', 'When b is bigger the curve goes up quicker'],
+        ra: ['a is where it starts on the y-axis.', 'a moves the starting point up', 'bigger a = higher start but same shape'],
+        fastwhy: ['f because 1/10 leaves less each year than 9/10.', 'f, it keeps only 10% each year', 'g because 9/10 is bigger'],
+        moldwhy: ['Tripling grows faster so it is the steeper solid one.', 'the dashed one starts higher so it is mold A?', 'B triples so it passes A eventually'] })[x][i % 3]; });
+    });
+    u['students/' + k] = { name: NAMES[i], bot: true }; u['checks/' + k] = ch; u['responses/' + k] = rs;
+  }
+  await DB.update(base(), u);
+};
+boot();
+</script>
+</body>
+</html>
