@@ -46,6 +46,11 @@ header svg{width:100%; height:auto; margin-bottom:6px}
 .go{flex:none; text-decoration:none; background:var(--blue-d); color:#fff; font-weight:650; border-radius:10px; padding:10px 18px}
 .go:hover{filter:brightness(1.08)}
 .tlink{display:inline-block; margin-top:6px; font-size:.85rem; color:var(--muted)}
+.studycard{display:flex; align-items:center; gap:16px; background:var(--card); border:1.5px solid var(--line); border-left:6px solid var(--orange); border-radius:14px; padding:16px 18px; margin:0 0 26px; text-decoration:none; color:var(--ink)}
+.studycard:hover{border-color:var(--orange)}
+.studycard h2{font:700 1.3rem var(--math)} .studycard p{color:var(--muted); font-size:.95rem; margin-top:2px}
+.studycard .go{margin-left:auto}
+@media (max-width:640px){ .studycard{flex-wrap:wrap} }
 footer{border-top:1.5px solid var(--line); padding-top:18px; color:var(--muted); font-size:.9rem}
 @media (max-width:640px){
   header{grid-template-columns:1fr; padding-top:36px} header svg{width:200px; order:-1}
@@ -67,6 +72,7 @@ footer{border-top:1.5px solid var(--line); padding-top:18px; color:var(--muted);
       <circle class="dot-b" cx="10" cy="140" r="7"/><circle class="dot-o" cx="10" cy="158" r="7"/>
     </svg>
   </header>
+  <a class="studycard" href="study.html"><div><h2>Unit 6 Study Hub</h2><p>Review each topic, practice new problems, and check your study guide answers.</p></div><span class="go">Study</span></a>
   <main id="list"></main>
   <footer>Your teacher will give you a 4-letter class code once you open an activity.</footer>
 </div>

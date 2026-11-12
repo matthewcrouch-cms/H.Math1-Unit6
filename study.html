@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unit 6 Study Hub: Exponential Functions</title>
+<style>
+:root{
+  --paper:#f7f9fc; --grid:#e3eaf3; --card:#ffffff; --ink:#14233a; --muted:#566883; --line:#d5deea;
+  --blue:#4B9CD3; --blue-d:#1d6aa5; --blue-soft:#e6f2fa; --orange:#F56600; --orange-d:#c24f00; --orange-soft:#fff0e5;
+  --good:#17805a; --good-soft:#e2f5ec; --bad:#b83a2b; --bad-soft:#fbeae7; --gold:#d79b14;
+  --math:"Cambria Math","STIX Two Text","Latin Modern Math",Cambria,Georgia,"Times New Roman",serif;
+  --ui:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#0f1824; --grid:#17263a; --card:#16222f; --ink:#e8eef7; --muted:#9db0c8; --line:#2b3d55;
+    --blue:#6bb3e3; --blue-d:#8cc6ee; --blue-soft:#183249; --orange:#ff8a3d; --orange-d:#ffa766; --orange-soft:#3a2415;
+    --good:#4fcf9b; --good-soft:#12352a; --bad:#ff8c7d; --bad-soft:#3a1c18; --gold:#f0bf4c; color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:var(--ui); color:var(--ink); background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px; line-height:1.45; -webkit-text-size-adjust:100%;
+}
+.math{font-family:var(--math); white-space:nowrap}
+.math i{font-style:italic}
+sup{font-size:.74em; line-height:0}
+button{font:inherit; cursor:pointer}
+:focus-visible{outline:3px solid var(--orange); outline-offset:2px}
+h1,h2,h3,p{margin:0}
+.card{background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:20px}
+.btn{border:0; border-radius:10px; padding:11px 20px; font-weight:650; background:var(--blue-d); color:#fff}
+.btn:hover{filter:brightness(1.08)}
+.btn[disabled]{opacity:.45; cursor:not-allowed}
+.btn.alt{background:var(--orange-d); color:#fff}
+.ghost{background:transparent; color:var(--ink); border:1.5px solid var(--line); border-radius:10px; padding:8px 14px; font-weight:600}
+.ghost:hover:not([disabled]){border-color:var(--blue)}
+.ghost[disabled]{opacity:.45; cursor:not-allowed}
+.ghost.on{border-color:var(--blue-d); background:var(--blue-soft); color:var(--blue-d)}
+.ghost.danger{color:var(--bad)}
+.banner{background:var(--orange-soft); border:1.5px solid var(--orange); color:var(--ink); border-radius:10px; padding:9px 14px; font-size:.9rem; margin-bottom:14px}
+.err{color:var(--bad); font-weight:600; min-height:1.4em; margin-top:8px}
+.muted{color:var(--muted)}
+input.txt,select.txt{width:100%; font:1.05rem var(--ui); padding:12px; border:2px solid var(--line); border-radius:10px; background:var(--card); color:var(--ink)}
+input.txt:focus,select.txt:focus{border-color:var(--blue); outline:none}
+.row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+
+/* landing */
+.landing{max-width:520px; margin:0 auto; padding:9vh 18px 40px}
+.landing h1{font:700 clamp(1.9rem,6vw,2.6rem)/1.15 var(--math); margin-bottom:8px}
+.landing .sub{color:var(--muted); margin-bottom:22px}
+.landing label{display:block; font-weight:600; margin:14px 0 6px}
+.landing .row{margin-top:20px}
+.code-in{text-transform:uppercase; letter-spacing:.35em; font-weight:700; text-align:center}
+.teacher-link{margin-top:26px; font-size:.92rem; color:var(--muted)}
+.teacher-link button{background:none; border:0; color:var(--blue-d); text-decoration:underline; padding:0}
+
+/* frames */
+.s-wrap{max-width:760px; margin:0 auto; padding:14px 14px 80px}
+.s-top{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap}
+.s-top .who{color:var(--muted); font-size:.92rem}
+.s-top .who button{background:none; border:0; color:var(--muted); text-decoration:underline; padding:0 0 0 8px; font-size:.85rem}
+.s-title{font:700 1.6rem var(--math); margin:2px 0 10px}
+.t-wrap{max-width:1500px; margin:0 auto; padding:14px 18px 40px}
+.t-top{display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:14px}
+.brand{font:700 1.25rem var(--math)}
+.join{font-size:1.02rem}
+.join .code{font:700 1.5rem var(--ui); letter-spacing:.2em; background:var(--orange-d); color:#fff; padding:2px 12px; border-radius:8px; margin-left:4px}
+.t-tools{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.pill{display:inline-block; font-size:.82rem; font-weight:600; padding:3px 11px; border-radius:99px; background:var(--blue-soft); color:var(--blue-d)}
+.steps{display:flex; gap:6px; flex-wrap:wrap}
+.steps button{border:1.5px solid var(--line); background:var(--card); color:var(--ink); border-radius:99px; padding:7px 14px; font-weight:600}
+.steps button.cur{background:var(--blue-d); border-color:var(--blue-d); color:#fff}
+table.data{border-collapse:separate; border-spacing:0; width:100%; font-variant-numeric:tabular-nums}
+table.data th{font-size:.82rem; color:var(--muted); text-align:right; padding:4px 10px; font-weight:600; position:sticky; top:0; z-index:1; background:var(--card); box-shadow:0 1px 0 var(--line)}
+table.data th:first-child,table.data td:first-child{text-align:left}
+table.data td{text-align:right; padding:6px 10px; border-top:1px solid var(--line)}
+table.data tr.now td{background:var(--blue-soft); font-weight:700}
+.scroll{max-height:46vh; overflow:auto}
+.hint{font-size:.85rem; color:var(--muted)}
+@media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} }
+/* ---------- study hub ---------- */
+.wrap{max-width:900px; margin:0 auto; padding:14px 16px 70px}
+.top{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:18px}
+.top .home{font:700 1.15rem var(--math); color:var(--ink); text-decoration:none}
+.top .crumb{color:var(--muted)} .top .crumb::before{content:"›"; margin-right:8px}
+.calcbtn{margin-left:auto}
+.hero{padding:22px 0 8px} .hero h1{font:700 clamp(2rem,6vw,3rem)/1.1 var(--math)} .hero p{color:var(--muted); margin-top:8px; max-width:40rem}
+.sec{font:700 1.3rem var(--math); margin:26px 0 10px}
+.tgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px}
+.tcard{display:flex; gap:14px; align-items:flex-start; background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:14px 16px; text-decoration:none; color:var(--ink)}
+.tcard:hover{border-color:var(--blue)}
+.tcard h3{font-size:1.08rem; margin-bottom:2px} .tcard > div{flex:1}
+.tcard.guide{border-left:6px solid var(--orange)}
+.tnum{flex:none; width:2.4rem; height:2.4rem; border-radius:10px; background:var(--orange-soft); color:var(--orange-d); display:grid; place-items:center; font:700 1.15rem var(--math)}
+.tnum.big{width:3.2rem; height:3.2rem; font-size:1.5rem}
+.meter{height:8px; background:var(--grid); border-radius:99px; overflow:hidden; margin:8px 0 4px} .meter span{display:block; height:100%; background:var(--good)}
+.thead{display:flex; gap:14px; align-items:center; margin-bottom:14px} .thead h1{font:700 clamp(1.6rem,5vw,2.2rem)/1.15 var(--math)}
+.tabs{display:flex; gap:6px; border-bottom:2px solid var(--line); margin-bottom:16px}
+.tabs a{padding:9px 16px; text-decoration:none; color:var(--muted); font-weight:650; border-bottom:3px solid transparent; margin-bottom:-2px}
+.tabs a.cur{color:var(--blue-d); border-bottom-color:var(--blue-d)}
+.tabs a span{font-size:.8rem; background:var(--grid); border-radius:99px; padding:1px 8px; margin-left:4px}
+.review{font-size:1.05rem} .review ul{padding-left:1.2rem} .review li{margin:6px 0} .review p+p,.review p+ul,.review ul+p{margin-top:10px}
+.example{margin-top:14px; border-left:6px solid var(--blue)} .example h3{font:700 1.1rem var(--math); margin-bottom:6px}
+.wsteps{padding-left:1.3rem; margin:10px 0 12px} .wsteps li{margin:8px 0; font-size:1.05rem}
+.rules{border-collapse:collapse; width:100%; margin-top:10px} .rules th,.rules td{text-align:left; padding:8px 10px; border-top:1px solid var(--line); vertical-align:middle} .rules th{font-size:.85rem; color:var(--muted)}
+.rules td:last-child{font-family:var(--math); font-size:1.15rem}
+.shapes{display:flex; gap:12px; flex-wrap:wrap; margin:12px 0} .shapes figure{margin:0; text-align:center; font-size:.85rem; color:var(--muted)}
+svg.shape{width:96px; height:auto; display:block}
+.prob{background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:16px 18px; margin-bottom:14px}
+.prob.done{border-color:var(--good)}
+.phead{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px}
+.pnum{font:700 1.05rem var(--math); color:var(--muted)}
+.badge{font-size:.78rem; font-weight:700; padding:2px 10px; border-radius:99px} .badge.ok{background:var(--good-soft); color:var(--good)}
+.stem{font-size:1.08rem} .stem i,.plabel i,.tpl i,.opt i,.m i{font-family:var(--math); font-size:1.08em}
+.m{font-family:var(--math)}
+.visual{margin:12px 0; overflow-x:auto}
+.part{margin-top:14px} .plabel{font-weight:600; margin-bottom:6px}
+.numwrap{display:inline-flex; align-items:center; gap:6px}
+.unit{font-weight:600; color:var(--muted)}
+input.in,input.bx,textarea.in{font:600 1.05rem var(--ui); border:2px solid var(--line); border-radius:9px; background:var(--card); color:var(--ink)}
+input.in{width:9em; padding:8px 10px} textarea.in{width:100%; padding:10px; font-weight:400; resize:vertical}
+input.bx{width:3.6em; padding:4px 6px; text-align:center; font-size:1.05rem; vertical-align:middle}
+.tpl sup input.bx{width:3em; font-size:1rem; padding:2px 4px; vertical-align:baseline}
+input.in:focus,input.bx:focus,textarea.in:focus{border-color:var(--blue); outline:none}
+input.in.ok,input.bx.ok{border-color:var(--good); background:var(--good-soft)} input.in.no,input.bx.no{border-color:var(--bad); background:var(--bad-soft)}
+.tpl{font:1.6rem var(--math); line-height:2.6; display:inline-block}
+.tpl sup{font-size:.7em; vertical-align:super; line-height:1}
+.fr{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; margin:0 3px; line-height:1.25}
+.fr > span:first-child{border-bottom:1.5px solid currentColor; padding:0 4px 2px} .fr > span:last-child{padding:2px 4px 0}
+.tpl .fr > span{padding:4px 6px}
+.opts{display:flex; flex-direction:column; gap:6px; align-items:flex-start}
+.opt{border:2px solid var(--line); background:var(--card); color:var(--ink); border-radius:10px; padding:8px 14px; text-align:left; font:inherit; max-width:100%}
+.opt:hover{border-color:var(--blue)} .opt.sel{border-color:var(--blue-d); background:var(--blue-soft)}
+.opt.sel.ok{border-color:var(--good); background:var(--good-soft)} .opt.sel.no{border-color:var(--bad); background:var(--bad-soft)}
+.opts.picks{flex-direction:row; flex-wrap:wrap} .picks .opt{display:flex; flex-direction:column; align-items:center; gap:4px; font-size:.85rem; width:128px; text-align:center}
+.fb{margin-top:6px; min-height:0}
+.mk{font-weight:700; font-size:.9rem} .mk.ok{color:var(--good)} .mk.no{color:var(--bad)}
+.sample{margin-top:6px; padding:8px 12px; border-left:4px solid var(--blue); background:var(--blue-soft); border-radius:0 8px 8px 0}
+.ghost.small{padding:4px 10px; font-size:.85rem}
+.pfoot{margin-top:16px} .reviewlink{margin-right:auto}
+.nav2{justify-content:space-between; margin-top:20px} .nav2 a{text-decoration:none}
+a.btn,a.ghost{text-decoration:none; display:inline-block}
+a.ghost{color:var(--ink)}
+.ghost.danger{color:var(--bad)}
+.tscroll{overflow-x:auto}
+table.ht,table.vt{border-collapse:collapse; font-variant-numeric:tabular-nums}
+.ht th,.ht td,.vt th,.vt td{border:1.5px solid var(--line); padding:6px 14px; text-align:center}
+.ht th,.vt th{background:var(--grid); font-weight:600}
+svg.mini{width:100%; max-width:340px; height:auto; display:block}
+.ax{stroke:var(--line)} .ax0{stroke:var(--muted); stroke-width:1.5} .axt{fill:var(--muted); font:11px var(--ui)}
+.cv{fill:none; stroke:var(--orange); stroke-width:3} .pt{fill:var(--blue-d)} .ptl{fill:var(--ink); font:600 12px var(--ui)}
+.calcpanel{position:fixed; right:12px; bottom:12px; width:min(560px,calc(100vw - 24px)); height:min(560px,75vh); background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:10px; display:flex; flex-direction:column; gap:8px; box-shadow:0 10px 30px rgba(0,0,0,.18); z-index:20}
+.calcpanel[hidden]{display:none}
+.calcpanel iframe{flex:1; width:100%; border:1px solid var(--line); border-radius:10px; background:#fff}
+.plabel{font-size:1.05rem} .plabel .fr{font-size:1.2em}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* =====================================================================
+   UNIT 6 STUDY HUB: Exponential Functions
+   Study by topic (review + new practice) and the interactive study guide.
+   Progress is saved in the student's own browser.
+   ===================================================================== */
+const DESMOS_GRAPH = 'https://www.desmos.com/testing/northcarolina/graphing';
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const $ = (s, r = document) => r.querySelector(s);
+const parseNum = s => {
+  s = String(s == null ? '' : s).trim().replace(/[$,\s%]/g, '');
+  if (!s) return null;
+  const m = s.match(/^(-?\d*\.?\d+)\/(-?\d*\.?\d+)$/);
+  if (m) return +m[2] === 0 ? null : +m[1] / +m[2];
+  const v = Number(s); return isFinite(v) ? v : null;
+};
+const near = (v, t, tol) => v != null && Math.abs(v - t) <= (tol != null ? tol : 1e-6);
+const fmt = (v, d = 2) => v.toLocaleString('en-US', { maximumFractionDigits: d });
+
+/* ---------- small math helpers for writing content ---------- */
+const X = '<i>x</i>', Y = '<i>y</i>';
+const pw = (base, e) => `${base}<sup>${e}</sup>`;
+const frac = (n, d) => `<span class="fr"><span>${n}</span><span>${d}</span></span>`;
+const box = name => `{{${name}}}`;
+
+/* ---------- graph helpers ---------- */
+function miniPlot(o) {
+  const W = o.w || 320, Hh = o.h || 220, L = 40, R = 12, T = 12, B = 30;
+  const Xp = x => L + (x - o.xmin) / (o.xmax - o.xmin) * (W - L - R), Yp = y => Hh - B - (y - o.ymin) / (o.ymax - o.ymin) * (Hh - T - B);
+  let s = '';
+  for (let y = o.ymin; y <= o.ymax + 1e-9; y += o.ystep) s += `<line class="ax" x1="${L}" x2="${W - R}" y1="${Yp(y)}" y2="${Yp(y)}"/><text class="axt" x="${L - 5}" y="${Yp(y) + 4}" text-anchor="end">${fmt(y)}</text>`;
+  for (let x = o.xmin; x <= o.xmax + 1e-9; x += o.xstep || 1) s += `<line class="ax" x1="${Xp(x)}" x2="${Xp(x)}" y1="${T}" y2="${Hh - B}"/><text class="axt" x="${Xp(x)}" y="${Hh - B + 15}" text-anchor="middle">${x}</text>`;
+  s += `<line class="ax0" x1="${L}" x2="${W - R}" y1="${Yp(Math.max(0, o.ymin))}" y2="${Yp(Math.max(0, o.ymin))}"/><line class="ax0" x1="${Xp(Math.max(0, o.xmin))}" x2="${Xp(Math.max(0, o.xmin))}" y1="${T}" y2="${Hh - B}"/>`;
+  if (o.f) { const p = []; for (let i = 0; i <= 200; i++) { const x = o.xmin + (o.xmax - o.xmin) * i / 200, y = o.f(x); if (y <= o.ymax * 1.05 && y >= o.ymin - 1) p.push(`${Xp(x).toFixed(1)},${Yp(y).toFixed(1)}`); } s += `<polyline class="cv" points="${p.join(' ')}"/>`; }
+  (o.pts || []).forEach(([x, y, lab]) => { s += `<circle class="pt" cx="${Xp(x)}" cy="${Yp(y)}" r="4.5"/>${lab ? `<text class="ptl" x="${Xp(x) + 7}" y="${Yp(y) - 7}">${esc(lab)}</text>` : ''}`; });
+  if (o.label) s += `<text class="ptl" x="${W - R - 4}" y="${T + 12}" text-anchor="end">${esc(o.label)}</text>`;
+  return `<svg class="mini" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="${esc(o.aria || 'Graph')}">${s}</svg>`;
+}
+function shape(kind) {
+  const p = { eg: 'M10,78 C45,76 70,66 90,10', ed: 'M10,10 C30,66 55,76 90,78', li: 'M10,78 L90,14', ld: 'M10,14 L90,78' }[kind];
+  return `<svg viewBox="0 0 100 90" class="shape" aria-hidden="true"><line x1="10" y1="82" x2="94" y2="82" class="ax0"/><line x1="10" y1="4" x2="10" y2="82" class="ax0"/><path d="${p}" class="cv"/></svg>`;
+}
+const SHAPES = [['eg', shape('eg') + 'Exponential growth'], ['ed', shape('ed') + 'Exponential decay'], ['li', shape('li') + 'Linear, increasing'], ['ld', shape('ld') + 'Linear, decreasing']];
+const DOM = [['xge0', `${X} ≥ 0`], ['all', 'All real numbers'], ['xgt0b', `0 ≤ ${X} ≤ 1`], ['neg', `${X} ≤ 0`]];
+
+/* =====================================================================
+   CONTENT: six topics
+   Part types: num, choice, pick (graph shapes), boxes (template), text (self-check)
+   ===================================================================== */
+const TOPICS = [
+  {
+    id: 't1', title: 'Properties of Exponents', guide: [1],
+    review: `<p>Exponent rules let you rewrite expressions without expanding them. Final answers use <b>only positive exponents</b>.</p>
+      <table class="rules"><tr><th>Rule</th><th>Example</th></tr>
+        <tr><td>Product: add exponents</td><td>${pw(X, 3)} · ${pw(X, 4)} = ${pw(X, 7)}</td></tr>
+        <tr><td>Quotient: subtract exponents</td><td>${frac(pw(X, 9), pw(X, 2))} = ${pw(X, 7)}</td></tr>
+        <tr><td>Power of a power: multiply exponents</td><td>(${pw(X, 2)})<sup>5</sup> = ${pw(X, 10)}</td></tr>
+        <tr><td>Power of a product: every factor gets the power</td><td>(3${pw(X, 2)}${Y})<sup>2</sup> = 9${pw(X, 4)}${pw(Y, 2)}</td></tr>
+        <tr><td>Zero exponent</td><td>${pw(X, 0)} = 1</td></tr>
+        <tr><td>Negative exponent: move it across the fraction bar</td><td>${pw(X, '−3')} = ${frac(1, pw(X, 3))}</td></tr></table>`,
+    example: { q: `Rewrite ${frac(`(2${pw(X, 3)}${Y})<sup>2</sup>`, `4${pw(X, '−1')}${pw(Y, 5)}`)} with only positive exponents.`,
+      steps: [`Apply the power to every factor on top: (2${pw(X, 3)}${Y})<sup>2</sup> = 4${pw(X, 6)}${pw(Y, 2)}.`, `Divide the coefficients: 4 ÷ 4 = 1.`, `Subtract the exponents of ${X}: 6 − (−1) = 7. Subtract the exponents of ${Y}: 2 − 5 = −3.`, `Move ${pw(Y, '−3')} to the bottom so the exponent is positive: <b>${frac(pw(X, 7), pw(Y, 3))}</b>.`] },
+    practice: [
+      { id: 'p1a', stem: `Rewrite ${pw('<i>a</i>', 4)} · ${pw('<i>a</i>', 9)}.`, parts: [{ k: 'x', type: 'boxes', tpl: `<i>a</i><sup>${box('e')}</sup>`, ans: { e: 13 }, hints: { e: [[v => v === 36, 'For a product with the same base, add the exponents.']] } }] },
+      { id: 'p1b', stem: `Rewrite (3${pw('<i>m</i>', 2)}${pw('<i>n</i>', 5)})<sup>2</sup>.`, parts: [{ k: 'x', type: 'boxes', tpl: `${box('c')}<i>m</i><sup>${box('m')}</sup><i>n</i><sup>${box('n')}</sup>`, ans: { c: 9, m: 4, n: 10 },
+        hints: { c: [[v => v === 6, 'The coefficient is squared too: 3 · 3.'], [v => v === 3, 'Every factor inside the parentheses gets the power, including the 3.']], n: [[v => v === 7, 'Power of a power: multiply the exponents, don’t add.']] } }] },
+      { id: 'p1c', stem: `Rewrite ${frac(`12${pw('<i>a</i>', 7)}${pw('<i>b</i>', 3)}`, `4${pw('<i>a</i>', 2)}${pw('<i>b</i>', 6)}`)} with only positive exponents.`, parts: [{ k: 'x', type: 'boxes',
+        tpl: frac(`${box('c')}<i>a</i><sup>${box('a')}</sup>`, `<i>b</i><sup>${box('b')}</sup>`), ans: { c: 3, a: 5, b: 3 }, hints: { c: [[v => v === 8, 'Divide the coefficients: 12 ÷ 4.']], b: [[v => v === -3, 'The exponent should be positive once the b is in the denominator.']] } }] },
+      { id: 'p1d', stem: `Rewrite ${frac(`(${pw('<i>p</i>', 4)}${pw('<i>q</i>', '−2')})<sup>3</sup>`, `${pw('<i>p</i>', '−3')}${pw('<i>q</i>', 5)}`)} with only positive exponents.`, parts: [{ k: 'x', type: 'boxes',
+        tpl: frac(`<i>p</i><sup>${box('p')}</sup>`, `<i>q</i><sup>${box('q')}</sup>`), ans: { p: 15, q: 11 }, hints: { p: [[v => v === 9, 'Subtracting a negative: 12 − (−3) = 15.'], [v => v === 12, 'Don’t forget to divide by p to the −3.']], q: [[v => v === 1, 'Top: q to the −6. Then −6 − 5 = −11, which moves to the bottom.']] } }] },
+      { id: 'p1e', stem: `Rewrite (2${pw(X, 0)}${pw(Y, 3)})<sup>4</sup>.`, parts: [{ k: 'x', type: 'boxes', tpl: `${box('c')}${Y}<sup>${box('y')}</sup>`, ans: { c: 16, y: 12 }, hints: { c: [[v => v === 8, '2 to the 4th power is 2 · 2 · 2 · 2.']] } }] }
+    ]
+  },
+  {
+    id: 't2', title: 'Writing Exponential Functions', guide: [2, 8],
+    review: `<p>An exponential function has the form <span class="m"><i>f</i>(${X}) = <i>a</i> · <i>b</i><sup>${X}</sup></span>.</p>
+      <ul><li><b><i>a</i></b> is the starting value: the output when ${X} = 0.</li><li><b><i>b</i></b> is the factor you multiply by each time ${X} goes up by 1. In a table, divide an output by the one before it.</li>
+      <li>If the table skips values of ${X}, the ratio you find is for more than one step. For two steps, find the number that times itself gives the ratio.</li>
+      <li>Check that the ratio stays the same. If the <i>differences</i> stay the same instead, the function is linear.</li></ul>`,
+    example: { q: 'A plant has 6 leaves when you first count them. The number of leaves doubles every week. Write a function L for the number of leaves after <i>w</i> weeks.',
+      steps: ['Starting value: 6, so <i>a</i> = 6.', 'Doubles each week, so <i>b</i> = 2.', '<b><i>L</i>(<i>w</i>) = 6 · 2<sup><i>w</i></sup></b>.', 'Check: <i>L</i>(3) = 6 · 8 = 48 leaves after 3 weeks.'] },
+    practice: [
+      { id: 'p2a', stem: 'Write an equation for the function in the table, then use it.', visual: tableHTML(['<i>x</i>', 0, 1, 2, 3], ['<i>f</i>(<i>x</i>)', 4, 20, 100, 500]),
+        parts: [{ k: 'eq', type: 'boxes', label: 'Equation', tpl: `<i>f</i>(${X}) = ${box('a')} · (${box('b')})<sup>${X}</sup>`, ans: { a: 4, b: 5 }, hints: { b: [[v => v === 16, '16 is the difference between outputs. What do you multiply by?']] } },
+          { k: 'f6', type: 'num', label: 'Find <i>f</i>(6).', ans: 62500 }] },
+      { id: 'p2b', stem: 'A new video has 250 views. The number of views doubles every day. Let <i>V</i>(<i>d</i>) be the number of views after <i>d</i> days.',
+        parts: [{ k: 'eq', type: 'boxes', label: 'Equation', tpl: `<i>V</i>(<i>d</i>) = ${box('a')} · (${box('b')})<sup><i>d</i></sup>`, ans: { a: 250, b: 2 } }, { k: 'v5', type: 'num', label: 'How many views after 5 days?', ans: 8000, hints: [[v => v === 2500, 'That multiplies by 2 · 5. Doubling 5 times means multiplying by 2 five times.']] }] },
+      { id: 'p2c', stem: 'Write an equation for the function in the table.', visual: tableHTML(['<i>x</i>', 0, 1, 2, 3], ['<i>g</i>(<i>x</i>)', 729, 243, 81, 27]),
+        parts: [{ k: 'eq', type: 'boxes', label: 'Equation', tpl: `<i>g</i>(${X}) = ${box('a')} · (${box('b')})<sup>${X}</sup>`, ans: { a: 729, b: 1 / 3 }, hints: { b: [[v => v === 3, 'The outputs get smaller, so the factor is less than 1.'], [v => v === -486, 'Use the ratio, not the difference.']] } },
+          { k: 'g5', type: 'num', label: 'Find <i>g</i>(5).', ans: 3 }] },
+      { id: 'p2d', stem: 'This table skips some values of <i>x</i>. Write an equation for <i>h</i>.', visual: tableHTML(['<i>x</i>', 0, 2, 4], ['<i>h</i>(<i>x</i>)', 5, 45, 405]),
+        parts: [{ k: 'eq', type: 'boxes', label: 'Equation', tpl: `<i>h</i>(${X}) = ${box('a')} · (${box('b')})<sup>${X}</sup>`, ans: { a: 5, b: 3 }, hints: { b: [[v => v === 9, '9 is the factor for 2 steps of x. What number times itself is 9?']] } }] },
+      { id: 'p2e', stem: 'Which describes this table?', visual: tableHTML(['<i>n</i>', 0, 1, 2, 3], ['<i>m</i>(<i>n</i>)', 3, 7, 11, 15]),
+        parts: [{ k: 'c', type: 'choice', opts: [['e4', 'Exponential: multiply by 4 each time'], ['l4', 'Linear: add 4 each time'], ['e3', 'Exponential: multiply by 3 each time'], ['l3', 'Linear: add 3 each time']], ans: 'l4' },
+          { k: 'eq', type: 'boxes', label: 'Write its equation.', tpl: `<i>m</i>(<i>n</i>) = ${box('b')} + ${box('m')}<i>n</i>`, ans: { b: 3, m: 4 } }] }
+    ]
+  },
+  {
+    id: 't3', title: 'Comparing Growth Factors', guide: [3],
+    review: `<p>To compare exponential functions, find the growth factor <i>b</i> in each representation:</p>
+      <ul><li><b>Equation:</b> read <i>b</i> from <span class="m"><i>a</i> · <i>b</i><sup>${X}</sup></span>. Simplify fractions: ${frac(21, 6)} = 3.5.</li>
+      <li><b>Table:</b> divide an output by the one before it, when ${X} goes up by 1.</li>
+      <li><b>Graph:</b> find two points one unit apart in ${X} and divide their ${Y}-values.</li></ul>
+      <p>The larger the growth factor, the faster the function grows <i>eventually</i>, no matter where it starts.</p>`,
+    example: { q: 'Which grows faster: <i>p</i>(<i>x</i>) = 10 · (1.5)<sup><i>x</i></sup> or a function <i>q</i> with <i>q</i>(0) = 4 and <i>q</i>(1) = 8?', steps: ['Growth factor of <i>p</i>: 1.5.', 'Growth factor of <i>q</i>: 8 ÷ 4 = 2.', '2 > 1.5, so <b><i>q</i> grows faster</b>, even though it starts lower.'] },
+    practice: [
+      { id: 'p3a', stem: `What is the growth factor of <i>g</i>(${X}) = 50 · ${frac(5, 2)}<sup>${X}</sup>? Enter a decimal or a fraction.`, parts: [{ k: 'b', type: 'num', ans: 2.5 }] },
+      { id: 'p3b', stem: 'What is the growth factor of <i>h</i>?', visual: tableHTML(['<i>x</i>', 0, 1, 2, 3], ['<i>h</i>(<i>x</i>)', 80, 100, 125, 156.25]), parts: [{ k: 'b', type: 'num', ans: 1.25, hints: [[v => v === 20, '20 is the first difference. Divide instead: 100 ÷ 80.']] }] },
+      { id: 'p3c', stem: 'What is the growth factor of <i>k</i>?', visual: miniPlot({ xmin: 0, xmax: 3, xstep: 1, ymin: 0, ymax: 30, ystep: 5, f: x => 2 * Math.pow(3, x), pts: [[0, 2, '(0, 2)'], [1, 6, '(1, 6)'], [2, 18, '(2, 18)']], label: 'k(x)' }), parts: [{ k: 'b', type: 'num', ans: 3, hints: [[v => v === 4, '4 is the difference. What do you multiply 2 by to get 6?']] }] },
+      { id: 'p3d', stem: 'Using <i>g</i>, <i>h</i>, and <i>k</i> from the last three problems, list the functions from <b>greatest to least</b> growth factor.', parts: [{ k: 'c', type: 'choice', opts: [['kgh', 'k, g, h'], ['gkh', 'g, k, h'], ['hgk', 'h, g, k'], ['khg', 'k, h, g']], ans: 'kgh' }] },
+      { id: 'p3e', stem: '<i>f</i>(<i>x</i>) = 1,000 · (1.1)<sup><i>x</i></sup> and <i>g</i>(<i>x</i>) = 2 · (1.5)<sup><i>x</i></sup>. Which is greater for very large values of <i>x</i>?', parts: [{ k: 'c', type: 'choice', opts: [['f', '<i>f</i>, because it starts at 1,000'], ['g', '<i>g</i>, because it has the larger growth factor'], ['same', 'They stay about the same']], ans: 'g' }] }
+    ]
+  },
+  {
+    id: 't4', title: 'Growth, Decay, or Linear?', guide: [4],
+    review: `<ul><li><b>Linear:</b> the same amount is <i>added or subtracted</i> each step. The graph is a line.</li>
+      <li><b>Exponential growth:</b> the amount is <i>multiplied</i> by a factor greater than 1 each step.</li>
+      <li><b>Exponential decay:</b> the amount is <i>multiplied</i> by a factor between 0 and 1 each step.</li></ul>
+      <div class="shapes">${['eg', 'ed', 'li', 'ld'].map(k => `<figure>${shape(k)}<figcaption>${{ eg: 'Exponential growth', ed: 'Exponential decay', li: 'Linear, increasing', ld: 'Linear, decreasing' }[k]}</figcaption></figure>`).join('')}</div>
+      <p><b>Watch the wording.</b> “Loses ${frac(1, 3)} of its value” means ${frac(2, 3)} is left, so the decay factor is ${frac(2, 3)}. “Grows by 4%” means the factor is 1.04.</p>`,
+    example: { q: 'A phone loses 20% of its value each year. Is this linear or exponential? What is the factor?', steps: ['It loses a <i>percent</i> of its current value, not a fixed number of dollars, so it is exponential.', 'Losing 20% leaves 80%.', '<b>Exponential decay with factor 0.8.</b>'] },
+    practice: [
+      { id: 'p4a', stem: 'A laptop loses 1/4 of its value each year after purchase.', parts: [{ k: 's', type: 'pick', label: 'Which graph shows this?', opts: SHAPES, ans: 'ed' }, { k: 'b', type: 'num', label: 'What is the decay factor?', ans: 0.75, hints: [[v => near(v, 0.25), 'It loses 1/4, so how much of its value is left?']] }] },
+      { id: 'p4b', stem: 'A sunflower grows 2 cm taller every week.', parts: [{ k: 's', type: 'pick', label: 'Which graph shows this?', opts: SHAPES, ans: 'li' }] },
+      { id: 'p4c', stem: 'The number of bacteria in a dish triples every hour.', parts: [{ k: 's', type: 'pick', label: 'Which graph shows this?', opts: SHAPES, ans: 'eg' }] },
+      { id: 'p4d', stem: 'A pool holding 9,000 gallons drains at 50 gallons per minute.', parts: [{ k: 's', type: 'pick', label: 'Which graph shows this?', opts: SHAPES, ans: 'ld' }] },
+      { id: 'p4e', stem: 'A town’s population is modeled by <i>P</i>(<i>t</i>) = 3,000 · (1.04)<sup><i>t</i></sup>.', parts: [{ k: 'c', type: 'choice', label: 'Growth or decay?', opts: [['g', 'Growth'], ['d', 'Decay']], ans: 'g' }, { k: 'pct', type: 'num', label: 'By what percent does it change each year?', unit: '%', ans: 4, hints: [[v => near(v, 104), '1.04 means 104% of last year, which is a 4% increase.'], [v => near(v, 1.04) || near(v, 0.04), 'Write it as a percent.']] }] }
+    ]
+  },
+  {
+    id: 't5', title: 'Exponential Models in Context', guide: [5, 6],
+    review: `<p>In <span class="m"><i>f</i>(${X}) = <i>a</i> · <i>b</i><sup>${X}</sup></span>:</p>
+      <ul><li><b><i>a</i></b> is the initial value, the amount when ${X} = 0.</li>
+      <li><b><i>b</i></b> tells what fraction or percent is kept each step. If <i>b</i> = 0.89, then 89% is kept and 11% is lost each step.</li>
+      <li>To <b>evaluate</b>, substitute: <i>f</i>(9) means ${X} = 9. To find <b>when</b> a value is reached, use a table in Desmos and find the first ${X} that works.</li>
+      <li><b>Amount processed or lost</b> = starting amount − amount left.</li>
+      <li><b>Discrete or continuous?</b> If the input can take any value in between (like time), the graph is continuous. If it only makes sense for whole numbers (like rounds or people), it is discrete.</li>
+      <li><b>Domain and range in context:</b> time can’t be negative, so the domain usually starts at 0. A decaying amount stays above 0 and is at most the starting value.</li></ul>`,
+    example: { q: 'A laptop’s value is <i>T</i>(<i>x</i>) = 1,500 · (0.92)<sup><i>x</i></sup> dollars after <i>x</i> years.', steps: ['Initial value: $1,500.', '0.92 < 1, so this is decay. It keeps 92% each year, so it loses 8% each year.', '<i>T</i>(3) = 1,500 · 0.92<sup>3</sup> ≈ $1,168.01.', 'Domain: <i>x</i> ≥ 0. Range: 0 < <i>T</i>(<i>x</i>) ≤ 1,500.'] },
+    practice: [
+      { id: 'p5a', stem: 'A boat bought for a family business is worth <i>V</i>(<i>x</i>) = 48,000 · (0.85)<sup><i>x</i></sup> dollars, <i>x</i> years after it was purchased. Use Desmos for the calculations.',
+        parts: [{ k: 'a', type: 'num', label: 'What was the boat’s initial value?', unit: '$', ans: 48000 },
+          { k: 'pct', type: 'num', label: 'What percent of its value does the boat lose each year?', unit: '%', ans: 15, hints: [[v => near(v, 85), '85% is what it keeps. How much does it lose?']] },
+          { k: 'v4', type: 'num', label: 'What is the boat worth after 4 years? Round to the nearest cent.', unit: '$', ans: 25056.30, tol: 0.6 },
+          { k: 'yr', type: 'num', label: 'What is the first whole year the boat is worth less than $20,000?', ans: 6, hints: [[v => v === 5, 'After 5 years it is worth about $21,298. Still more than $20,000.']] },
+          { k: 'dom', type: 'choice', label: 'Best domain', opts: DOM, ans: 'xge0' },
+          { k: 'rng', type: 'choice', label: 'Best range', opts: [['r1', '0 < <i>V</i>(<i>x</i>) ≤ 48,000'], ['r2', 'All real numbers'], ['r3', '<i>V</i>(<i>x</i>) ≥ 48,000'], ['r4', '0 ≤ <i>V</i>(<i>x</i>) ≤ 0.85']], ans: 'r1' }] },
+      { id: 'p5b', stem: 'The milligrams of caffeine in a person’s body is <i>C</i>(<i>t</i>) = 120 · (0.8)<sup><i>t</i></sup>, where <i>t</i> is the number of hours since they drank coffee.',
+        parts: [{ k: 'a', type: 'num', label: 'How much caffeine did they start with?', unit: 'mg', ans: 120 },
+          { k: 'c2', type: 'num', label: 'How much caffeine is left after 2 hours?', unit: 'mg', ans: 76.8, tol: 0.01 },
+          { k: 'p30', type: 'num', label: 'How much caffeine has the body processed after 30 minutes? Round to the nearest hundredth.', unit: 'mg', ans: 12.67, tol: 0.02, hints: [[v => near(v, 107.33, 0.05), 'That’s how much is left. How much has been processed?'], [v => near(v, 24, 0.5) || near(v, 96, 0.5), '30 minutes is half an hour, so t = 0.5.']] },
+          { k: 'b', type: 'num', label: 'What is the decay factor?', ans: 0.8 },
+          { k: 'mean', type: 'choice', label: 'What does the decay factor tell us?', opts: [['m1', 'Each hour, 80% of the caffeine remains.'], ['m2', 'Each hour, 80 mg of caffeine leaves the body.'], ['m3', 'Each hour, 20% of the caffeine remains.'], ['m4', 'After 0.8 hours, the caffeine is gone.']], ans: 'm1' },
+          { k: 'dc', type: 'choice', label: 'Should the graph be discrete or continuous?', opts: [['c', 'Continuous: time passes between whole hours and caffeine is still in the body'], ['d', 'Discrete: we only measure on the hour']], ans: 'c' },
+          { k: 'rng', type: 'choice', label: 'Best range', opts: [['r1', '0 < <i>C</i>(<i>t</i>) ≤ 120'], ['r2', '<i>C</i>(<i>t</i>) ≥ 0'], ['r3', '0 ≤ <i>C</i>(<i>t</i>) ≤ 0.8'], ['r4', 'All real numbers']], ans: 'r1' }] }
+    ]
+  },
+  {
+    id: 't6', title: 'Linear vs. Exponential', guide: [7, 8],
+    review: `<ul><li>A <b>linear</b> function adds the same amount each step. An <b>exponential</b> function multiplies by the same factor.</li>
+      <li>A linear function can be ahead at first, but an exponential growth function <b>always catches up and passes it eventually</b>, because its increases keep getting bigger.</li>
+      <li>To find when one passes the other, make a table of both, or graph both in Desmos and look for where they cross.</li></ul>`,
+    example: { q: 'Account A starts at $500 and gains $40 per year. Account B starts at $500 and grows 7% per year. Which is worth more after 10 years?', steps: ['A: 500 + 40 · 10 = $900.', 'B: 500 · (1.07)<sup>10</sup> ≈ $983.58.', '<b>Account B</b> is worth more after 10 years.'] },
+    practice: [
+      { id: 'p6a', stem: 'Marcus deposits $800. Option 1 grows by $60 each year. Option 2 grows by 6% each year.',
+        parts: [{ k: 'o1', type: 'num', label: 'Value of Option 1 after 8 years', unit: '$', ans: 1280 },
+          { k: 'o2', type: 'num', label: 'Value of Option 2 after 8 years (nearest cent)', unit: '$', ans: 1275.08, tol: 0.02, hints: [[v => near(v, 1088, 1), 'That adds 6% of $800 each year, which is linear. Multiply by 1.06 each year instead.']] },
+          { k: 'w8', type: 'choice', label: 'Which is worth more after 8 years?', opts: [['1', 'Option 1'], ['2', 'Option 2']], ans: '1' },
+          { k: 'w15', type: 'choice', label: 'Which is worth more after 15 years?', opts: [['1', 'Option 1'], ['2', 'Option 2']], ans: '2' }] },
+      { id: 'p6b', stem: 'A cricket population is <i>c</i>(<i>n</i>) = 3 · 2<sup><i>n</i></sup> and an ant population is <i>a</i>(<i>n</i>) = 40 + 10<i>n</i>, where <i>n</i> is months.',
+        parts: [{ k: 'n', type: 'num', label: 'In what month do the crickets first outnumber the ants?', ans: 5, hints: [[v => v === 4, 'At month 4 there are 48 crickets and 80 ants.']] }] },
+      { id: 'p6c', stem: 'Write an equation for the linear function in the table.', visual: tableHTML(['<i>n</i>', 0, 1, 2, 3], ['<i>m</i>(<i>n</i>)', 12, 17, 22, 27]),
+        parts: [{ k: 'eq', type: 'boxes', tpl: `<i>m</i>(<i>n</i>) = ${box('b')} + ${box('m')}<i>n</i>`, ans: { b: 12, m: 5 } }] },
+      { id: 'p6d', stem: 'Use your answers above.', parts: [{ k: 't', type: 'text', label: 'The ants started with more than the crickets. Explain why the crickets eventually outnumber them.', sample: 'The ants increase by the same amount (10) each month, but the crickets double each month. Doubling adds more and more each month, so the crickets catch up and then grow much faster than the ants.' }] }
+    ]
+  }
+];
+
+/* =====================================================================
+   THE STUDY GUIDE (same numbers as the paper copy)
+   ===================================================================== */
+const GUIDE = [
+  { id: 'g1', n: 1, topic: 't1', stem: 'Rewrite the expressions using the rules of exponents. Use only positive exponents.',
+    parts: [{ k: 'a', type: 'boxes', label: `a) ${pw(Y, 5)} · ${pw(Y, 6)}`, tpl: `${Y}<sup>${box('e')}</sup>`, ans: { e: 11 }, hints: { e: [[v => v === 30, 'Product of powers: add the exponents.']] } },
+      { k: 'b', type: 'boxes', label: `b) (5${pw(X, 4)}${Y})<sup>3</sup>`, tpl: `${box('c')}${X}<sup>${box('x')}</sup>${Y}<sup>${box('y')}</sup>`, ans: { c: 125, x: 12, y: 3 }, hints: { c: [[v => v === 15, '5 cubed is 5 · 5 · 5.']], x: [[v => v === 7, 'Power of a power: multiply.']] } },
+      { k: 'c', type: 'boxes', label: `c) ${frac(`10${pw(X, 8)}${pw(Y, 2)}`, `5${pw(X, 6)}${pw(Y, 5)}`)}`, tpl: frac(`${box('c')}${X}<sup>${box('x')}</sup>`, `${Y}<sup>${box('y')}</sup>`), ans: { c: 2, x: 2, y: 3 } },
+      { k: 'd', type: 'boxes', label: `d) ${frac(`(${pw(X, 5)}${pw(Y, 10)}<i>z</i>)<sup>3</sup>`, `${pw(X, '−5')}${pw(Y, 8)}${pw('<i>z</i>', 2)}`)}`, tpl: `${X}<sup>${box('x')}</sup>${Y}<sup>${box('y')}</sup><i>z</i><sup>${box('z')}</sup>`, ans: { x: 20, y: 22, z: 1 }, hints: { x: [[v => v === 10, 'Subtracting a negative: 15 − (−5) = 20.']] } }] },
+  { id: 'g2', n: 2, topic: 't2', stem: 'In the Battle of the Books, each round <i>x</i> has triple the points available as the previous round. Round 0 has 15 points.',
+    parts: [{ k: 'r1', type: 'num', label: 'Points in round 1', ans: 45 }, { k: 'r2', type: 'num', label: 'Points in round 2', ans: 135 }, { k: 'r6', type: 'num', label: 'Points in round 6', ans: 10935, hints: [[v => v === 270, 'That multiplies by 3 · 6. Triple the points six times instead.']] },
+      { k: 'eq', type: 'boxes', label: 'Write the equation.', tpl: `<i>P</i>(${X}) = ${box('a')} · (${box('b')})<sup>${X}</sup>`, ans: { a: 15, b: 3 } }] },
+  { id: 'g3', n: 3, topic: 't3', stem: 'Three different functions are represented below.', visual: `<div class="row" style="gap:18px;align-items:center">${tableHTML(['<i>x</i>', 0, 1, 2, 3, 4], ['<i>e</i>(<i>x</i>)', 200, 300, 450, 675, 1012.5], true)}<div class="m" style="font-size:1.3rem"><i>d</i>(<i>x</i>) = 200 · ${frac(21, 6)}<sup><i>x</i></sup></div>${miniPlot({ xmin: 0, xmax: 3, ymin: 0, ymax: 10, ystep: 2, f: x => Math.pow(2, x), label: 'f(x)', w: 240, h: 200 })}</div>`,
+    parts: [{ k: 'bd', type: 'num', label: 'Growth factor of <i>d</i>', ans: 3.5 }, { k: 'be', type: 'num', label: 'Growth factor of <i>e</i>', ans: 1.5, hints: [[v => v === 100, 'Divide, don’t subtract: 300 ÷ 200.']] }, { k: 'bf', type: 'num', label: 'Growth factor of <i>f</i>', ans: 2 },
+      { k: 'c', type: 'choice', label: 'Which lists the functions from <b>greatest to least</b> growth factor?', opts: [['A', 'A. e(x), f(x), d(x)'], ['B', 'B. d(x), f(x), e(x)'], ['C', 'C. f(x), e(x), d(x)'], ['D', 'D. e(x), d(x), f(x)']], ans: 'B' }] },
+  { id: 'g4', n: 4, topic: 't4', stem: 'Decide what each graph generally looks like.',
+    parts: [{ k: 'a', type: 'pick', label: 'a) A new car loses 1/3 of its value each year.', opts: SHAPES, ans: 'ed' }, { k: 'b', type: 'pick', label: 'b) A hippo at the zoo weighs 600 pounds and gains 4 pounds per year.', opts: SHAPES, ans: 'li' }] },
+  { id: 'g5', n: 5, topic: 't5', stem: 'The value of a Jeep purchased in 2020 is modeled by <i>p</i>(<i>x</i>) = 34,000 · (0.89)<sup><i>x</i></sup>, where <i>x</i> is the number of years since the car was purchased.',
+    parts: [{ k: 'a', type: 'num', label: 'a) What is the initial value of the Jeep?', unit: '$', ans: 34000 },
+      { k: 'gd', type: 'choice', label: 'b) Is this growth or decay?', opts: [['g', 'Growth'], ['d', 'Decay']], ans: 'd' },
+      { k: 'mean', type: 'choice', label: 'What does this mean in this situation?', opts: [['m1', 'The Jeep loses 11% of its value each year.'], ['m2', 'The Jeep loses 89% of its value each year.'], ['m3', 'The Jeep loses $0.89 each year.'], ['m4', 'The Jeep gains 11% each year.']], ans: 'm1' },
+      { k: 'v9', type: 'num', label: 'e) What is the Jeep worth in 9 years? Round to the nearest cent.', unit: '$', ans: 11912.12, tol: 0.02 },
+      { k: 'yr', type: 'num', label: 'f) What is the first year the Jeep is worth less than $10,000?', ans: 11, hints: [[v => v === 10, 'After 10 years it is worth about $10,602.']] },
+      { k: 'dom', type: 'choice', label: 'g) Best domain', opts: DOM, ans: 'xge0' },
+      { k: 'rng', type: 'choice', label: 'Best range', opts: [['r1', '0 < <i>p</i>(<i>x</i>) ≤ 34,000'], ['r2', 'All real numbers'], ['r3', '<i>p</i>(<i>x</i>) ≥ 34,000'], ['r4', '0 ≤ <i>p</i>(<i>x</i>) ≤ 0.89']], ans: 'r1' }] },
+  { id: 'g6', n: 6, topic: 't5', stem: `The milligrams of ibuprofen in a person’s body is <i>f</i>(<i>t</i>) = 200 · ${frac(3, 4)}<sup><i>t</i></sup>, where <i>t</i> is the number of hours since the patient took the medicine.`,
+    parts: [{ k: 'a', type: 'num', label: 'a) How much ibuprofen did the person take to begin with?', unit: 'mg', ans: 200 },
+      { k: 'b3', type: 'num', label: 'b) How much will be left after 3 hours?', unit: 'mg', ans: 84.375, tol: 0.01, hints: [[v => near(v, 450, 1), 'Multiply by 3/4 three times. The amount should go down.']] },
+      { k: 'p30', type: 'num', label: 'c) How much will have been processed after 30 minutes? Round to the nearest hundredth.', unit: 'mg', ans: 26.79, tol: 0.02, hints: [[v => near(v, 173.21, 0.05), 'That’s how much is left. Subtract from 200.']] },
+      { k: 'b', type: 'num', label: 'd) What is the decay factor?', ans: 0.75 },
+      { k: 'mean', type: 'choice', label: 'What does it tell us?', opts: [['m1', 'Each hour, 3/4 (75%) of the ibuprofen remains.'], ['m2', 'Each hour, 75 mg leaves the body.'], ['m3', 'Each hour, 3/4 of the ibuprofen leaves the body.'], ['m4', 'The medicine lasts 3/4 of an hour.']], ans: 'm1' },
+      { k: 'dc', type: 'choice', label: 'f) Should the graph be discrete or continuous?', opts: [['c', 'Continuous'], ['d', 'Discrete']], ans: 'c' },
+      { k: 'why', type: 'text', label: 'Explain why.', sample: 'Time keeps passing between whole hours, and there is always some ibuprofen in the body at every moment, so the graph should be a connected curve.' },
+      { k: 'dom', type: 'choice', label: 'g) Best domain', opts: [['xge0', '<i>t</i> ≥ 0'], ['all', 'All real numbers'], ['b', '0 ≤ <i>t</i> ≤ 200'], ['neg', '<i>t</i> ≤ 0']], ans: 'xge0' },
+      { k: 'rng', type: 'choice', label: 'Best range', opts: [['r1', '0 < <i>f</i>(<i>t</i>) ≤ 200'], ['r2', 'All real numbers'], ['r3', '<i>f</i>(<i>t</i>) ≥ 200'], ['r4', '0 ≤ <i>f</i>(<i>t</i>) ≤ 0.75']], ans: 'r1' }] },
+  { id: 'g7', n: 7, topic: 't6', stem: 'Tanvi deposited $600 when she was 10 and will take out all the money on her 21st birthday. Option 1 grows by $50 each year. Option 2 grows by 9% each year.',
+    parts: [{ k: 'o1', type: 'num', label: 'Option 1 at age 21', unit: '$', ans: 1150, hints: [[v => v === 1100, 'From age 10 to 21 is 11 years.']] },
+      { k: 'o2', type: 'num', label: 'Option 2 at age 21 (nearest cent)', unit: '$', ans: 1548.26, tol: 0.02, hints: [[v => near(v, 1420.41, 0.05), 'From age 10 to 21 is 11 years, not 10.']] },
+      { k: 'w', type: 'choice', label: 'Which account will be worth more when she is 21?', opts: [['1', 'Option 1'], ['2', 'Option 2']], ans: '2' }] },
+  { id: 'g8', n: 8, topic: 't6', stem: 'Mrs. S had 2 rabbits in her backyard. One month later, the number of rabbits had doubled. Ms. Jones has mice in her garage:', visual: tableHTML(['<i>n</i>, months', 0, 1, 2, 3, 4], ['<i>m</i>, mice', 10, 14, 18, 22, 26]),
+    parts: [{ k: 'r', type: 'boxes', label: 'a) Write an equation for the rabbits after <i>n</i> months.', tpl: `<i>r</i>(<i>n</i>) = ${box('a')} · (${box('b')})<sup><i>n</i></sup>`, ans: { a: 2, b: 2 } },
+      { k: 'r8', type: 'num', label: 'b) Find <i>r</i>(8).', ans: 512, hints: [[v => v === 32, 'That is 2 · 2 · 8. Double 8 times instead.']] },
+      { k: 'r8m', type: 'choice', label: 'What does <i>r</i>(8) = 512 mean?', opts: [['m1', 'After 8 months, Mrs. S has 512 rabbits.'], ['m2', 'It takes 512 months to have 8 rabbits.'], ['m3', 'Mrs. S gains 512 rabbits each month.']], ans: 'm1' },
+      { k: 'over80', type: 'num', label: 'c) After how many months will Mrs. S first have more than 80 rabbits?', ans: 6, hints: [[v => v === 5, 'After 5 months she has 64 rabbits.']] },
+      { k: 'm', type: 'boxes', label: 'd) Write an equation for the mice.', tpl: `<i>m</i>(<i>n</i>) = ${box('b')} + ${box('k')}<i>n</i>`, ans: { b: 10, k: 4 } },
+      { k: 'same', type: 'choice', label: 'e) When are the two populations the same?', opts: [['a', 'Between 2 and 3 months'], ['b', 'Between 3 and 4 months'], ['c', 'At exactly 5 months'], ['d', 'Never']], ans: 'b' },
+      { k: 'why', type: 'text', label: 'f) Explain why the rabbits will eventually outnumber the mice even though the mice started with more.', sample: 'The mice increase by 4 each month (linear), but the rabbits double each month (exponential). Doubling adds more and more each month, so the rabbits catch up and pass the mice between months 3 and 4.' }] }
+];
+
+function tableHTML(r1, r2, vertical) {
+  if (vertical) return `<table class="vt"><tr><th>${r1[0]}</th><th>${r2[0]}</th></tr>${r1.slice(1).map((v, i) => `<tr><td>${v}</td><td>${fmt(r2[i + 1], 4)}</td></tr>`).join('')}</table>`;
+  return `<div class="tscroll"><table class="ht"><tr><th>${r1[0]}</th>${r1.slice(1).map(v => `<td>${v}</td>`).join('')}</tr><tr><th>${r2[0]}</th>${r2.slice(1).map(v => `<td>${fmt(v, 4)}</td>`).join('')}</tr></table></div>`;
+}
+
+/* =====================================================================
+   PROGRESS (saved in this browser)
+   ===================================================================== */
+const KEY = 'u6studyhub';
+let P = {};
+try { P = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { P = {}; }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(P)); } catch (e) {} };
+const partDone = (pid, k) => P[pid] && P[pid][k] && P[pid][k].ok;
+const probDone = pr => pr.parts.every(pt => partDone(pr.id, pt.k));
+const countDone = list => list.filter(probDone).length;
+
+/* =====================================================================
+   RENDERING PROBLEMS
+   ===================================================================== */
+function inputFor(pr, pt) {
+  const st = (P[pr.id] && P[pr.id][pt.k]) || {}, id = `${pr.id}__${pt.k}`, cls = st.ok ? 'ok' : st.tries ? 'no' : '';
+  if (pt.type === 'num') return `<span class="numwrap">${pt.unit === '$' ? '<span class="unit">$</span>' : ''}<input class="in ${cls}" id="${id}" inputmode="decimal" autocomplete="off" value="${esc(st.v || '')}" aria-label="Answer">${pt.unit && pt.unit !== '$' ? `<span class="unit">${esc(pt.unit)}</span>` : ''}</span>`;
+  if (pt.type === 'boxes') return `<div class="tpl ${cls}">${pt.tpl.replace(/\{\{(\w+)\}\}/g, (_, n) => `<input class="bx ${st.boxes && st.boxes[n] != null ? (st.boxOk && st.boxOk[n] ? 'ok' : 'no') : ''}" id="${id}__${n}" inputmode="decimal" autocomplete="off" value="${esc(st.boxes ? st.boxes[n] || '' : '')}" aria-label="${n}">`)}</div>`;
+  if (pt.type === 'choice' || pt.type === 'pick') return `<div class="opts ${pt.type === 'pick' ? 'picks' : ''}" role="radiogroup">${pt.opts.map(([v, t]) => `<button type="button" class="opt ${st.v === v ? 'sel' : ''} ${st.v === v ? cls : ''}" data-act="opt" data-id="${id}" data-v="${v}" role="radio" aria-checked="${st.v === v}">${t}</button>`).join('')}</div>`;
+  if (pt.type === 'text') return `<textarea class="in ta" id="${id}" rows="3" placeholder="Write your answer, then compare with a sample.">${esc(st.v || '')}</textarea>`;
+  return '';
+}
+function ansText(pt) {
+  if (pt.type === 'num') { const v = pt.ans; return (pt.unit === '$' ? '$' : '') + fmt(v, 4) + (pt.unit && pt.unit !== '$' ? ' ' + pt.unit : ''); }
+  if (pt.type === 'boxes') return pt.tpl.replace(/\{\{(\w+)\}\}/g, (_, n) => { const v = pt.ans[n]; return `<b>${Math.abs(v - Math.round(v)) > 1e-9 ? (near(v, 1 / 3) ? '1/3' : fmt(v, 4)) : v}</b>`; });
+  if (pt.type === 'choice' || pt.type === 'pick') return pt.opts.find(o => o[0] === pt.ans)[1];
+  if (pt.type === 'text') return pt.sample;
+}
+function problemHTML(pr, num) {
+  const done = probDone(pr);
+  return `<article class="prob ${done ? 'done' : ''}" id="pr-${pr.id}">
+    <div class="phead"><span class="pnum">${num}</span>${done ? '<span class="badge ok">Complete</span>' : ''}</div>
+    <div class="stem">${pr.stem}</div>${pr.visual ? `<div class="visual">${pr.visual}</div>` : ''}
+    ${pr.parts.map(pt => { const st = (P[pr.id] && P[pr.id][pt.k]) || {};
+      return `<div class="part" id="pt-${pr.id}-${pt.k}">${pt.label ? `<div class="plabel">${pt.label}</div>` : ''}${inputFor(pr, pt)}
+        <div class="fb" id="fb-${pr.id}-${pt.k}">${feedbackHTML(pr, pt, st)}</div></div>`; }).join('')}
+    <div class="row pfoot"><button class="btn" data-act="check" data-p="${pr.id}">Check</button><button class="ghost" data-act="clearp" data-p="${pr.id}">Clear answers</button></div>
+  </article>`;
+}
+function feedbackHTML(pr, pt, st) {
+  if (pt.type === 'text') return st.shown ? `<div class="sample"><b>Sample answer:</b> ${esc(pt.sample)}</div>` : st.v ? `<button class="ghost small" data-act="sample" data-p="${pr.id}" data-k="${pt.k}">Compare with a sample answer</button>` : '';
+  if (!st.tries) return '';
+  if (st.ok) return '<span class="mk ok">Correct</span>';
+  let h = `<span class="mk no">${esc(st.hint || 'Not quite. Try again.')}</span>`;
+  if (st.tries >= 2) h += st.reveal ? `<div class="sample"><b>Answer:</b> ${ansText(pt)}</div>` : ` <button class="ghost small" data-act="reveal" data-p="${pr.id}" data-k="${pt.k}">Show answer</button>`;
+  return h;
+}
+const findProb = id => { for (const t of TOPICS) { const p = t.practice.find(x => x.id === id); if (p) return p; } return GUIDE.find(x => x.id === id); };
+function checkProblem(pid) {
+  const pr = findProb(pid); P[pid] = P[pid] || {};
+  pr.parts.forEach(pt => {
+    const id = `${pid}__${pt.k}`, st = P[pid][pt.k] = P[pid][pt.k] || {};
+    if (pt.type === 'text') { const t = $('#' + id); st.v = t ? t.value.trim() : ''; st.ok = !!st.v && !!st.shown; return; }
+    if (st.ok) return;
+    let ok = false, hint = null, entered = false;
+    if (pt.type === 'num') {
+      const raw = ($('#' + id) || {}).value || ''; st.v = raw; if (!raw.trim()) return; entered = true;
+      const v = parseNum(raw); ok = near(v, pt.ans, pt.tol != null ? pt.tol : Math.max(1e-6, Math.abs(pt.ans) * 1e-6));
+      if (!ok && pt.hints) { const h = pt.hints.find(([f]) => v != null && f(v)); if (h) hint = h[1]; }
+      if (!ok && v == null) hint = 'Enter a number (fractions like 3/4 are fine).';
+    } else if (pt.type === 'boxes') {
+      st.boxes = {}; st.boxOk = {}; ok = true;
+      Object.keys(pt.ans).forEach(n => {
+        const raw = ($(`#${id}__${n}`) || {}).value || ''; st.boxes[n] = raw; if (raw.trim()) entered = true;
+        const v = parseNum(raw), good = near(v, pt.ans[n], 1e-4); st.boxOk[n] = good; if (!good) ok = false;
+        if (!good && !hint && pt.hints && pt.hints[n]) { const h = pt.hints[n].find(([f]) => v != null && f(v)); if (h && h[1]) hint = h[1]; }
+      });
+      if (!entered) return;
+      if (!ok && !hint) hint = `${Object.values(st.boxOk).filter(Boolean).length} of ${Object.keys(pt.ans).length} boxes are correct. Red boxes need another look.`;
+    } else {
+      if (!st.v) return; entered = true; ok = st.v === pt.ans;
+    }
+    st.tries = (st.tries || 0) + (ok ? 0 : 1); if (ok) st.tries = Math.max(1, st.tries); st.ok = ok; st.hint = hint;
+  });
+  save(); rerenderProblem(pid);
+}
+function rerenderProblem(pid) {
+  const pr = findProb(pid), el = $('#pr-' + pid); if (!el) return;
+  const num = el.querySelector('.pnum').textContent; el.outerHTML = problemHTML(pr, num); updateCounts();
+}
+function updateCounts() {
+  const c = $('#count'); if (!c) return;
+  if (c.dataset.k === 'guide') c.textContent = `${countDone(GUIDE)} of ${GUIDE.length} questions complete`;
+  else { const t = TOPICS[+c.dataset.k]; c.textContent = `${countDone(t.practice)} of ${t.practice.length}`; }
+}
+
+/* =====================================================================
+   PAGES
+   ===================================================================== */
+function page(inner, crumb) {
+  $('#app').innerHTML = `<div class="wrap">
+    <nav class="top"><a href="#" class="home">Unit 6 Study Hub</a>${crumb ? `<span class="crumb">${crumb}</span>` : ''}<button class="ghost calcbtn" data-act="calc">Desmos</button></nav>
+    ${inner}</div>
+    <aside id="calcpanel" class="calcpanel" hidden><div class="row" style="justify-content:space-between"><b>NC Desmos graphing calculator</b><span class="row"><a class="hint" href="${DESMOS_GRAPH}" target="_blank" rel="noopener">New tab</a><button class="ghost small" data-act="calc">Close</button></span></div><iframe title="NC Desmos graphing calculator" data-src="${DESMOS_GRAPH}"></iframe></aside>`;
+  window.scrollTo(0, 0);
+}
+function homePage() {
+  const gDone = countDone(GUIDE);
+  page(`<header class="hero"><h1>Unit 6: Exponential Functions</h1><p>Review each topic, practice with new problems, then work through the study guide. Your progress saves on this device.</p></header>
+    <h2 class="sec">Study by topic</h2>
+    <div class="tgrid">${TOPICS.map((t, i) => { const d = countDone(t.practice), n = t.practice.length;
+      return `<a class="tcard" href="#${t.id}"><span class="tnum">${i + 1}</span><div><h3>${t.title}</h3><p class="hint">Study guide question${t.guide.length > 1 ? 's' : ''} ${t.guide.join(' and ')}</p>
+        <div class="meter"><span style="width:${100 * d / n}%"></span></div><p class="hint">${d} of ${n} practice problems complete</p></div></a>`; }).join('')}</div>
+    <h2 class="sec">The study guide</h2>
+    <a class="tcard guide" href="#guide"><span class="tnum">SG</span><div><h3>Unit 6 Study Guide, interactive</h3><p class="hint">All 8 questions from your paper copy. Work on paper, then check each part here.</p>
+      <div class="meter"><span style="width:${100 * gDone / GUIDE.length}%"></span></div><p class="hint">${gDone} of ${GUIDE.length} questions complete</p></div></a>
+    <p style="margin-top:28px"><button class="ghost danger" data-act="resetall">Reset all my progress</button></p>`);
+}
+function topicPage(t, tab) {
+  const i = TOPICS.indexOf(t), d = countDone(t.practice);
+  page(`<header class="thead"><span class="tnum big">${i + 1}</span><div><h1>${t.title}</h1><p class="hint">Matches study guide question${t.guide.length > 1 ? 's' : ''} ${t.guide.join(' and ')}.</p></div></header>
+    <div class="tabs"><a class="${tab === 'review' ? 'cur' : ''}" href="#${t.id}">Review</a><a class="${tab === 'practice' ? 'cur' : ''}" href="#${t.id}/practice">Practice <span id="count" data-k="${i}">${d} of ${t.practice.length}</span></a></div>
+    ${tab === 'review' ? `<section class="card review">${t.review}</section>
+      <section class="card example"><h3>Worked example</h3><div class="stem">${t.example.q}</div><ol class="wsteps" id="steps">${t.example.steps.map((s, j) => `<li ${j ? 'hidden' : ''}>${s}</li>`).join('')}</ol>
+        <div class="row"><button class="ghost" data-act="nextstep">Show next step</button><a class="btn" href="#${t.id}/practice">Start practice</a></div></section>`
+      : t.practice.map((p, j) => problemHTML(p, `Problem ${j + 1}`)).join('') + `<div class="row nav2">${i > 0 ? `<a class="ghost" href="#${TOPICS[i - 1].id}">← ${TOPICS[i - 1].title}</a>` : '<span></span>'}${i < TOPICS.length - 1 ? `<a class="btn alt" href="#${TOPICS[i + 1].id}">Next topic: ${TOPICS[i + 1].title}</a>` : `<a class="btn alt" href="#guide">Go to the study guide</a>`}</div>`}`,
+    t.title);
+}
+function guidePage() {
+  page(`<header class="thead"><span class="tnum big">SG</span><div><h1>Unit 6 Study Guide</h1><p class="hint">Work each question on your paper copy, then enter your answers to check them. Stuck? Each question links to its review topic.</p></div></header>
+    <p class="hint" style="margin:0 0 10px"><span id="count" data-k="guide">${countDone(GUIDE)} of ${GUIDE.length} questions complete</span></p>
+    ${GUIDE.map(g => { const t = TOPICS.find(x => x.id === g.topic); return problemHTML(g, `Question ${g.n}`).replace('<div class="row pfoot">', `<div class="row pfoot"><a class="hint reviewlink" href="#${t.id}">Review: ${t.title}</a>`); }).join('')}`, 'Study guide');
+}
+function route() {
+  const h = location.hash.replace('#', '');
+  if (h === 'guide') return guidePage();
+  const [tid, tab] = h.split('/'), t = TOPICS.find(x => x.id === tid);
+  if (t) return topicPage(t, tab === 'practice' ? 'practice' : 'review');
+  homePage();
+}
+window.addEventListener('hashchange', route);
+
+/* ---------- events ---------- */
+const H = {
+  check: b => checkProblem(b.dataset.p),
+  clearp: b => { delete P[b.dataset.p]; save(); rerenderProblem(b.dataset.p); },
+  opt: b => { const [pid, k] = b.dataset.id.split('__'); P[pid] = P[pid] || {}; const st = P[pid][k] = P[pid][k] || {}; if (st.ok) return; st.v = b.dataset.v;
+    b.parentElement.querySelectorAll('.opt').forEach(o => { const on = o === b; o.classList.toggle('sel', on); o.classList.remove('ok', 'no'); o.setAttribute('aria-checked', on); }); },
+  reveal: b => { P[b.dataset.p][b.dataset.k].reveal = true; save(); rerenderProblem(b.dataset.p); },
+  sample: b => { const pid = b.dataset.p, k = b.dataset.k, t = $(`#${pid}__${k}`); P[pid] = P[pid] || {}; const st = P[pid][k] = P[pid][k] || {}; st.v = t ? t.value.trim() : st.v; st.shown = true; st.ok = !!st.v; save(); rerenderProblem(pid); },
+  nextstep: b => { const h = [...document.querySelectorAll('#steps li[hidden]')]; if (h[0]) h[0].hidden = false; if (h.length <= 1) b.disabled = true; },
+  calc: () => { const p = $('#calcpanel'); if (!p) return; p.hidden = !p.hidden; const f = p.querySelector('iframe'); if (!p.hidden && !f.src) f.src = f.dataset.src; },
+  resetall: () => { if (confirm('Erase all of your progress on this device?')) { P = {}; save(); route(); } }
+};
+document.addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (!b || b.disabled) return; const f = H[b.dataset.act]; if (f) { e.preventDefault(); f(b); } });
+document.addEventListener('input', e => {
+  if (e.target.classList.contains('ta')) { const [pid, k] = e.target.id.split('__'); P[pid] = P[pid] || {}; const st = P[pid][k] = P[pid][k] || {}; const had = !!st.v; st.v = e.target.value.trim(); save();
+    if (!had && st.v && !st.shown) { const fb = $(`#fb-${pid}-${k}`); if (fb) fb.innerHTML = `<button class="ghost small" data-act="sample" data-p="${pid}" data-k="${k}">Compare with a sample answer</button>`; } }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('input.in, input.bx')) { const pr = e.target.closest('.prob'); if (pr) checkProblem(pr.id.replace('pr-', '')); } });
+route();
+</script>
+</body>
+</html>
