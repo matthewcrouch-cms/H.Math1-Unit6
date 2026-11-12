@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matching Descriptions to Graphs</title>
+<style>
+:root{
+  --paper:#f7f9fc; --grid:#e3eaf3; --card:#ffffff; --ink:#14233a; --muted:#566883; --line:#d5deea;
+  --blue:#4B9CD3; --blue-d:#1d6aa5; --blue-soft:#e6f2fa; --orange:#F56600; --orange-d:#c24f00; --orange-soft:#fff0e5;
+  --good:#17805a; --good-soft:#e2f5ec; --bad:#b83a2b; --bad-soft:#fbeae7; --gold:#d79b14;
+  --math:"Cambria Math","STIX Two Text","Latin Modern Math",Cambria,Georgia,"Times New Roman",serif;
+  --ui:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#0f1824; --grid:#17263a; --card:#16222f; --ink:#e8eef7; --muted:#9db0c8; --line:#2b3d55;
+    --blue:#6bb3e3; --blue-d:#8cc6ee; --blue-soft:#183249; --orange:#ff8a3d; --orange-d:#ffa766; --orange-soft:#3a2415;
+    --good:#4fcf9b; --good-soft:#12352a; --bad:#ff8c7d; --bad-soft:#3a1c18; --gold:#f0bf4c; color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:var(--ui); color:var(--ink); background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px; line-height:1.45; -webkit-text-size-adjust:100%;
+}
+.math{font-family:var(--math); white-space:nowrap}
+.math i{font-style:italic}
+sup{font-size:.74em; line-height:0}
+button{font:inherit; cursor:pointer}
+:focus-visible{outline:3px solid var(--orange); outline-offset:2px}
+h1,h2,h3,p{margin:0}
+.card{background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:20px}
+.btn{border:0; border-radius:10px; padding:11px 20px; font-weight:650; background:var(--blue-d); color:#fff}
+.btn:hover{filter:brightness(1.08)}
+.btn[disabled]{opacity:.45; cursor:not-allowed}
+.btn.alt{background:var(--orange-d); color:#fff}
+.ghost{background:transparent; color:var(--ink); border:1.5px solid var(--line); border-radius:10px; padding:8px 14px; font-weight:600}
+.ghost:hover:not([disabled]){border-color:var(--blue)}
+.ghost[disabled]{opacity:.45; cursor:not-allowed}
+.ghost.on{border-color:var(--blue-d); background:var(--blue-soft); color:var(--blue-d)}
+.ghost.danger{color:var(--bad)}
+.banner{background:var(--orange-soft); border:1.5px solid var(--orange); color:var(--ink); border-radius:10px; padding:9px 14px; font-size:.9rem; margin-bottom:14px}
+.err{color:var(--bad); font-weight:600; min-height:1.4em; margin-top:8px}
+.muted{color:var(--muted)}
+input.txt,select.txt{width:100%; font:1.05rem var(--ui); padding:12px; border:2px solid var(--line); border-radius:10px; background:var(--card); color:var(--ink)}
+input.txt:focus,select.txt:focus{border-color:var(--blue); outline:none}
+.row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+
+/* landing */
+.landing{max-width:520px; margin:0 auto; padding:9vh 18px 40px}
+.landing h1{font:700 clamp(1.9rem,6vw,2.6rem)/1.15 var(--math); margin-bottom:8px}
+.landing .sub{color:var(--muted); margin-bottom:22px}
+.landing label{display:block; font-weight:600; margin:14px 0 6px}
+.landing .row{margin-top:20px}
+.code-in{text-transform:uppercase; letter-spacing:.35em; font-weight:700; text-align:center}
+.teacher-link{margin-top:26px; font-size:.92rem; color:var(--muted)}
+.teacher-link button{background:none; border:0; color:var(--blue-d); text-decoration:underline; padding:0}
+
+/* frames */
+.s-wrap{max-width:760px; margin:0 auto; padding:14px 14px 80px}
+.s-top{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap}
+.s-top .who{color:var(--muted); font-size:.92rem}
+.s-top .who button{background:none; border:0; color:var(--muted); text-decoration:underline; padding:0 0 0 8px; font-size:.85rem}
+.s-title{font:700 1.6rem var(--math); margin:2px 0 10px}
+.t-wrap{max-width:1500px; margin:0 auto; padding:14px 18px 40px}
+.t-top{display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:14px}
+.brand{font:700 1.25rem var(--math)}
+.join{font-size:1.02rem}
+.join .code{font:700 1.5rem var(--ui); letter-spacing:.2em; background:var(--orange-d); color:#fff; padding:2px 12px; border-radius:8px; margin-left:4px}
+.t-tools{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.pill{display:inline-block; font-size:.82rem; font-weight:600; padding:3px 11px; border-radius:99px; background:var(--blue-soft); color:var(--blue-d)}
+.steps{display:flex; gap:6px; flex-wrap:wrap}
+.steps button{border:1.5px solid var(--line); background:var(--card); color:var(--ink); border-radius:99px; padding:7px 14px; font-weight:600}
+.steps button.cur{background:var(--blue-d); border-color:var(--blue-d); color:#fff}
+table.data{border-collapse:separate; border-spacing:0; width:100%; font-variant-numeric:tabular-nums}
+table.data th{font-size:.82rem; color:var(--muted); text-align:right; padding:4px 10px; font-weight:600; position:sticky; top:0; z-index:1; background:var(--card); box-shadow:0 1px 0 var(--line)}
+table.data th:first-child,table.data td:first-child{text-align:left}
+table.data td{text-align:right; padding:6px 10px; border-top:1px solid var(--line)}
+table.data tr.now td{background:var(--blue-soft); font-weight:700}
+.scroll{max-height:46vh; overflow:auto}
+.hint{font-size:.85rem; color:var(--muted)}
+@media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important} }
+/* ---------- shared kit ---------- */
+.layout{display:grid; grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr); gap:16px; align-items:start}
+.big-q{font:700 1.3rem var(--math); margin-bottom:6px}
+.side-h{font:700 1.05rem var(--math); margin:16px 0 6px}
+.side-h:first-child{margin-top:0}
+.story{font-size:1.06rem; max-width:46rem}
+.hidebox{text-align:center; border:2px dashed var(--line); border-radius:14px; padding:24px 16px; margin-top:12px}
+.hidebox .big{font:700 3.2rem/1 var(--ui)} .hidebox .big span{font-size:1.4rem; color:var(--muted); font-weight:600}
+.hidebox p{margin:6px 0 14px}
+.resp{border:1.5px solid var(--line); border-left:4px solid var(--blue); border-radius:0 10px 10px 0; padding:9px 12px; margin-bottom:8px; background:var(--card); font-size:1.05rem}
+.resp small{display:block; color:var(--muted); font-weight:600}
+.rlabel{display:block; font-weight:600; margin:16px 0 6px}
+textarea.rbox{width:100%; font:1rem var(--ui); padding:10px 12px; border:2px solid var(--line); border-radius:10px; background:var(--card); color:var(--ink); resize:vertical}
+textarea.rbox:focus{border-color:var(--blue); outline:none}
+.rsave{margin-top:6px}
+.rsave .ghost{padding:5px 12px; font-size:.9rem}
+.ckwrap{display:inline-flex; flex-direction:column; gap:2px; vertical-align:top}
+input.ck{font:600 1.05rem var(--ui); width:7.5em; padding:8px 10px; border:2px solid var(--line); border-radius:9px; background:var(--card); color:var(--ink)}
+input.ck:focus{border-color:var(--blue); outline:none}
+input.ck.ok{border-color:var(--good); background:var(--good-soft)}
+input.ck.no{border-color:var(--bad); background:var(--bad-soft)}
+.mark{font-weight:700; font-size:.82rem; max-width:16rem}
+.ckwrap .mark:empty{display:none}
+.mark.ok{color:var(--good)} .mark.no{color:var(--bad)}
+.qrow{display:flex; gap:10px 16px; align-items:flex-start; flex-wrap:wrap; margin:12px 0}
+.qrow > span:first-child{flex:1 1 260px; font-weight:600; padding-top:8px}
+.tally td .bar2{display:inline-block; height:10px; border-radius:5px; background:var(--good); vertical-align:middle; margin-right:6px}
+.notice{border-left:5px solid var(--orange); background:var(--orange-soft); padding:10px 14px; border-radius:0 10px 10px 0; margin-top:12px}
+.chart-box{border:1.5px solid var(--line); border-radius:12px; background:var(--card); padding:6px; margin-top:8px}
+.chart-box svg{display:block; width:100%; height:auto}
+.ax{stroke:var(--line)} .axt{fill:var(--muted); font:12px var(--ui)} .ax0{stroke:var(--muted); stroke-width:1.5}
+@media (max-width:900px){ .layout{grid-template-columns:1fr} }
+/* ---------- matching card sort ---------- */
+.s-wrap.wide{max-width:980px}
+.stepper{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px}
+.stepper button{border:1.5px solid var(--line); background:var(--card); color:var(--ink); border-radius:99px; padding:7px 14px; font-weight:600}
+.stepper button.cur{background:var(--blue-d); border-color:var(--blue-d); color:#fff}
+.stepper button.done:not(.cur){border-color:var(--good); color:var(--good)}
+.stepper button[disabled]{opacity:.45; cursor:not-allowed}
+.cgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:12px; margin-top:12px}
+.mgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px}
+.grp-h{font:700 1.05rem var(--math); margin:16px 0 8px; color:var(--muted)}
+.card8{background:var(--card); border:2px solid var(--line); border-radius:14px; padding:12px 14px; text-align:left; color:var(--ink); font:inherit; display:flex; flex-direction:column; gap:6px}
+.card8 p{margin:0; font-size:1rem} .card8 .rel{color:var(--muted); font-size:.9rem}
+.ctitle{font:700 1.15rem var(--math)}
+.card8 svg{width:100%; height:auto; display:block}
+.card8 .gd{margin-top:auto}
+.card8 .gd .ghost{flex:1}
+button.card8.desc{cursor:pointer}
+button.card8.desc:hover{border-color:var(--blue)}
+.card8.picked{border-color:var(--orange-d); box-shadow:0 0 0 3px var(--orange-soft)}
+.pairtag{font-size:.82rem; font-weight:700; color:var(--muted)}
+.card8.paired.pc1{border-color:#7b4fd0; background:color-mix(in srgb,#7b4fd0 9%,var(--card))}
+.card8.paired.pc2{border-color:#1b8a8a; background:color-mix(in srgb,#1b8a8a 9%,var(--card))}
+.card8.paired.pc3{border-color:#c2410c; background:color-mix(in srgb,#c2410c 9%,var(--card))}
+.card8.paired.pc4{border-color:#2563eb; background:color-mix(in srgb,#2563eb 9%,var(--card))}
+.card8.paired .pairtag{color:var(--ink)}
+.ghost.small{padding:5px 10px; font-size:.82rem}
+.gm{stroke:var(--grid)} .dot{fill:var(--ink)} .dot.on{fill:var(--orange)}
+.hit{fill:transparent; cursor:pointer} .hit:hover{fill:color-mix(in srgb,var(--orange) 20%,transparent)}
+.lbl{fill:var(--orange-d); font:700 12px var(--ui); paint-order:stroke; stroke:var(--card); stroke-width:4px}
+.fr{font-size:.95em; white-space:nowrap} .fr sup,.fr sub{font-size:.7em}
+.pairs{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
+.pchip{border:1.5px solid var(--good); color:var(--good); background:var(--good-soft); border-radius:99px; padding:4px 12px; font-weight:700}
+.projc{max-width:520px}
+.gridwrap{max-height:48vh}
+.pgrid th,.pgrid td{text-align:center} .pgrid th:first-child,.pgrid td:first-child{text-align:left}
+.cell{display:inline-block; min-width:4.5em; padding:3px 8px; border-radius:99px; font-size:.82rem; font-weight:700; color:var(--muted)}
+.cell.ok{background:var(--good-soft); color:var(--good)} .cell.part{background:var(--blue-soft); color:var(--blue-d)} .cell.stuck{background:var(--bad-soft); color:var(--bad)}
+.tags{list-style:none; padding:0; margin:6px 0 0; display:grid; gap:8px}
+.tags li{border:1.5px solid var(--line); border-radius:10px; padding:8px 12px; background:var(--card)}
+.tags li b{display:inline-block; min-width:1.6em; color:var(--bad); font-size:1.15rem}
+.tags small{display:block; color:var(--muted); margin-top:2px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+const APP = { id: 'match' };
+/* =====================================================================
+   1. FIREBASE SETUP
+   This is the same Firebase project as your Exponent Rules discovery app.
+   Leave databaseURL empty to run in PRACTICE MODE: the teacher view and
+   student view then sync between tabs of the same browser only.
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDkuZVoCbhVotMLGi_iI8wGYCrRKie8ex8",
+  authDomain: "exponentproperties-7198b.firebaseapp.com",
+  databaseURL: "https://exponentproperties-7198b-default-rtdb.firebaseio.com",
+  projectId: "exponentproperties-7198b",
+  appId: "1:189445254765:web:3e6f1c783f9b6fdfa85964"
+};
+
+/* =====================================================================
+   2. TINY DATABASE LAYER (Firebase, or localStorage for practice mode)
+   ===================================================================== */
+const DB = (() => {
+  let live = !!FIREBASE_CONFIG.databaseURL && typeof firebase !== 'undefined';
+  if (live) {
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      const fdb = firebase.database();
+      return {
+        mode: 'live',
+        set: (p, v) => fdb.ref(p).set(v),
+        update: (p, v) => fdb.ref(p).update(v),
+        remove: p => fdb.ref(p).remove(),
+        once: p => fdb.ref(p).once('value').then(s => s.val()),
+        on: (p, cb) => { const r = fdb.ref(p); const h = r.on('value', s => cb(s.val())); return () => r.off('value', h); }
+      };
+    } catch (e) { live = false; }
+  }
+  const KEY = APP.id + ':tree', subs = [];
+  const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
+  const get = (t, p) => { const v = p.split('/').reduce((o, k) => (o == null ? null : o[k]), t); return v === undefined ? null : v; };
+  const clone = v => (v == null ? null : JSON.parse(JSON.stringify(v)));
+  const notify = () => { const t = read(); subs.slice().forEach(s => s.cb(clone(get(t, s.p)))); };
+  window.addEventListener('storage', e => { if (e.key === KEY) notify(); });
+  function put(t, p, v) {
+    const ks = p.split('/'); let o = t;
+    ks.slice(0, -1).forEach(k => { if (typeof o[k] !== 'object' || o[k] === null) o[k] = {}; o = o[k]; });
+    if (v === null) delete o[ks[ks.length - 1]]; else o[ks[ks.length - 1]] = clone(v);
+  }
+  const save = t => { try { localStorage.setItem(KEY, JSON.stringify(t)); } catch (e) {} notify(); };
+  return {
+    mode: 'local',
+    set: (p, v) => { const t = read(); put(t, p, v); save(t); return Promise.resolve(); },
+    update: (p, obj) => { const t = read(); Object.keys(obj).forEach(k => put(t, p + '/' + k, obj[k])); save(t); return Promise.resolve(); },
+    remove: p => { const t = read(); put(t, p, null); save(t); return Promise.resolve(); },
+    once: p => Promise.resolve(clone(get(read(), p))),
+    on: (p, cb) => { const s = { p, cb }; subs.push(s); setTimeout(() => { if (subs.includes(s)) cb(clone(get(read(), p))); }, 0); return () => { const i = subs.indexOf(s); if (i >= 0) subs.splice(i, 1); }; }
+  };
+})();
+
+/* =====================================================================
+   3. HELPERS
+   ===================================================================== */
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const $ = (s, r = document) => r.querySelector(s);
+const ls = { get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }, del: k => { try { localStorage.removeItem(k); } catch (e) {} } };
+const unsubs = {};
+function watch(key, path, cb) { if (unsubs[key]) unsubs[key](); unsubs[key] = DB.on(path, cb); }
+function unwatchAll() { Object.keys(unsubs).forEach(k => { unsubs[k](); delete unsubs[k]; }); }
+const genCode = () => Array.from({ length: 4 }, () => 'ABCDEFGHJKMNPQRSTUVWXYZ'[Math.floor(Math.random() * 23)]).join('');
+const S = { role: null, code: null, sid: null, name: '' };
+const base = () => `sessions/${S.code}`;
+const H = {};  // click handlers: data-act="name"
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  const f = H[b.dataset.act]; if (f) f(b, e);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.matches('#code,#name')) H.join();
+});
+const NAMES = ['Ava','Mateo','Jada','Liam','Priya','Noah','Mai','Diego','Han','Clare','Elena','Kiran','Tyler','Andre','Lin','Jayden','Sofia','Omar','Zoe','Isaiah','Camila','Ethan','Nia','Leo'];
+
+/* =====================================================================
+   4. LANDING, JOIN, SESSIONS
+   ===================================================================== */
+function renderLanding(msg, teacherOpen) {
+  unwatchAll();
+  const saved = ls.get(APP.id + ':student') || {};
+  const tsaved = ls.get(APP.id + ':teacher');
+  const qp = new URLSearchParams(location.search);
+  const qcode = (qp.get('code') || saved.code || '').toUpperCase();
+  const showT = teacherOpen || qp.has('teacher');
+  $('#app').innerHTML = `<div class="landing">
+    <h1>${esc(APP.title)}</h1>
+    <p class="sub">${esc(APP.sub)}</p>
+    ${DB.mode === 'local' ? `<div class="banner"><b>Practice mode.</b> Firebase isn’t connected, so this only syncs between tabs of this browser.</div>` : ''}
+    ${showT ? `
+      <div class="card">
+        <h2 style="font-size:1.2rem;margin-bottom:12px">Teacher</h2>
+        <div class="row" style="margin-top:0">
+          <button class="btn" data-act="newsession">Start a new session</button>
+          ${tsaved ? `<button class="ghost" data-act="resume">Resume ${esc(tsaved.code)}</button>` : ''}
+        </div>
+        <p class="err" id="err">${esc(msg || '')}</p>
+        <p class="teacher-link"><button data-act="studentpanel">I’m a student</button></p>
+      </div>` : `
+      <div class="card">
+        <label for="code" style="margin-top:0">Class code</label>
+        <input id="code" class="txt code-in" maxlength="4" autocomplete="off" value="${esc(qcode)}" placeholder="ABCD">
+        <label for="name">Your first name</label>
+        <input id="name" class="txt" maxlength="20" autocomplete="off" value="${esc(saved.name || '')}" placeholder="First name">
+        <div class="row"><button class="btn" data-act="join">Join class</button></div>
+        <p class="err" id="err">${esc(msg || '')}</p>
+      </div>
+      <p class="teacher-link">Teacher? <button data-act="teacherpanel">Open teacher controls</button></p>`}
+  </div>`;
+}
+H.teacherpanel = () => renderLanding('', true);
+H.studentpanel = () => { history.replaceState(null, '', location.pathname); renderLanding('', false); };
+H.newsession = async () => {
+  try {
+    let code;
+    for (let i = 0; i < 12; i++) { code = genCode(); if (!(await DB.once(`sessions/${code}/app`))) break; }
+    await DB.set(`sessions/${code}`, { app: APP.id, state: APP.initialState(), created: Date.now() });
+    ls.set(APP.id + ':teacher', { code });
+    S.role = 'teacher'; S.code = code; APP.startTeacher();
+  } catch (e) { renderLanding('Could not reach Firebase. Check your config and database rules.', true); }
+};
+H.resume = async () => {
+  const t = ls.get(APP.id + ':teacher'); if (!t) return;
+  try {
+    const a = await DB.once(`sessions/${t.code}/app`);
+    if (a !== APP.id) { ls.del(APP.id + ':teacher'); return renderLanding('That session no longer exists.', true); }
+    S.role = 'teacher'; S.code = t.code; APP.startTeacher();
+  } catch (e) { renderLanding('Could not reach Firebase.', true); }
+};
+H.end = async () => {
+  if (!confirm('End this session for everyone? Student data will be deleted.')) return;
+  await DB.set(`${base()}/ended`, true);
+  setTimeout(() => DB.remove(base()), 1500);
+  ls.del(APP.id + ':teacher'); renderLanding('', true);
+};
+H.join = async () => {
+  const code = ($('#code').value || '').trim().toUpperCase(), name = ($('#name').value || '').trim().slice(0, 20);
+  if (code.length !== 4) return ($('#err').textContent = 'Enter the 4-letter class code.');
+  if (!name) return ($('#err').textContent = 'Enter your first name.');
+  try {
+    const a = await DB.once(`sessions/${code}/app`);
+    if (a !== APP.id) return ($('#err').textContent = 'No session with that code. Check the code on the board.');
+    const saved = ls.get(APP.id + ':student') || {};
+    const sid = saved.code === code && saved.sid ? saved.sid : 's' + Math.random().toString(36).slice(2, 10);
+    S.role = 'student'; S.code = code; S.sid = sid; S.name = name;
+    ls.set(APP.id + ':student', { code, sid, name });
+    await APP.joinStudent();
+    APP.startStudent();
+  } catch (e) { $('#err').textContent = 'Could not reach the class. Check your internet connection.'; }
+};
+H.leave = () => { unwatchAll(); ls.del(APP.id + ':student'); renderLanding('', false); };
+function endedScreen() {
+  unwatchAll();
+  $('#app').innerHTML = `<div class="s-wrap"><div class="card" style="margin-top:18vh;text-align:center"><h2 class="s-title">This session has ended</h2><p>Thanks for joining. You can close this page.</p><div class="row" style="justify-content:center;margin-top:16px"><button class="ghost" data-act="leave">Join another</button></div></div></div>`;
+}
+function teacherTop(extraTools) {
+  const url = location.origin + location.pathname;
+  return `<div class="t-top">
+    <div><div class="brand">${esc(APP.title)}</div>
+      <div class="join">Join at <b>${esc(url.replace(/^https?:\/\//, ''))}</b> with code <span class="code">${esc(S.code)}</span>
+      <span class="muted" id="joined"></span></div></div>
+    <div class="t-tools">${extraTools || ''}<button class="ghost danger" data-act="end">End session</button></div>
+  </div>${DB.mode === 'local' ? `<div class="banner"><b>Practice mode.</b> Open a second tab of this page to try the student view.</div>` : ''}`;
+}
+async function boot() {
+  const t = ls.get(APP.id + ':teacher'), s = ls.get(APP.id + ':student');
+  const qp = new URLSearchParams(location.search);
+  if (qp.has('teacher') && t) return H.resume();
+  if (!qp.has('teacher') && s && s.code && s.sid) {
+    try {
+      const a = await DB.once(`sessions/${s.code}/app`);
+      if (a === APP.id) { Object.assign(S, { role: 'student', code: s.code, sid: s.sid, name: s.name }); await APP.joinStudent(); return APP.startStudent(); }
+    } catch (e) {}
+  }
+  renderLanding('', false);
+}
+/* =====================================================================
+   4b. SHARED KIT: written responses, checked answers, reveal panels
+   ===================================================================== */
+const parseNum = s => {
+  s = String(s == null ? '' : s).trim().replace(/[$,\s]/g, '');
+  if (!s) return null;
+  const m = s.match(/^(-?\d*\.?\d+)\/(-?\d*\.?\d+)$/);
+  if (m) return +m[2] === 0 ? null : +m[1] / +m[2];
+  const v = Number(s); return isFinite(v) ? v : null;
+};
+const near = (v, t, tol) => v != null && Math.abs(v - t) <= (tol != null ? tol : Math.max(1e-6, Math.abs(t) * 1e-6));
+const KIT = { resp: {}, checks: {}, myResp: {}, myChecks: {}, showNames: false };
+
+/* --- student side --- */
+// A response box: <textarea data-rk="key">. Saves when the student clicks away or taps Save.
+function respBox(key, label) {
+  return `<label class="rlabel" for="rk-${key}">${label}</label>
+    <textarea id="rk-${key}" class="txt rbox" data-rk="${key}" rows="3">${esc(KIT.myResp[key] || '')}</textarea>
+    <div class="row rsave"><button class="ghost" data-act="saverk" data-k="${key}">Save</button><span class="hint" id="rs-${key}">${KIT.myResp[key] ? 'Saved.' : ''}</span></div>`;
+}
+function saveRk(key, how) {
+  const t = $('#rk-' + key); if (!t) return;
+  const v = t.value.trim().slice(0, 800);
+  if (v === (KIT.myResp[key] || '')) { const s = $('#rs-' + key); if (s && v) s.textContent = 'Saved.'; return; }
+  KIT.myResp[key] = v; DB.set(`${base()}/responses/${S.sid}/${key}`, v || null);
+  const s = $('#rs-' + key); if (s) s.textContent = how || 'Saved.';
+}
+H.saverk = b => saveRk(b.dataset.k, 'Saved. You can edit and save again.');
+document.addEventListener('focusout', e => { if (S.role === 'student' && e.target.dataset && e.target.dataset.rk) saveRk(e.target.dataset.rk, 'Saved automatically.'); });
+function watchMine() {
+  watch('myResp', `${base()}/responses/${S.sid}`, v => {
+    KIT.myResp = v || {};
+    document.querySelectorAll('textarea[data-rk]').forEach(t => { const k = t.dataset.rk; if (!t.value && document.activeElement !== t && KIT.myResp[k]) t.value = KIT.myResp[k]; });
+  });
+  watch('myChecks', `${base()}/checks/${S.sid}`, v => { KIT.myChecks = v || {}; });
+}
+// A checked number box: <input data-ck="key">. CHECKS[key] = { ans: number, tol, hint(v) -> string|null }
+function ckBox(key, ph) {
+  const prev = KIT.myChecks[key];
+  const cls = prev ? (prev.ok ? 'ok' : 'no') : '';
+  return `<span class="ckwrap"><input class="ck ${cls}" id="ck-${key}" data-ck="${key}" inputmode="decimal" autocomplete="off" placeholder="${esc(ph || '')}" value="${esc(prev ? prev.v : '')}"><span class="mark ${cls}" id="mk-${key}">${prev ? (prev.ok ? 'Correct' : 'Try again') : ''}</span></span>`;
+}
+function runChecks(keys) {
+  const out = {}; let right = 0;
+  keys.forEach(k => {
+    const inp = $('#ck-' + k), mk = $('#mk-' + k), spec = CHECKS[k]; if (!inp || !spec) return;
+    const raw = inp.value.trim(); inp.classList.remove('ok', 'no'); mk.className = 'mark'; mk.textContent = '';
+    if (!raw) return;
+    const v = parseNum(raw), ok = spec.ok ? spec.ok(v, raw) : near(v, spec.ans, spec.tol);
+    out[k] = { v: raw, ok, tag: !ok && spec.tag ? (spec.tag(v, raw) || null) : null, t: Date.now() }; if (ok) right++;
+    inp.classList.add(ok ? 'ok' : 'no'); mk.classList.add(ok ? 'ok' : 'no');
+    mk.textContent = ok ? 'Correct' : ((spec.hint && spec.hint(v, raw)) || 'Try again');
+  });
+  Object.assign(KIT.myChecks, out);
+  DB.update(`${base()}/checks/${S.sid}`, out);
+  return right;
+}
+
+/* --- teacher side --- */
+function hiddenBox(n, total, what, key, label) {
+  return `<div class="hidebox"><div class="big">${n} <span>of ${total}</span></div><p class="muted">${what}</p>
+    <button class="btn alt" data-act="reveal" data-k="${key}" ${n ? '' : 'disabled'}>${label}</button></div>`;
+}
+function ckTally(students, keys) {
+  return keys.map(k => { let ans = 0, ok = 0; Object.keys(students).forEach(s => { const c = KIT.checks[s] && KIT.checks[s][k]; if (c) { ans++; if (c.ok) ok++; } }); return { k, ans, ok }; });
+}
+function ckTable(students, rows) {
+  const t = ckTally(students, rows.map(r => r.k));
+  return `<table class="data tally"><tr><th>Question</th><th style="text-align:left">Class progress</th></tr>${rows.map((r, i) =>
+    `<tr><td>${r.label}</td><td style="text-align:left"><span class="bar2" style="width:${t[i].ans ? 90 * t[i].ok / t[i].ans : 0}px"></span>${t[i].ok} of ${t[i].ans} correct</td></tr>`).join('')}</table>`;
+}
+// Response viewer. qs = [{k, text}]. st = app state (respQ, showResp).
+function respViewer(students, qs, st) {
+  if (!qs.length) return '';
+  const q = qs.find(r => r.k === st.respQ) || qs[0];
+  const ids = Object.keys(students).filter(k => KIT.resp[k] && (KIT.resp[k][q.k] || '').trim());
+  const nS = Object.keys(students).length;
+  return `<h3 class="side-h">Student responses</h3>
+    ${qs.length > 1 ? `<div class="steps" style="margin:6px 0 10px">${qs.map((r, i) => `<button class="${r.k === q.k ? 'cur' : ''}" data-act="respq" data-q="${r.k}">${esc(r.short || 'Question ' + (i + 1))}</button>`).join('')}</div>` : ''}
+    <p style="font-weight:600">${q.text}</p>
+    <div class="row" style="justify-content:space-between;margin:8px 0"><span class="hint">${ids.length} of ${nS} answered</span>
+      <span class="row"><button class="ghost" data-act="names">Names ${KIT.showNames ? 'shown' : 'hidden'}</button>
+      <button class="ghost ${st.showResp ? 'on' : ''}" data-act="${st.showResp ? 'hide' : 'reveal'}" data-k="showResp" ${ids.length || st.showResp ? '' : 'disabled'}>${st.showResp ? 'Hide responses' : 'Show responses'}</button></span></div>
+    ${st.showResp ? `<div class="scroll" style="max-height:44vh">${ids.map(k => `<div class="resp">${KIT.showNames ? `<small>${esc(students[k].name)}</small>` : ''}${esc(KIT.resp[k][q.k])}</div>`).join('') || '<p class="hint">No responses yet.</p>'}</div>` : ''}`;
+}
+H.reveal = b => APP.setState({ [b.dataset.k]: true });
+H.hide = b => APP.setState({ [b.dataset.k]: false });
+H.respq = b => APP.setState({ respQ: b.dataset.q });
+H.names = () => { KIT.showNames = !KIT.showNames; APP.redraw(); };
+function watchClassWork(after) {
+  watch('resp', `${base()}/responses`, v => { KIT.resp = v || {}; after(); });
+  watch('checks', `${base()}/checks`, v => { KIT.checks = v || {}; after(); });
+}
+/* =====================================================================
+   5. MATCHING DESCRIPTIONS TO GRAPHS  (Unit 6, Lesson 4, Activity 4 card sort)
+   Answer key: 1-7, 2-3, 5-4, 6-8.
+   ===================================================================== */
+const DESC = {
+  1: { kind: 'g', text: 'The value of a company’s stock doubles approximately every 4 years.', rel: 'The relationship between the number of years since purchasing the stock and the stock value.' },
+  2: { kind: 'd', text: 'A car loses 1/4 of its value every year after purchase.', rel: 'The relationship between the number of years since purchasing the car and the value of the car.' },
+  5: { kind: 'g', text: 'The value of a company’s stock triples roughly every 8 years.', rel: 'The relationship between the number of years since purchasing the stock and the stock value.' },
+  6: { kind: 'd', text: 'A laptop loses 2/5 of its value every year after purchase.', rel: 'The relationship between the number of years since purchasing the laptop and the value of the laptop.' }
+};
+const GRAPH = {
+  3: { kind: 'd', f: x => 1500 * Math.pow(0.75, x) },
+  4: { kind: 'g', f: x => 100 * Math.pow(3, x / 8) },
+  7: { kind: 'g', f: x => 100 * Math.pow(2, x / 4) },
+  8: { kind: 'd', f: x => 1500 * Math.pow(0.6, x) }
+};
+const KEY = { 1: 7, 2: 3, 5: 4, 6: 8 };
+const ALL = [1, 2, 3, 4, 5, 6, 7, 8];
+const kindOf = c => (DESC[c] || GRAPH[c]).kind;
+const PAIRCOL = ['pc1', 'pc2', 'pc3', 'pc4'];
+const TAGS = { gd: 'Paired a growth situation with a decay graph (or the reverse)', gfac: 'Mixed up the two growth rates (doubles every 4 years vs. triples every 8)', dfac: 'Mixed up the two decay rates (loses 1/4 vs. loses 2/5)' };
+function pairHint(d, g) {
+  if (kindOf(d) !== kindOf(g)) return { tag: 'gd', hint: `Card ${d} describes ${kindOf(d) === 'g' ? 'growth' : 'decay'}, but Card ${g} shows ${kindOf(g) === 'g' ? 'growth' : 'decay'}.` };
+  if (d === 1) return { tag: 'gfac', hint: 'Card 1 doubles every 4 years. Tap the points at year 0 and year 4 on your graph. Did the value double?' };
+  if (d === 5) return { tag: 'gfac', hint: 'Card 5 triples about every 8 years. Tap the points at year 0 and year 8. Did the value triple?' };
+  if (d === 2) return { tag: 'dfac', hint: 'Losing 1/4 means 3/4 of the value is left. Tap year 0 and year 1. Is the second value 3/4 of the first?' };
+  return { tag: 'dfac', hint: 'Losing 2/5 means 3/5 of the value is left. Tap year 0 and year 1. Is the second value 3/5 of the first?' };
+}
+const RQS = [
+  { k: 'rgrow', short: 'Growth cards', text: 'How did you tell which graph matches Card 1 and which matches Card 5?' },
+  { k: 'rdecay', short: 'Decay cards', text: 'How did you tell which graph matches Card 2 and which matches Card 6?' }
+];
+const M = { st: {}, students: {}, entries: {}, mine: { sort: {}, pairs: {} }, pickDesc: null, inspect: {}, proj: 3, feedback: {} };
+
+Object.assign(APP, {
+  id: 'match',
+  title: 'Matching Descriptions to Graphs',
+  sub: 'Match each situation to the graph that shows it.',
+  initialState: () => ({ showResp: false, t: Date.now() }),
+  joinStudent: async () => { await DB.update(`${base()}/students/${S.sid}`, { name: S.name, t: Date.now() }); },
+  setState: patch => DB.set(`${base()}/state`, Object.assign({}, M.st, patch, { t: Date.now() })),
+  redraw: () => S.role === 'teacher' && renderTeacher(),
+  startTeacher, startStudent
+});
+
+/* ---------- card graph ---------- */
+function cardGraph(c, opts) {
+  const o = opts || {}, W = 300, Hh = 236, L = 56, R = 10, T = 10, B = 40, f = GRAPH[c].f;
+  const X = x => L + x / 15 * (W - L - R), Y = y => Hh - B - y / 1500 * (Hh - T - B);
+  let s = '';
+  for (let y = 0; y <= 1500; y += 100) s += `<line class="${y % 500 ? 'gm' : 'ax'}" x1="${L}" x2="${W - R}" y1="${Y(y)}" y2="${Y(y)}"/>`;
+  for (let x = 0; x <= 15; x++) s += `<line class="${x % 5 ? 'gm' : 'ax'}" x1="${X(x)}" x2="${X(x)}" y1="${T}" y2="${Hh - B}"/>`;
+  [500, 1000, 1500].forEach(y => { s += `<text class="axt" x="${L - 5}" y="${Y(y) + 4}" text-anchor="end">${y.toLocaleString()}</text>`; });
+  [5, 10, 15].forEach(x => { s += `<text class="axt" x="${X(x)}" y="${Hh - B + 15}" text-anchor="middle">${x}</text>`; });
+  s += `<line class="ax0" x1="${L}" x2="${W - R}" y1="${Y(0)}" y2="${Y(0)}"/><line class="ax0" x1="${L}" x2="${L}" y1="${T}" y2="${Hh - B}"/>
+    <text class="axt" x="${(L + W) / 2}" y="${Hh - 6}" text-anchor="middle">time in years</text>
+    <text class="axt" x="11" y="${(T + Hh - B) / 2}" text-anchor="middle" transform="rotate(-90 11 ${(T + Hh - B) / 2})">amount in dollars</text>`;
+  const sel = M.inspect[c] || [];
+  for (let x = 0; x <= 15; x++) {
+    const y = f(x); if (y > 1500.5) continue;
+    const on = sel.includes(x);
+    s += `<circle class="dot ${on ? 'on' : ''}" cx="${X(x)}" cy="${Y(y)}" r="${on ? 6 : 4.5}"/>`;
+    if (o.inspect) s += `<circle class="hit" cx="${X(x)}" cy="${Y(y)}" r="11" data-act="insp" data-c="${c}" data-x="${x}"><title>Year ${x}</title></circle>`;
+  }
+  sel.forEach((x, i) => {
+    const y = f(x); if (y > 1500.5) return;
+    const tx = Math.min(W - R - 4, Math.max(L + 4, X(x))), ty = Math.max(T + 14, Y(y) - 12 - i * 2);
+    s += `<text class="lbl" x="${tx}" y="${ty}" text-anchor="${X(x) > W - 80 ? 'end' : X(x) < L + 60 ? 'start' : 'middle'}">(${x}, ${Math.round(y).toLocaleString()})</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Card ${c} graph">${s}</svg>`;
+}
+H.insp = b => {
+  const c = +b.dataset.c, x = +b.dataset.x, a = (M.inspect[c] || []).slice(), i = a.indexOf(x);
+  if (i >= 0) a.splice(i, 1); else { a.push(x); if (a.length > 2) a.shift(); }
+  M.inspect[c] = a;
+  document.querySelectorAll(`[data-graph="${c}"]`).forEach(el => { el.innerHTML = cardGraph(c, { inspect: true }); });
+};
+function descCard(c) { const d = DESC[c]; return `<div class="ctitle">Card ${c}</div><p>${esc(d.text).replace('1/4', '<span class="fr"><sup>1</sup>⁄<sub>4</sub></span>').replace('2/5', '<span class="fr"><sup>2</sup>⁄<sub>5</sub></span>')}</p><p class="rel">${esc(d.rel)}</p>`; }
+
+/* =====================================================================
+   6. STUDENT
+   ===================================================================== */
+function startStudent() {
+  watch('ended', `${base()}/ended`, v => { if (v) endedScreen(); });
+  watchMine();
+  DB.once(`${base()}/entries/${S.sid}`).then(v => { M.mine = Object.assign({ sort: {}, pairs: {} }, v || {}); M.mine.sort = M.mine.sort || {}; M.mine.pairs = M.mine.pairs || {}; renderStudent(); });
+}
+const saveMine = () => DB.set(`${base()}/entries/${S.sid}`, M.mine);
+const sortDone = () => ALL.every(c => M.mine.sort[c] === kindOf(c)) && M.mine.sortOk;
+const matchDone = () => Object.keys(KEY).every(d => +M.mine.pairs[d] === KEY[d]) && M.mine.matchOk;
+function renderStudent() {
+  const step = !sortDone() ? 1 : !matchDone() ? 2 : 3;
+  M.step = M.step && M.step <= step ? M.step : step;
+  const tabs = [[1, 'Grow or decay?'], [2, 'Make the matches'], [3, 'Explain']];
+  let body = '';
+  if (M.step === 1) {
+    body = `<h3 class="big-q">Step 1: Grow or decay?</h3><p class="story">Before matching, sort every card. Does it show a value that grows or one that decays?</p>
+      <div class="cgrid">${ALL.map(c => `<div class="card8">${DESC[c] ? descCard(c) : `<div class="ctitle">Card ${c}</div><div data-graph="${c}">${cardGraph(c)}</div>`}
+        <div class="row gd"><button class="ghost ${M.mine.sort[c] === 'g' ? 'on' : ''}" data-act="sortc" data-c="${c}" data-k="g">Grows</button><button class="ghost ${M.mine.sort[c] === 'd' ? 'on' : ''}" data-act="sortc" data-c="${c}" data-k="d">Decays</button></div></div>`).join('')}</div>
+      <div class="row" style="margin-top:14px"><button class="btn" data-act="cksort">Check my sort</button><span class="mark" id="sortfb">${M.sortMsg || ''}</span></div>`;
+  } else if (M.step === 2) {
+    const usedBy = {}; Object.keys(M.mine.pairs).forEach(d => { if (M.mine.pairs[d]) usedBy[M.mine.pairs[d]] = +d; });
+    const col = d => PAIRCOL[[1, 2, 5, 6].indexOf(+d)];
+    body = `<h3 class="big-q">Step 2: Make the matches</h3>
+      <p class="story">Tap a situation, then tap the graph that represents it. <b>Tap any point on a graph</b> to see its coordinates. Use them to test each description.</p>
+      ${['g', 'd'].map(k => `<h4 class="grp-h">${k === 'g' ? 'Growth' : 'Decay'}</h4><div class="mgrid">
+        ${[1, 2, 5, 6].filter(c => kindOf(c) === k).map(c => { const p = M.mine.pairs[c], fb = M.feedback[c];
+          return `<button class="card8 desc ${M.pickDesc === c ? 'picked' : ''} ${p ? 'paired ' + col(c) : ''}" data-act="pickd" data-c="${c}">${descCard(c)}
+            <span class="pairtag">${p ? `Matched with Card ${p}` : M.pickDesc === c ? 'Now tap a graph' : 'Tap to match'}</span>${fb ? `<span class="mark ${fb.ok ? 'ok' : 'no'}">${esc(fb.msg)}</span>` : ''}</button>`; }).join('')}
+        ${[3, 4, 7, 8].filter(c => kindOf(c) === k).map(c => `<div class="card8 graphc ${usedBy[c] ? 'paired ' + col(usedBy[c]) : ''}"><div class="row" style="justify-content:space-between"><span class="ctitle">Card ${c}</span>
+          <button class="ghost small" data-act="pickg" data-c="${c}" ${M.pickDesc ? '' : 'disabled'}>${M.pickDesc ? `Match with Card ${M.pickDesc}` : usedBy[c] ? `Matched with Card ${usedBy[c]}` : 'Pick a situation first'}</button></div>
+          <div data-graph="${c}">${cardGraph(c, { inspect: true })}</div></div>`).join('')}</div>`).join('')}
+      <div class="row" style="margin-top:14px"><button class="btn" data-act="ckmatch" ${Object.keys(KEY).every(d => M.mine.pairs[d]) ? '' : 'disabled'}>Check my matches</button><button class="ghost" data-act="clearpairs">Clear matches</button></div>`;
+  } else {
+    body = `<h3 class="big-q">Step 3: Explain your reasoning</h3><p class="story">All four matches are correct. Now explain how you knew.</p>
+      <div class="pairs">${Object.keys(KEY).map(d => `<span class="pchip">Card ${d} ↔ Card ${KEY[d]}</span>`).join('')}</div>
+      <p class="hint" style="margin-top:8px">Sentence frames: “____ and ____ represent the same situation because ….” “I noticed ____, so I matched ….”</p>
+      ${respBox('rgrow', 'How did you tell which graph matches Card 1 and which matches Card 5?')}
+      ${respBox('rdecay', 'How did you tell which graph matches Card 2 and which matches Card 6?')}
+      <div class="notice" style="margin-top:16px"><b>Done?</b> Record your matches in your workbook and be ready to share your strategy.</div>`;
+  }
+  $('#app').innerHTML = `<div class="s-wrap wide"><div class="s-top"><span class="pill">Card sort</span><div class="who">${esc(S.name)} <button data-act="leave">Leave</button></div></div>
+    <div class="stepper">${tabs.map(([n, t]) => `<button class="${M.step === n ? 'cur' : ''} ${n < step ? 'done' : ''}" data-act="gostep" data-n="${n}" ${n > step ? 'disabled' : ''}>${n}. ${t}${n < step ? ' ✓' : ''}</button>`).join('')}</div>
+    <section class="card" id="sbody">${body}</section></div>`;
+}
+H.gostep = b => { M.step = +b.dataset.n; renderStudent(); };
+H.sortc = b => { M.mine.sort[b.dataset.c] = b.dataset.k; M.mine.sortOk = false; M.sortMsg = ''; saveMine(); renderStudent(); };
+H.cksort = () => {
+  const missing = ALL.filter(c => !M.mine.sort[c]).length, wrong = ALL.filter(c => M.mine.sort[c] && M.mine.sort[c] !== kindOf(c)).length;
+  if (missing) { M.sortMsg = `Sort all 8 cards first (${missing} left).`; return renderStudent(); }
+  const ok = !wrong;
+  DB.update(`${base()}/checks/${S.sid}`, { sort: { v: String(8 - wrong), ok, tag: null, t: Date.now() } });
+  if (ok) { M.mine.sortOk = true; saveMine(); M.sortMsg = ''; M.step = 2; }
+  else M.sortMsg = `${wrong} card${wrong === 1 ? ' is' : 's are'} in the wrong group. Look again.`;
+  renderStudent(); window.scrollTo(0, 0);
+};
+H.pickd = b => { const c = +b.dataset.c; M.pickDesc = M.pickDesc === c ? null : c; renderStudent(); };
+H.pickg = b => {
+  const g = +b.dataset.c, d = M.pickDesc; if (!d) return;
+  Object.keys(M.mine.pairs).forEach(k => { if (+M.mine.pairs[k] === g) delete M.mine.pairs[k]; });
+  M.mine.pairs[d] = g; M.mine.matchOk = false; delete M.feedback[d]; M.pickDesc = null; saveMine(); renderStudent();
+};
+H.clearpairs = () => { M.mine.pairs = {}; M.mine.matchOk = false; M.feedback = {}; M.pickDesc = null; saveMine(); renderStudent(); };
+H.ckmatch = () => {
+  const out = {}; let right = 0;
+  Object.keys(KEY).forEach(d => {
+    const g = +M.mine.pairs[d], ok = g === KEY[d];
+    const h = ok ? null : pairHint(+d, g);
+    M.feedback[d] = { ok, msg: ok ? 'Correct' : h.hint };
+    out['p' + d] = { v: String(g), ok, tag: h ? h.tag : null, t: Date.now() };
+    if (ok) right++;
+  });
+  DB.update(`${base()}/checks/${S.sid}`, out);
+  if (right === 4) { M.mine.matchOk = true; saveMine(); M.step = 3; window.scrollTo(0, 0); }
+  renderStudent();
+};
+
+/* =====================================================================
+   7. TEACHER
+   ===================================================================== */
+function startTeacher() {
+  watch('state', `${base()}/state`, st => { if (!st) return; M.st = st; renderTeacher(); });
+  watch('students', `${base()}/students`, v => { M.students = v || {}; renderTeacher(); });
+  watch('entries', `${base()}/entries`, v => { M.entries = v || {}; renderTeacher(); });
+  watchClassWork(() => renderTeacher());
+}
+function renderTeacher() {
+  const ids = Object.keys(M.students), hasBots = ids.some(k => k.startsWith('bot'));
+  const side = $('#side .scroll'), keep = side ? side.scrollTop : 0;
+  const rows = ids.map(k => {
+    const ch = KIT.checks[k] || {}, rs = KIT.resp[k] || {}, e = M.entries[k] || {};
+    const sorted = ch.sort && ch.sort.ok, nPairs = Object.keys(KEY).filter(d => ch['p' + d] && ch['p' + d].ok).length, tried = Object.keys(KEY).some(d => ch['p' + d]);
+    const nResp = RQS.filter(q => (rs[q.k] || '').trim()).length;
+    const cell = (cls, t) => `<td><span class="cell ${cls}">${t}</span></td>`;
+    return `<tr><td>${esc(M.students[k].name)}</td>${sorted ? cell('ok', 'Done') : ch.sort ? cell('stuck', ch.sort.v + ' of 8') : cell('', e.sort && Object.keys(e.sort).length ? 'Working' : '—')}
+      ${nPairs === 4 ? cell('ok', '4 of 4') : tried ? cell('stuck', nPairs + ' of 4') : cell('', sorted ? 'Working' : '—')}
+      ${nResp === 2 ? cell('ok', '2 of 2') : nResp ? cell('part', '1 of 2') : cell('', '—')}</tr>`;
+  }).join('');
+  const tags = {}; ids.forEach(k => Object.values(KIT.checks[k] || {}).forEach(c => { if (c && !c.ok && c.tag) (tags[c.tag] = tags[c.tag] || new Set()).add(k); }));
+  const tagHTML = Object.keys(tags).length ? `<ul class="tags">${Object.entries(tags).sort((a, b) => b[1].size - a[1].size).map(([t, set]) =>
+    `<li><b>${set.size}</b> ${esc(TAGS[t])}${KIT.showNames ? `<small>${[...set].map(k => esc(M.students[k].name)).join(', ')}</small>` : ''}</li>`).join('')}</ul>` : '<p class="hint">Wrong pairings will be grouped here by type once students check their matches.</p>';
+  $('#app').innerHTML = `<div class="t-wrap">${teacherTop(`<button class="ghost" data-act="bots">${hasBots ? 'Remove sample class' : 'Add sample class'}</button>`)}
+    <div class="layout">
+      <section class="card"><h3 class="side-h">Class progress</h3><p class="hint" style="margin-bottom:8px">Red means the student checked and still has something wrong.</p>
+        <div class="scroll gridwrap"><table class="data pgrid"><tr><th>Student</th><th>1. Grow or decay?</th><th>2. Matches</th><th>3. Explain</th></tr>${rows || '<tr><td colspan="4" class="hint">Waiting for students to join…</td></tr>'}</table></div>
+        <h3 class="side-h" style="margin-top:18px">Common mistakes</h3>${tagHTML}
+        <h3 class="side-h" style="margin-top:18px">Project a card</h3>
+        <div class="steps" style="margin-bottom:8px">${ALL.map(c => `<button class="${M.proj === c ? 'cur' : ''}" data-act="proj" data-c="${c}">Card ${c}</button>`).join('')}</div>
+        <div class="card8 projc">${DESC[M.proj] ? descCard(M.proj) : `<div class="ctitle">Card ${M.proj}</div><div data-graph="${M.proj}">${cardGraph(M.proj, { inspect: true })}</div><p class="hint">Click points to show their coordinates.</p>`}</div></section>
+      <aside class="card" id="side">${respViewer(M.students, RQS, M.st)}</aside>
+    </div></div>`;
+  const sc = $('#side .scroll'); if (sc) sc.scrollTop = keep;
+  const el = $('#joined'); if (el) el.textContent = ` · ${ids.length} joined`;
+}
+H.proj = b => { M.proj = +b.dataset.c; renderTeacher(); };
+H.bots = async () => {
+  const bots = Object.keys(M.students).filter(k => k.startsWith('bot')), u = {};
+  if (bots.length) { bots.forEach(k => ['students', 'entries', 'responses', 'checks'].forEach(n => { u[n + '/' + k] = null; })); return DB.update(base(), u); }
+  for (let i = 0; i < 20; i++) {
+    const k = 'bot' + i, r = Math.random(), ch = {}, rs = {};
+    ch.sort = r < 0.1 ? { v: '6', ok: false, tag: null } : { v: '8', ok: true, tag: null };
+    if (r >= 0.1) {
+      const swapG = Math.random() < 0.25, swapD = Math.random() < 0.3, gd = Math.random() < 0.06;
+      ch.p1 = gd ? { v: '3', ok: false, tag: 'gd' } : swapG ? { v: '4', ok: false, tag: 'gfac' } : { v: '7', ok: true, tag: null };
+      ch.p5 = swapG ? { v: '7', ok: false, tag: 'gfac' } : { v: '4', ok: true, tag: null };
+      ch.p2 = swapD ? { v: '8', ok: false, tag: 'dfac' } : { v: '3', ok: true, tag: null };
+      ch.p6 = swapD ? { v: '3', ok: false, tag: 'dfac' } : { v: '8', ok: true, tag: null };
+      if (!swapG && !swapD && !gd) {
+        rs.rgrow = ['Card 7 goes from 100 to 200 in 4 years so it doubles. Card 4 takes 8 years to get to 300.', 'Card 7 grows faster so it is the doubling one', 'I checked year 0 and year 8 on card 4 and it was 300, which is triple'][i % 3];
+        if (Math.random() < .7) rs.rdecay = ['Card 3 goes 1500 to 1125, that is 3/4 left. Card 8 drops to 900 which is 3/5.', 'Card 8 drops faster because it loses more each year', 'the laptop loses more so it is the steeper one'][i % 3];
+      }
+    }
+    u['students/' + k] = { name: NAMES[i], bot: true }; u['checks/' + k] = ch; u['responses/' + k] = rs;
+  }
+  await DB.update(base(), u);
+};
+boot();
+</script>
+</body>
+</html>
