@@ -157,6 +157,15 @@ select.ck.ok{border-color:var(--good); background:var(--good-soft)} select.ck.no
 .layout .chart-box svg{max-height:56vh}
 .eqline .grp{display:inline-flex; align-items:flex-start; gap:6px}
 .eqline .grp > .math{padding-top:8px; white-space:nowrap}
+.ctab.locked{opacity:.5; cursor:not-allowed; border-style:dashed}
+.waitnext{font-weight:600; color:var(--muted); max-width:24rem; text-align:right}
+.pacebar{border:2px solid var(--orange); background:var(--orange-soft); border-radius:12px; padding:12px 14px; display:grid; gap:8px}
+.pacebar.self{border-color:var(--line); background:var(--card); grid-template-columns:1fr auto; align-items:center}
+.pace-h{font:700 1.2rem var(--math)}
+.pace-btns{gap:8px}
+.linkbtn{justify-self:start; background:none; border:0; padding:0; color:var(--blue-d); text-decoration:underline; font-size:.88rem}
+.pgrid th.lockcol,.pgrid td.lockcol{background:var(--grid); color:var(--muted)}
+.pgrid th.nowcol{color:var(--orange-d); box-shadow:inset 0 -3px 0 var(--orange)}
 </style>
 </head>
 <body>
@@ -505,18 +514,19 @@ const CHECKS = {
   moldA: pick('dashed', 'intercept'), moldMore: pick('A'), moldPQ: pick('both')
 };
 const CASES = [
-  { id: 'inv', title: 'The Investments', sub: 'How do a and b change the graph?', checks: [], resp: ['rb', 'ra'] },
-  { id: 'bank', title: 'The Bank Accounts', sub: 'Match each decay equation to its graph.', checks: ['bA', 'bB', 'bC', 'bD', 'fast'], resp: ['fastwhy'] },
-  { id: 'comp', title: 'The Computer', sub: 'What is it worth over time?', checks: ['cp', 'c1', 'cf', 'ca', 'cb', 'c10'], resp: [] },
-  { id: 'gm', title: 'Graph M', sub: 'Find the equation from the graph.', checks: ['ma', 'mb', 'm5'], resp: [] },
-  { id: 'gn', title: 'Graph N', sub: 'Find the equation from the graph.', checks: ['na', 'nb', 'n5'], resp: [] },
-  { id: 'mold', title: 'The Moldy Wall', sub: 'No numbers. Just reasoning.', checks: ['moldA', 'moldMore', 'moldPQ'], resp: ['moldwhy'] }
+  { id: 'inv', tab: 'Activity 1', title: 'Equations and Their Graphs', sub: 'How do a and b change the graph?', checks: [], resp: ['rb', 'ra'] },
+  { id: 'bank', tab: 'Activity 2', title: 'Graphs Representing Exponential Decay', sub: 'Match each decay equation to its graph.', checks: ['bA', 'bB', 'bC', 'bD', 'fast'], resp: ['fastwhy'] },
+  { id: 'comp', tab: 'Activity 3 #1', title: 'Value of a Computer', sub: 'What is it worth over time?', checks: ['cp', 'c1', 'cf', 'ca', 'cb', 'c10'], resp: [] },
+  { id: 'gm', tab: 'Activity 3 #2a', title: 'Graph M', sub: 'Find the equation from the graph.', checks: ['ma', 'mb', 'm5'], resp: [] },
+  { id: 'gn', tab: 'Activity 3 #2b', title: 'Graph N', sub: 'Find the equation from the graph.', checks: ['na', 'nb', 'n5'], resp: [] },
+  { id: 'mold', tab: 'Activity 4', title: 'Moldy Wall', sub: 'No numbers. Just reasoning.', checks: ['moldA', 'moldMore', 'moldPQ'], resp: ['moldwhy'] }
 ];
+const shortTab = c => c.tab.replace('Activity ', 'Act ');
 const RQS = [
-  { k: 'rb', short: 'Changing b', text: 'Investments: how does changing the value of b change the graph?' },
-  { k: 'ra', short: 'Changing a', text: 'Investments: how does changing the value of a change the graph?' },
-  { k: 'fastwhy', short: 'Decays faster', text: 'Bank accounts: which function decays more quickly, f(x) = 1,000 · (1/10)ˣ or g(x) = 1,000 · (9/10)ˣ? Explain.' },
-  { k: 'moldwhy', short: 'Moldy wall', text: 'Moldy wall: how did you decide which graph is mold A and which is mold B?' }
+  { k: 'rb', short: 'Act 1 #1b', text: 'Activity 1 #1b: Explain how changing the value of b changes the graph.' },
+  { k: 'ra', short: 'Act 1 #2c', text: 'Activity 1 #2c: Explain how changing the value of a changes the graph.' },
+  { k: 'fastwhy', short: 'Act 2 #2a', text: 'Activity 2 #2a: Which function is decaying more quickly, f(x) = 1,000 · (1/10)ˣ or g(x) = 1,000 · (9/10)ˣ? Explain your reasoning.' },
+  { k: 'moldwhy', short: 'Act 4 #1', text: 'Activity 4 #1: Which graph represents each function? Explain your reasoning.' }
 ];
 const D = { st: {}, students: {}, cur: 0, inv: 'b', a: 50, b: 2, proj: 'comp', tries: {} };
 
@@ -524,7 +534,7 @@ Object.assign(APP, {
   id: 'detective',
   title: 'Graph Detective',
   sub: 'Read the clues in each graph and crack the case.',
-  initialState: () => ({ showResp: false, t: Date.now() }),
+  initialState: () => ({ showResp: false, open: 0, paced: true, t: Date.now() }),
   joinStudent: async () => { await DB.update(`${base()}/students/${S.sid}`, { name: S.name, t: Date.now() }); },
   setState: patch => DB.set(`${base()}/state`, Object.assign({}, D.st, patch, { t: Date.now() })),
   redraw: () => S.role === 'teacher' && renderTeacher(),
@@ -597,17 +607,34 @@ const startedFor = (checks, resp, c) => c.checks.some(k => checks && checks[k]) 
 /* =====================================================================
    6. STUDENT
    ===================================================================== */
+/* Pacing: in teacher-led mode, students can open any case up to the one the
+   teacher has unlocked (state.open). When the teacher moves the class forward,
+   every student jumps to the new case. In self-paced mode, all cases are open. */
+const maxOpen = () => (D.st.paced === false ? CASES.length - 1 : Math.min(CASES.length - 1, D.st.open || 0));
 function startStudent() {
   watch('ended', `${base()}/ended`, v => { if (v) endedScreen(); });
   watchMine();
-  renderStudent();
-  setTimeout(() => { if (!$('#sbody')) return; renderStudent(); }, 600);
+  D.paceKey = null;
+  watch('state', `${base()}/state`, st => {
+    if (!st) return;
+    const prevOpen = D.paceKey == null ? null : D.st.open || 0;
+    D.st = st;
+    const key = (st.paced === false ? 'self' : 'led') + ':' + (st.open || 0);
+    if (key === D.paceKey) return;               // ignore teacher-only changes (responses, names)
+    const first = D.paceKey == null; D.paceKey = key;
+    if (first) D.cur = maxOpen();                 // join on the class's current case
+    else if (st.paced !== false && prevOpen != null && (st.open || 0) > prevOpen) D.cur = maxOpen();  // teacher moved the class forward
+    if (D.cur > maxOpen()) D.cur = maxOpen();
+    renderStudent(); window.scrollTo(0, 0);
+  });
+  // Saved answers load a moment after joining; redraw once so they show.
+  setTimeout(() => { if ($('#sbody') && !document.activeElement.closest('#sbody')) renderStudent(); }, 700);
 }
 function caseBody(c) {
-  let h = `<h3 class="big-q">Case ${CASES.indexOf(c) + 1}: ${esc(c.title)}</h3>`;
+  let h = `<h3 class="big-q">${esc(c.tab)}: ${esc(c.title)}</h3>`;
   if (c.id === 'inv') {
     h += `<p class="story">Each function gives the value of an investment, in dollars, after <i>x</i> years. Every one has the form <span class="math"><i>m</i>(<i>x</i>) = <i>a</i> · <i>b</i><sup><i>x</i></sup></span>.</p>
-      <div class="row" style="margin:12px 0 4px"><button class="ghost ${D.inv === 'b' ? 'on' : ''}" data-act="invset" data-s="b">Set 1: same a, different b</button><button class="ghost ${D.inv === 'a' ? 'on' : ''}" data-act="invset" data-s="a">Set 2: same b, different a</button></div>
+      <div class="row" style="margin:12px 0 4px"><button class="ghost ${D.inv === 'b' ? 'on' : ''}" data-act="invset" data-s="b">#1: f, g, h, j (same a, different b)</button><button class="ghost ${D.inv === 'a' ? 'on' : ''}" data-act="invset" data-s="a">#2: p, q, r (same b, different a)</button></div>
       <div class="eqs">${D.inv === 'b' ? '<span><b class="k1">f</b>(<i>x</i>) = 50 · 2<sup><i>x</i></sup></span><span><b class="k2">g</b>(<i>x</i>) = 50 · 3<sup><i>x</i></sup></span><span><b class="k3">h</b>(<i>x</i>) = 50 · (3/2)<sup><i>x</i></sup></span><span><b class="k4">j</b>(<i>x</i>) = 50 · (0.5)<sup><i>x</i></sup></span>'
         : '<span><b class="k1">p</b>(<i>x</i>) = 10 · 4<sup><i>x</i></sup></span><span><b class="k2">q</b>(<i>x</i>) = 40 · 4<sup><i>x</i></sup></span><span><b class="k3">r</b>(<i>x</i>) = 100 · 4<sup><i>x</i></sup></span>'}</div>
       <div class="chart-box" id="cg">${caseGraph('inv', true)}</div>
@@ -615,7 +642,7 @@ function caseBody(c) {
         <div class="srow"><span class="math"><i>a</i></span><input type="range" id="sa" min="5" max="200" step="5" value="${D.a}" aria-label="a"></div>
         <div class="srow"><span class="math"><i>b</i></span><input type="range" id="sb" min="0.1" max="4" step="0.05" value="${D.b}" aria-label="b"></div>
         <p class="hint">Drag the sliders. Your function is the dashed black curve.</p></div>
-      ${respBox('rb', 'How does changing the value of b change the graph?')}${respBox('ra', 'How does changing the value of a change the graph?')}`;
+      ${respBox('rb', '1b. Explain how changing the value of b changes the graph.')}${respBox('ra', '2c. Explain how changing the value of a changes the graph.')}`;
   } else if (c.id === 'bank') {
     h += `<p class="story">Each function gives the balance of a bank account, in dollars, after <i>x</i> years.</p>
       <div class="eqs"><span><b>m</b>(<i>x</i>) = 200 · (1/4)<sup><i>x</i></sup></span><span><b>n</b>(<i>x</i>) = 200 · (1/2)<sup><i>x</i></sup></span><span><b>p</b>(<i>x</i>) = 200 · (3/4)<sup><i>x</i></sup></span><span><b>q</b>(<i>x</i>) = 200 · (7/8)<sup><i>x</i></sup></span></div>
@@ -623,25 +650,25 @@ function caseBody(c) {
       <p style="font-weight:600;margin-top:12px">1. Match each graph with its equation.</p>
       ${['A', 'B', 'C', 'D'].map(L => `<div class="qrow"><span>Graph ${L}</span>${selBox('b' + L, [['m', 'm(x)'], ['n', 'n(x)'], ['p', 'p(x)'], ['q', 'q(x)']])}</div>`).join('')}
       <p style="font-weight:600;margin-top:12px">2. <span class="math"><i>f</i>(<i>x</i>) = 1,000 · (1/10)<sup><i>x</i></sup></span> and <span class="math"><i>g</i>(<i>x</i>) = 1,000 · (9/10)<sup><i>x</i></sup></span></p>
-      <div class="qrow"><span>Which function decays more quickly?</span>${selBox('fast', [['f', 'f(x)'], ['g', 'g(x)']])}</div>
+      <div class="qrow"><span>2a. Which function is decaying more quickly?</span>${selBox('fast', [['f', 'f(x)'], ['g', 'g(x)']])}</div>
       <div class="row"><button class="btn" data-act="ckcase">Check my answers</button></div>
-      ${respBox('fastwhy', 'Explain how you know which one decays more quickly.')}`;
+      ${respBox('fastwhy', '2a. Explain your reasoning.')}`;
   } else if (c.id === 'comp') {
     h += `<p class="story">The function <i>f</i> gives the value of a computer, in dollars, <i>x</i> years after it was purchased.</p>
       <div class="chart-box" id="cg">${caseGraph('comp', true)}</div>
-      <div class="qrow"><span>1. What was the purchase price?</span>${ckBox('cp', '$')}</div>
-      <div class="qrow"><span>2. What is <i>f</i>(1), the value after 1 year?</span>${ckBox('c1', '$')}</div>
-      <div class="qrow"><span>3. Each year, the value is multiplied by…</span>${ckBox('cf', 'factor')}</div>
-      <p style="font-weight:600;margin-top:10px">4. Write an equation that defines <i>f</i>.</p>${eqLine('ca', 'cb', '<i>f</i>')}
-      <div class="qrow"><span>5. Will the value of the computer reach $0 after 10 years?</span>${selBox('c10', [['yes', 'Yes'], ['no', 'No']])}</div>
+      <div class="qrow"><span>a. The purchase price of the computer</span>${ckBox('cp', '$')}</div>
+      <div class="qrow"><span>b. The value of <i>f</i> when <i>x</i> is 1</span>${ckBox('c1', '$')}</div>
+      <div class="qrow"><span>d. How is the value changing each year? It is multiplied by…</span>${ckBox('cf', 'factor')}</div>
+      <p style="font-weight:600;margin-top:10px">e. An equation that defines <i>f</i></p>${eqLine('ca', 'cb', '<i>f</i>')}
+      <div class="qrow"><span>f. Will the value of <i>f</i> reach 0 after 10 years?</span>${selBox('c10', [['yes', 'Yes'], ['no', 'No']])}</div>
       <div class="row"><button class="btn" data-act="ckcase">Check my answers</button></div>
       <p class="hint" style="margin-top:8px">After you check, your equation is drawn as a dashed black curve on the graph.</p>`;
   } else if (c.id === 'gm' || c.id === 'gn') {
     const m = c.id === 'gm', pre = m ? 'm' : 'n', F = m ? 'M' : 'N';
     h += `<p class="story">Write an equation for the function, then find its value when <i>x</i> is 5.</p>
       <div class="chart-box" id="cg">${caseGraph(c.id, true)}</div>
-      <p style="font-weight:600;margin-top:12px">1. Equation</p>${eqLine(pre + 'a', pre + 'b', F)}
-      <div class="qrow"><span>2. What is ${F}(5)?</span>${ckBox(pre + '5', '')}</div>
+      <p style="font-weight:600;margin-top:12px">Write an equation that defines the function.</p>${eqLine(pre + 'a', pre + 'b', F)}
+      <div class="qrow"><span>Find the value of the function when <i>x</i> is 5: ${F}(5) =</span>${ckBox(pre + '5', '')}</div>
       <div class="row"><button class="btn" data-act="ckcase">Check my answers</button></div>
       <p class="hint" style="margin-top:8px">After you check, your equation is drawn as a dashed black curve on the graph.</p>`;
   } else {
@@ -654,21 +681,24 @@ function caseBody(c) {
       ${respBox('moldwhy', 'How did you decide which graph is mold A and which is mold B?')}`;
   }
   const i = CASES.indexOf(c);
-  h += `<div class="row" style="justify-content:space-between;margin-top:20px">${i > 0 ? `<button class="ghost" data-act="gocase" data-i="${i - 1}">Previous case</button>` : '<span></span>'}${i < CASES.length - 1 ? `<button class="btn alt" data-act="gocase" data-i="${i + 1}">Next case</button>` : '<span class="hint">That’s the last case.</span>'}</div>`;
+  const next = i < CASES.length - 1 ? (i + 1 <= maxOpen() ? `<button class="btn alt" data-act="gocase" data-i="${i + 1}">Next: ${esc(CASES[i + 1].tab)}</button>`
+    : `<span class="waitnext">Finished? Check your answers while you wait. Your teacher will open ${esc(CASES[i + 1].tab)}.</span>`) : '<span class="hint">That’s the last activity.</span>';
+  h += `<div class="row" style="justify-content:space-between;margin-top:20px">${i > 0 ? `<button class="ghost" data-act="gocase" data-i="${i - 1}">Back to ${esc(CASES[i - 1].tab)}</button>` : '<span></span>'}${next}</div>`;
   return h;
 }
 function tabsHTML() {
   return `<div class="ctabs">${CASES.map((c, i) => { const done = solvedFor(KIT.myChecks, KIT.myResp, c);
-    return `<button class="ctab ${i === D.cur ? 'cur' : ''} ${done ? 'done' : ''}" data-act="gocase" data-i="${i}"><span>Case ${i + 1}</span>${esc(c.title)}${done ? ' ✓' : ''}</button>`; }).join('')}</div>`;
+    const locked = i > maxOpen();
+    return `<button class="ctab ${i === D.cur ? 'cur' : ''} ${done ? 'done' : ''} ${locked ? 'locked' : ''}" data-act="gocase" data-i="${i}" ${locked ? 'disabled aria-disabled="true" title="Your teacher will open this part"' : ''}><span>${esc(c.tab)}${locked ? ' · Locked' : ''}</span>${esc(c.title)}${done ? ' ✓' : ''}</button>`; }).join('')}</div>`;
 }
 function scrollTab() { const t = $('.ctab.cur'); if (t && t.scrollIntoView) t.scrollIntoView({ block: 'nearest', inline: 'center' }); }
 function renderStudent() {
   const c = CASES[D.cur];
-  $('#app').innerHTML = `<div class="s-wrap wide"><div class="s-top"><span class="pill">Graph Detective</span><div class="who">${esc(S.name)} <button data-act="leave">${S.preview ? 'Reset preview' : 'Leave'}</button></div></div>
+  $('#app').innerHTML = `<div class="s-wrap wide"><div class="s-top"><span class="pill">Lesson 7: Graph Detective</span><div class="who">${esc(S.name)} <button data-act="leave">${S.preview ? 'Reset preview' : 'Leave'}</button></div></div>
     ${tabsHTML()}<section class="card" id="sbody">${caseBody(c)}</section></div>`;
   scrollTab();
 }
-H.gocase = b => { D.cur = +b.dataset.i; renderStudent(); window.scrollTo(0, 0); };
+H.gocase = b => { const i = +b.dataset.i; if (S.role === 'student' && i > maxOpen()) return; D.cur = i; renderStudent(); window.scrollTo(0, 0); };
 H.invset = b => { D.inv = b.dataset.s; renderStudent(); };
 H.ckcase = () => {
   const c = CASES[D.cur]; runChecks(c.checks);
@@ -694,8 +724,9 @@ function startTeacher() {
 function renderTeacher() {
   const ids = Object.keys(D.students), hasBots = ids.some(k => k.startsWith('bot'));
   const side = $('#side .scroll'), keep = side ? side.scrollTop : 0;
-  const grid = `<div class="scroll gridwrap"><table class="data pgrid"><tr><th>Student</th>${CASES.map((c, i) => `<th title="${esc(c.title)}">Case ${i + 1}</th>`).join('')}</tr>
-    ${ids.map(k => `<tr><td>${esc(D.students[k].name)}</td>${CASES.map(c => {
+  const led = D.st.paced !== false, open = D.st.open || 0, lk = i => led && i > open;
+  const grid = `<div class="scroll gridwrap"><table class="data pgrid"><tr><th>Student</th>${CASES.map((c, i) => `<th title="${esc(c.title)}" class="${lk(i) ? 'lockcol' : ''} ${led && i === open ? 'nowcol' : ''}">${esc(shortTab(c))}</th>`).join('')}</tr>
+    ${ids.map(k => `<tr><td>${esc(D.students[k].name)}</td>${CASES.map((c, ci) => { if (lk(ci)) return '<td class="lockcol"></td>';
       const ch = KIT.checks[k] || {}, rs = KIT.resp[k] || {};
       if (solvedFor(ch, rs, c)) return '<td><span class="cell ok">Solved</span></td>';
       if (!startedFor(ch, rs, c)) return '<td><span class="cell">—</span></td>';
@@ -707,10 +738,10 @@ function renderTeacher() {
     `<li><b>${set.size}</b> ${esc(TAGS[t] || t)}${KIT.showNames ? `<small>${[...set].map(k => esc(D.students[k].name)).join(', ')}</small>` : ''}</li>`).join('')}</ul>` : '<p class="hint">No common mistakes yet. This lists wrong answers that show a specific misconception, like using a difference instead of a factor.</p>';
   $('#app').innerHTML = `<div class="t-wrap">${teacherTop(`<button class="ghost" data-act="bots">${hasBots ? 'Remove sample class' : 'Add sample class'}</button>`)}
     <div class="layout">
-      <section class="card"><h3 class="side-h">Class progress</h3><p class="hint" style="margin-bottom:8px">Students work at their own pace. “2 of 5” means two parts are correct. Red means a wrong answer they haven’t fixed yet.</p>${grid}
+      <section class="card">${paceHTML(ids)}<h3 class="side-h" style="margin-top:18px">Class progress</h3><p class="hint" style="margin-bottom:8px">“2 of 5” means two parts are correct. Red means a wrong answer they haven’t fixed yet.${led ? ' Shaded columns are still locked for students.' : ''}</p>${grid}
         <h3 class="side-h" style="margin-top:18px">Common mistakes</h3>${tagHTML}
-        <h3 class="side-h" style="margin-top:18px">Project a case</h3>
-        <div class="steps" style="margin-bottom:8px">${CASES.map((c, i) => `<button class="${D.proj === c.id ? 'cur' : ''}" data-act="proj" data-c="${c.id}">${i + 1}. ${esc(c.title)}</button>`).join('')}</div>
+        <h3 class="side-h" style="margin-top:18px">Project a graph</h3>
+        <div class="steps" style="margin-bottom:8px">${CASES.map((c, i) => `<button class="${D.proj === c.id ? 'cur' : ''}" data-act="proj" data-c="${c.id}">${esc(shortTab(c))}</button>`).join('')}</div>
         <div class="chart-box">${D.proj === 'inv' ? caseGraph('inv', false) : caseGraph(D.proj)}</div></section>
       <aside class="card" id="side">${respViewer(D.students, RQS, D.st)}</aside>
     </div></div>`;
@@ -718,6 +749,25 @@ function renderTeacher() {
   const el = $('#joined'); if (el) el.textContent = ` · ${ids.length} joined`;
 }
 H.proj = b => { D.proj = b.dataset.c; renderTeacher(); };
+function paceHTML(ids) {
+  const led = D.st.paced !== false, open = Math.min(CASES.length - 1, D.st.open || 0), c = CASES[open];
+  const solved = ids.filter(k => solvedFor(KIT.checks[k], KIT.resp[k], c)).length;
+  if (!led) return `<div class="pacebar self"><div><div class="pace-h">Self-paced</div><p class="hint">Students can open any activity and move ahead on their own.</p></div>
+    <button class="ghost" data-act="pacemode" data-m="led">Switch to teacher-led</button></div>`;
+  return `<div class="pacebar"><div class="pace-now"><div class="pace-h">The class is on ${esc(c.tab)}: ${esc(c.title)}</div>
+      <p class="hint">${solved} of ${ids.length} finished this part. Students can go back to earlier parts but can’t open the next one until you do.</p></div>
+    <div class="row pace-btns"><button class="ghost" data-act="pace" data-d="-1" ${open === 0 ? 'disabled' : ''}>Back one part</button>
+      ${open < CASES.length - 1 ? `<button class="btn alt" data-act="pace" data-d="1">Open ${esc(CASES[open + 1].tab)}: ${esc(CASES[open + 1].title)}</button>` : '<span class="hint">Everything is open.</span>'}</div>
+    <button class="linkbtn" data-act="pacemode" data-m="self">Let students work ahead instead</button></div>`;
+}
+H.pace = b => {
+  const open = Math.max(0, Math.min(CASES.length - 1, (D.st.open || 0) + +b.dataset.d));
+  if (+b.dataset.d < 0 && !confirm(`Lock ${CASES[open + 1].tab} again? Students on it will be moved back to ${CASES[open].tab}.`)) return;
+  D.proj = CASES[open].id;
+  const patch = { open }; if (CASES[open].resp.length) { patch.respQ = CASES[open].resp[0]; patch.showResp = false; }
+  APP.setState(patch);
+};
+H.pacemode = b => APP.setState({ paced: b.dataset.m === 'led' });
 H.bots = async () => {
   const bots = Object.keys(D.students).filter(k => k.startsWith('bot')), u = {};
   if (bots.length) { bots.forEach(k => ['students', 'responses', 'checks'].forEach(n => { u[n + '/' + k] = null; })); return DB.update(base(), u); }
