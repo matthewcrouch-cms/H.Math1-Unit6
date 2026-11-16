@@ -157,6 +157,15 @@ select.ck.ok{border-color:var(--good); background:var(--good-soft)} select.ck.no
 .layout .chart-box svg{max-height:56vh}
 .eqline .grp{display:inline-flex; align-items:flex-start; gap:6px}
 .eqline .grp > .math{padding-top:8px; white-space:nowrap}
+.ctab.locked{opacity:.5; cursor:not-allowed; border-style:dashed}
+.waitnext{font-weight:600; color:var(--muted); max-width:24rem; text-align:right}
+.pacebar{border:2px solid var(--orange); background:var(--orange-soft); border-radius:12px; padding:12px 14px; display:grid; gap:8px}
+.pacebar.self{border-color:var(--line); background:var(--card); grid-template-columns:1fr auto; align-items:center}
+.pace-h{font:700 1.2rem var(--math)}
+.pace-btns{gap:8px}
+.linkbtn{justify-self:start; background:none; border:0; padding:0; color:var(--blue-d); text-decoration:underline; font-size:.88rem}
+.pgrid th.lockcol,.pgrid td.lockcol{background:var(--grid); color:var(--muted)}
+.pgrid th.nowcol{color:var(--orange-d); box-shadow:inset 0 -3px 0 var(--orange)}
 </style>
 </head>
 <body>
@@ -524,7 +533,7 @@ Object.assign(APP, {
   id: 'detective',
   title: 'Graph Detective',
   sub: 'Read the clues in each graph and crack the case.',
-  initialState: () => ({ showResp: false, t: Date.now() }),
+  initialState: () => ({ showResp: false, open: 0, paced: true, t: Date.now() }),
   joinStudent: async () => { await DB.update(`${base()}/students/${S.sid}`, { name: S.name, t: Date.now() }); },
   setState: patch => DB.set(`${base()}/state`, Object.assign({}, D.st, patch, { t: Date.now() })),
   redraw: () => S.role === 'teacher' && renderTeacher(),
@@ -597,11 +606,28 @@ const startedFor = (checks, resp, c) => c.checks.some(k => checks && checks[k]) 
 /* =====================================================================
    6. STUDENT
    ===================================================================== */
+/* Pacing: in teacher-led mode, students can open any case up to the one the
+   teacher has unlocked (state.open). When the teacher moves the class forward,
+   every student jumps to the new case. In self-paced mode, all cases are open. */
+const maxOpen = () => (D.st.paced === false ? CASES.length - 1 : Math.min(CASES.length - 1, D.st.open || 0));
 function startStudent() {
   watch('ended', `${base()}/ended`, v => { if (v) endedScreen(); });
   watchMine();
-  renderStudent();
-  setTimeout(() => { if (!$('#sbody')) return; renderStudent(); }, 600);
+  D.paceKey = null;
+  watch('state', `${base()}/state`, st => {
+    if (!st) return;
+    const prevOpen = D.paceKey == null ? null : D.st.open || 0;
+    D.st = st;
+    const key = (st.paced === false ? 'self' : 'led') + ':' + (st.open || 0);
+    if (key === D.paceKey) return;               // ignore teacher-only changes (responses, names)
+    const first = D.paceKey == null; D.paceKey = key;
+    if (first) D.cur = maxOpen();                 // join on the class's current case
+    else if (st.paced !== false && prevOpen != null && (st.open || 0) > prevOpen) D.cur = maxOpen();  // teacher moved the class forward
+    if (D.cur > maxOpen()) D.cur = maxOpen();
+    renderStudent(); window.scrollTo(0, 0);
+  });
+  // Saved answers load a moment after joining; redraw once so they show.
+  setTimeout(() => { if ($('#sbody') && !document.activeElement.closest('#sbody')) renderStudent(); }, 700);
 }
 function caseBody(c) {
   let h = `<h3 class="big-q">Case ${CASES.indexOf(c) + 1}: ${esc(c.title)}</h3>`;
@@ -654,12 +680,15 @@ function caseBody(c) {
       ${respBox('moldwhy', 'How did you decide which graph is mold A and which is mold B?')}`;
   }
   const i = CASES.indexOf(c);
-  h += `<div class="row" style="justify-content:space-between;margin-top:20px">${i > 0 ? `<button class="ghost" data-act="gocase" data-i="${i - 1}">Previous case</button>` : '<span></span>'}${i < CASES.length - 1 ? `<button class="btn alt" data-act="gocase" data-i="${i + 1}">Next case</button>` : '<span class="hint">That’s the last case.</span>'}</div>`;
+  const next = i < CASES.length - 1 ? (i + 1 <= maxOpen() ? `<button class="btn alt" data-act="gocase" data-i="${i + 1}">Next case</button>`
+    : `<span class="waitnext">Finished? Check your answers while you wait. Your teacher will open the next case.</span>`) : '<span class="hint">That’s the last case.</span>';
+  h += `<div class="row" style="justify-content:space-between;margin-top:20px">${i > 0 ? `<button class="ghost" data-act="gocase" data-i="${i - 1}">Previous case</button>` : '<span></span>'}${next}</div>`;
   return h;
 }
 function tabsHTML() {
   return `<div class="ctabs">${CASES.map((c, i) => { const done = solvedFor(KIT.myChecks, KIT.myResp, c);
-    return `<button class="ctab ${i === D.cur ? 'cur' : ''} ${done ? 'done' : ''}" data-act="gocase" data-i="${i}"><span>Case ${i + 1}</span>${esc(c.title)}${done ? ' ✓' : ''}</button>`; }).join('')}</div>`;
+    const locked = i > maxOpen();
+    return `<button class="ctab ${i === D.cur ? 'cur' : ''} ${done ? 'done' : ''} ${locked ? 'locked' : ''}" data-act="gocase" data-i="${i}" ${locked ? 'disabled aria-disabled="true" title="Your teacher will open this case"' : ''}><span>Case ${i + 1}${locked ? ' · Locked' : ''}</span>${esc(c.title)}${done ? ' ✓' : ''}</button>`; }).join('')}</div>`;
 }
 function scrollTab() { const t = $('.ctab.cur'); if (t && t.scrollIntoView) t.scrollIntoView({ block: 'nearest', inline: 'center' }); }
 function renderStudent() {
@@ -668,7 +697,7 @@ function renderStudent() {
     ${tabsHTML()}<section class="card" id="sbody">${caseBody(c)}</section></div>`;
   scrollTab();
 }
-H.gocase = b => { D.cur = +b.dataset.i; renderStudent(); window.scrollTo(0, 0); };
+H.gocase = b => { const i = +b.dataset.i; if (S.role === 'student' && i > maxOpen()) return; D.cur = i; renderStudent(); window.scrollTo(0, 0); };
 H.invset = b => { D.inv = b.dataset.s; renderStudent(); };
 H.ckcase = () => {
   const c = CASES[D.cur]; runChecks(c.checks);
@@ -694,8 +723,9 @@ function startTeacher() {
 function renderTeacher() {
   const ids = Object.keys(D.students), hasBots = ids.some(k => k.startsWith('bot'));
   const side = $('#side .scroll'), keep = side ? side.scrollTop : 0;
-  const grid = `<div class="scroll gridwrap"><table class="data pgrid"><tr><th>Student</th>${CASES.map((c, i) => `<th title="${esc(c.title)}">Case ${i + 1}</th>`).join('')}</tr>
-    ${ids.map(k => `<tr><td>${esc(D.students[k].name)}</td>${CASES.map(c => {
+  const led = D.st.paced !== false, open = D.st.open || 0, lk = i => led && i > open;
+  const grid = `<div class="scroll gridwrap"><table class="data pgrid"><tr><th>Student</th>${CASES.map((c, i) => `<th title="${esc(c.title)}" class="${lk(i) ? 'lockcol' : ''} ${led && i === open ? 'nowcol' : ''}">Case ${i + 1}</th>`).join('')}</tr>
+    ${ids.map(k => `<tr><td>${esc(D.students[k].name)}</td>${CASES.map((c, ci) => { if (lk(ci)) return '<td class="lockcol"></td>';
       const ch = KIT.checks[k] || {}, rs = KIT.resp[k] || {};
       if (solvedFor(ch, rs, c)) return '<td><span class="cell ok">Solved</span></td>';
       if (!startedFor(ch, rs, c)) return '<td><span class="cell">—</span></td>';
@@ -707,7 +737,7 @@ function renderTeacher() {
     `<li><b>${set.size}</b> ${esc(TAGS[t] || t)}${KIT.showNames ? `<small>${[...set].map(k => esc(D.students[k].name)).join(', ')}</small>` : ''}</li>`).join('')}</ul>` : '<p class="hint">No common mistakes yet. This lists wrong answers that show a specific misconception, like using a difference instead of a factor.</p>';
   $('#app').innerHTML = `<div class="t-wrap">${teacherTop(`<button class="ghost" data-act="bots">${hasBots ? 'Remove sample class' : 'Add sample class'}</button>`)}
     <div class="layout">
-      <section class="card"><h3 class="side-h">Class progress</h3><p class="hint" style="margin-bottom:8px">Students work at their own pace. “2 of 5” means two parts are correct. Red means a wrong answer they haven’t fixed yet.</p>${grid}
+      <section class="card">${paceHTML(ids)}<h3 class="side-h" style="margin-top:18px">Class progress</h3><p class="hint" style="margin-bottom:8px">“2 of 5” means two parts are correct. Red means a wrong answer they haven’t fixed yet.${led ? ' Shaded columns are still locked for students.' : ''}</p>${grid}
         <h3 class="side-h" style="margin-top:18px">Common mistakes</h3>${tagHTML}
         <h3 class="side-h" style="margin-top:18px">Project a case</h3>
         <div class="steps" style="margin-bottom:8px">${CASES.map((c, i) => `<button class="${D.proj === c.id ? 'cur' : ''}" data-act="proj" data-c="${c.id}">${i + 1}. ${esc(c.title)}</button>`).join('')}</div>
@@ -718,6 +748,25 @@ function renderTeacher() {
   const el = $('#joined'); if (el) el.textContent = ` · ${ids.length} joined`;
 }
 H.proj = b => { D.proj = b.dataset.c; renderTeacher(); };
+function paceHTML(ids) {
+  const led = D.st.paced !== false, open = Math.min(CASES.length - 1, D.st.open || 0), c = CASES[open];
+  const solved = ids.filter(k => solvedFor(KIT.checks[k], KIT.resp[k], c)).length;
+  if (!led) return `<div class="pacebar self"><div><div class="pace-h">Self-paced</div><p class="hint">Students can open any case and move ahead on their own.</p></div>
+    <button class="ghost" data-act="pacemode" data-m="led">Switch to teacher-led</button></div>`;
+  return `<div class="pacebar"><div class="pace-now"><div class="pace-h">The class is on Case ${open + 1}: ${esc(c.title)}</div>
+      <p class="hint">${solved} of ${ids.length} solved this case. Students can go back to earlier cases but can’t open the next one until you do.</p></div>
+    <div class="row pace-btns"><button class="ghost" data-act="pace" data-d="-1" ${open === 0 ? 'disabled' : ''}>Back a case</button>
+      ${open < CASES.length - 1 ? `<button class="btn alt" data-act="pace" data-d="1">Open Case ${open + 2}: ${esc(CASES[open + 1].title)}</button>` : '<span class="hint">All cases are open.</span>'}</div>
+    <button class="linkbtn" data-act="pacemode" data-m="self">Let students work ahead instead</button></div>`;
+}
+H.pace = b => {
+  const open = Math.max(0, Math.min(CASES.length - 1, (D.st.open || 0) + +b.dataset.d));
+  if (+b.dataset.d < 0 && !confirm(`Lock Case ${open + 2} again? Students on it will be moved back to Case ${open + 1}.`)) return;
+  D.proj = CASES[open].id;
+  const patch = { open }; if (CASES[open].resp.length) { patch.respQ = CASES[open].resp[0]; patch.showResp = false; }
+  APP.setState(patch);
+};
+H.pacemode = b => APP.setState({ paced: b.dataset.m === 'led' });
 H.bots = async () => {
   const bots = Object.keys(D.students).filter(k => k.startsWith('bot')), u = {};
   if (bots.length) { bots.forEach(k => ['students', 'responses', 'checks'].forEach(n => { u[n + '/' + k] = null; })); return DB.update(base(), u); }
