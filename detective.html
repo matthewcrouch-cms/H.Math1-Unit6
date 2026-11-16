@@ -166,6 +166,11 @@ select.ck.ok{border-color:var(--good); background:var(--good-soft)} select.ck.no
 .linkbtn{justify-self:start; background:none; border:0; padding:0; color:var(--blue-d); text-decoration:underline; font-size:.88rem}
 .pgrid th.lockcol,.pgrid td.lockcol{background:var(--grid); color:var(--muted)}
 .pgrid th.nowcol{color:var(--orange-d); box-shadow:inset 0 -3px 0 var(--orange)}
+input.ck:disabled,select.ck:disabled{opacity:1; cursor:not-allowed; color:var(--ink); -webkit-text-fill-color:var(--ink)}
+textarea.rbox.locked{background:var(--grid); cursor:not-allowed}
+.lockmsg{font-weight:700; font-size:.9rem; color:var(--muted)}
+.lockmsg::before{content:"🔒 "}
+.resp small.draft{color:var(--orange-d)}
 </style>
 </head>
 <body>
@@ -352,7 +357,7 @@ H.preview = () => {
 };
 H.resetpreview = async () => {
   if (!confirm('Clear your preview answers and start this activity over as a new student?')) return;
-  const u = {}; ['students', 'votes', 'answers', 'entries', 'responses', 'checks'].forEach(n => { u[`${n}/${PREVIEW_SID}`] = null; });
+  const u = {}; ['students', 'votes', 'answers', 'entries', 'responses', 'checks', 'submitted'].forEach(n => { u[`${n}/${PREVIEW_SID}`] = null; });
   try { await DB.update(base(), u); } catch (e) {}
   location.reload();
 };
@@ -391,47 +396,62 @@ const parseNum = s => {
   const v = Number(s); return isFinite(v) ? v : null;
 };
 const near = (v, t, tol) => v != null && Math.abs(v - t) <= (tol != null ? tol : Math.max(1e-6, Math.abs(t) * 1e-6));
-const KIT = { resp: {}, checks: {}, myResp: {}, myChecks: {}, showNames: false };
+const KIT = { resp: {}, checks: {}, sub: {}, myResp: {}, myChecks: {}, mySub: {}, showNames: false };
 
 /* --- student side --- */
-// A response box: <textarea data-rk="key">. Saves when the student clicks away or taps Save.
+// A response box: <textarea data-rk="key">. Drafts save when the student clicks away;
+// "Submit" locks the answer so it can't be changed.
 function respBox(key, label) {
+  const done = !!KIT.mySub[key];
   return `<label class="rlabel" for="rk-${key}">${label}</label>
-    <textarea id="rk-${key}" class="txt rbox" data-rk="${key}" rows="3">${esc(KIT.myResp[key] || '')}</textarea>
-    <div class="row rsave"><button class="ghost" data-act="saverk" data-k="${key}">Save</button><span class="hint" id="rs-${key}">${KIT.myResp[key] ? 'Saved.' : ''}</span></div>`;
+    <textarea id="rk-${key}" class="txt rbox ${done ? 'locked' : ''}" data-rk="${key}" rows="3" ${done ? 'readonly aria-readonly="true"' : ''}>${esc(KIT.myResp[key] || '')}</textarea>
+    <div class="row rsave" id="rrow-${key}">${done ? '<span class="lockmsg">Submitted. This answer is locked.</span>'
+      : `<button class="ghost" data-act="saverk" data-k="${key}">Submit</button><span class="hint" id="rs-${key}">${KIT.myResp[key] ? 'Draft saved. ' : ''}You can’t change it after you submit.</span>`}</div>`;
 }
 function saveRk(key, how) {
+  if (KIT.mySub[key]) return;
   const t = $('#rk-' + key); if (!t) return;
   const v = t.value.trim().slice(0, 800);
-  if (v === (KIT.myResp[key] || '')) { const s = $('#rs-' + key); if (s && v) s.textContent = 'Saved.'; return; }
+  if (v === (KIT.myResp[key] || '')) return;
   KIT.myResp[key] = v; DB.set(`${base()}/responses/${S.sid}/${key}`, v || null);
-  const s = $('#rs-' + key); if (s) s.textContent = how || 'Saved.';
+  const s = $('#rs-' + key); if (s) s.textContent = how || 'Draft saved.';
 }
-H.saverk = b => saveRk(b.dataset.k, 'Saved. You can edit and save again.');
-document.addEventListener('focusout', e => { if (S.role === 'student' && e.target.dataset && e.target.dataset.rk) saveRk(e.target.dataset.rk, 'Saved automatically.'); });
+H.saverk = b => {
+  const key = b.dataset.k, t = $('#rk-' + key); if (!t || KIT.mySub[key]) return;
+  if (!t.value.trim()) { const s = $('#rs-' + key); if (s) s.textContent = 'Write your answer first.'; return; }
+  saveRk(key);
+  KIT.mySub[key] = true; DB.set(`${base()}/submitted/${S.sid}/${key}`, true);
+  t.readOnly = true; t.classList.add('locked');
+  const row = $('#rrow-' + key); if (row) row.innerHTML = '<span class="lockmsg">Submitted. This answer is locked.</span>';
+  if (APP.afterSubmit) APP.afterSubmit();
+};
+document.addEventListener('focusout', e => { if (S.role === 'student' && e.target.dataset && e.target.dataset.rk) saveRk(e.target.dataset.rk, 'Draft saved. You can’t change it after you submit.'); });
 function watchMine() {
   watch('myResp', `${base()}/responses/${S.sid}`, v => {
     KIT.myResp = v || {};
     document.querySelectorAll('textarea[data-rk]').forEach(t => { const k = t.dataset.rk; if (!t.value && document.activeElement !== t && KIT.myResp[k]) t.value = KIT.myResp[k]; });
   });
   watch('myChecks', `${base()}/checks/${S.sid}`, v => { KIT.myChecks = v || {}; });
+  watch('mySub', `${base()}/submitted/${S.sid}`, v => { KIT.mySub = v || {}; });
 }
 // A checked number box: <input data-ck="key">. CHECKS[key] = { ans: number, tol, hint(v) -> string|null }
 function ckBox(key, ph) {
   const prev = KIT.myChecks[key];
   const cls = prev ? (prev.ok ? 'ok' : 'no') : '';
-  return `<span class="ckwrap"><input class="ck ${cls}" id="ck-${key}" data-ck="${key}" inputmode="decimal" autocomplete="off" placeholder="${esc(ph || '')}" value="${esc(prev ? prev.v : '')}"><span class="mark ${cls}" id="mk-${key}">${prev ? (prev.ok ? 'Correct' : 'Try again') : ''}</span></span>`;
+  return `<span class="ckwrap"><input class="ck ${cls}" id="ck-${key}" data-ck="${key}" inputmode="decimal" autocomplete="off" placeholder="${esc(ph || '')}" value="${esc(prev ? prev.v : '')}" ${prev ? 'disabled aria-disabled="true"' : ''}><span class="mark ${cls}" id="mk-${key}">${prev ? markText(prev) : ''}</span></span>`;
 }
+const markText = c => (c.ok ? 'Correct' : 'Incorrect' + (c.hint ? '. ' + c.hint : ''));
 function runChecks(keys) {
   const out = {}; let right = 0;
   keys.forEach(k => {
-    const inp = $('#ck-' + k), mk = $('#mk-' + k), spec = CHECKS[k]; if (!inp || !spec) return;
+    const inp = $('#ck-' + k), mk = $('#mk-' + k), spec = CHECKS[k]; if (!inp || !spec || KIT.myChecks[k]) return;  // already checked = locked
     const raw = inp.value.trim(); inp.classList.remove('ok', 'no'); mk.className = 'mark'; mk.textContent = '';
     if (!raw) return;
     const v = parseNum(raw), ok = spec.ok ? spec.ok(v, raw) : near(v, spec.ans, spec.tol);
-    out[k] = { v: raw, ok, tag: !ok && spec.tag ? (spec.tag(v, raw) || null) : null, t: Date.now() }; if (ok) right++;
+    const hint = ok ? null : ((spec.hint && spec.hint(v, raw)) || null);
+    out[k] = { v: raw, ok, tag: !ok && spec.tag ? (spec.tag(v, raw) || null) : null, hint, t: Date.now() }; if (ok) right++;
     inp.classList.add(ok ? 'ok' : 'no'); mk.classList.add(ok ? 'ok' : 'no');
-    mk.textContent = ok ? 'Correct' : ((spec.hint && spec.hint(v, raw)) || 'Try again');
+    mk.textContent = markText(out[k]); inp.disabled = true;
   });
   Object.assign(KIT.myChecks, out);
   DB.update(`${base()}/checks/${S.sid}`, out);
@@ -463,7 +483,7 @@ function respViewer(students, qs, st) {
     <div class="row" style="justify-content:space-between;margin:8px 0"><span class="hint">${ids.length} of ${nS} answered</span>
       <span class="row"><button class="ghost" data-act="names">Names ${KIT.showNames ? 'shown' : 'hidden'}</button>
       <button class="ghost ${st.showResp ? 'on' : ''}" data-act="${st.showResp ? 'hide' : 'reveal'}" data-k="showResp" ${ids.length || st.showResp ? '' : 'disabled'}>${st.showResp ? 'Hide responses' : 'Show responses'}</button></span></div>
-    ${st.showResp ? `<div class="scroll" style="max-height:44vh">${ids.map(k => `<div class="resp">${KIT.showNames ? `<small>${esc(students[k].name)}</small>` : ''}${esc(KIT.resp[k][q.k])}</div>`).join('') || '<p class="hint">No responses yet.</p>'}</div>` : ''}`;
+    ${st.showResp ? `<div class="scroll" style="max-height:44vh">${ids.map(k => `<div class="resp">${KIT.showNames ? `<small>${esc(students[k].name)}</small>` : ''}${KIT.sub[k] && KIT.sub[k][q.k] ? '' : '<small class="draft">Draft, not submitted yet</small>'}${esc(KIT.resp[k][q.k])}</div>`).join('') || '<p class="hint">No responses yet.</p>'}</div>` : ''}`;
 }
 H.reveal = b => APP.setState({ [b.dataset.k]: true });
 H.hide = b => APP.setState({ [b.dataset.k]: false });
@@ -472,6 +492,7 @@ H.names = () => { KIT.showNames = !KIT.showNames; APP.redraw(); };
 function watchClassWork(after) {
   watch('resp', `${base()}/responses`, v => { KIT.resp = v || {}; after(); });
   watch('checks', `${base()}/checks`, v => { KIT.checks = v || {}; after(); });
+  watch('sub', `${base()}/submitted`, v => { KIT.sub = v || {}; after(); });
 }
 /* =====================================================================
    5. GRAPH DETECTIVE  (Unit 6, Lesson 7: Reasoning about Exponential Graphs)
@@ -597,11 +618,17 @@ function caseGraph(id, withYou) {
     curves: [{ f: exp(2, 3), cls: 'solid' }, { f: exp(8, 2), cls: 'dashed' }], points: [{ x: px, y: py, label: '(p, q)', dx: 10, dy: 14 }] });
 }
 const selBox = (k, opts) => { const p = KIT.myChecks[k], cls = p ? (p.ok ? 'ok' : 'no') : '';
-  return `<span class="ckwrap"><select class="ck ${cls}" id="ck-${k}" data-ck="${k}"><option value="">Choose</option>${opts.map(([v, t]) => `<option value="${v}" ${p && p.v === v ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select><span class="mark ${cls}" id="mk-${k}">${p ? (p.ok ? 'Correct' : 'Try again') : ''}</span></span>`; };
+  return `<span class="ckwrap"><select class="ck ${cls}" id="ck-${k}" data-ck="${k}" ${p ? 'disabled aria-disabled="true"' : ''}><option value="">Choose</option>${opts.map(([v, t]) => `<option value="${v}" ${p && p.v === v ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select><span class="mark ${cls}" id="mk-${k}">${p ? markText(p) : ''}</span></span>`; };
 const eqLine = (ka, kb, fn) => `<div class="eqline"><span class="math">${fn}(<i>x</i>) =</span> ${ckBox(ka, 'a')} <span class="grp"><span class="math">· (</span>${ckBox(kb, 'b')}<span class="math">)<sup><i>x</i></sup></span></span></div>`;
 
+function checkRow(c) {
+  if (c.checks.every(k => KIT.myChecks[k])) return '<p class="lockmsg" style="margin:10px 0 0">All answers on this page are checked and locked.</p>';
+  return `<div class="row"><button class="btn" data-act="ckcase">Check my answers</button><span class="hint">Answers lock once you check them. Blank ones stay open.</span></div>`;
+}
 /* ---------- progress ---------- */
 const solvedFor = (checks, resp, c) => c.checks.every(k => checks && checks[k] && checks[k].ok) && c.resp.every(k => resp && (resp[k] || '').trim());
+// Finished = every answer checked and every written response submitted (right or wrong).
+const doneFor = (checks, sub, c) => c.checks.every(k => checks && checks[k]) && c.resp.every(k => sub && sub[k]);
 const startedFor = (checks, resp, c) => c.checks.some(k => checks && checks[k]) || c.resp.some(k => resp && (resp[k] || '').trim());
 
 /* =====================================================================
@@ -651,7 +678,7 @@ function caseBody(c) {
       ${['A', 'B', 'C', 'D'].map(L => `<div class="qrow"><span>Graph ${L}</span>${selBox('b' + L, [['m', 'm(x)'], ['n', 'n(x)'], ['p', 'p(x)'], ['q', 'q(x)']])}</div>`).join('')}
       <p style="font-weight:600;margin-top:12px">2. <span class="math"><i>f</i>(<i>x</i>) = 1,000 · (1/10)<sup><i>x</i></sup></span> and <span class="math"><i>g</i>(<i>x</i>) = 1,000 · (9/10)<sup><i>x</i></sup></span></p>
       <div class="qrow"><span>2a. Which function is decaying more quickly?</span>${selBox('fast', [['f', 'f(x)'], ['g', 'g(x)']])}</div>
-      <div class="row"><button class="btn" data-act="ckcase">Check my answers</button></div>
+      ${checkRow(c)}
       ${respBox('fastwhy', '2a. Explain your reasoning.')}`;
   } else if (c.id === 'comp') {
     h += `<p class="story">The function <i>f</i> gives the value of a computer, in dollars, <i>x</i> years after it was purchased.</p>
@@ -661,7 +688,7 @@ function caseBody(c) {
       <div class="qrow"><span>d. How is the value changing each year? It is multiplied by…</span>${ckBox('cf', 'factor')}</div>
       <p style="font-weight:600;margin-top:10px">e. An equation that defines <i>f</i></p>${eqLine('ca', 'cb', '<i>f</i>')}
       <div class="qrow"><span>f. Will the value of <i>f</i> reach 0 after 10 years?</span>${selBox('c10', [['yes', 'Yes'], ['no', 'No']])}</div>
-      <div class="row"><button class="btn" data-act="ckcase">Check my answers</button></div>
+      ${checkRow(c)}
       <p class="hint" style="margin-top:8px">After you check, your equation is drawn as a dashed black curve on the graph.</p>`;
   } else if (c.id === 'gm' || c.id === 'gn') {
     const m = c.id === 'gm', pre = m ? 'm' : 'n', F = m ? 'M' : 'N';
@@ -669,7 +696,7 @@ function caseBody(c) {
       <div class="chart-box" id="cg">${caseGraph(c.id, true)}</div>
       <p style="font-weight:600;margin-top:12px">Write an equation that defines the function.</p>${eqLine(pre + 'a', pre + 'b', F)}
       <div class="qrow"><span>Find the value of the function when <i>x</i> is 5: ${F}(5) =</span>${ckBox(pre + '5', '')}</div>
-      <div class="row"><button class="btn" data-act="ckcase">Check my answers</button></div>
+      ${checkRow(c)}
       <p class="hint" style="margin-top:8px">After you check, your equation is drawn as a dashed black curve on the graph.</p>`;
   } else {
     h += `<p class="story">Function <i>f</i>: the area of a wall covered by <b>mold A</b>, in square inches, <b>doubling</b> every month.<br>Function <i>g</i>: the area covered by <b>mold B</b>, in square inches, <b>tripling</b> every month.</p>
@@ -677,7 +704,7 @@ function caseBody(c) {
       <div class="qrow"><span>1. Which graph shows mold A (doubling)?</span>${selBox('moldA', [['solid', 'The solid curve'], ['dashed', 'The dashed curve']])}</div>
       <div class="qrow"><span>2. When the mold was first measured, which mold covered more of the wall?</span>${selBox('moldMore', [['A', 'Mold A'], ['B', 'Mold B']])}</div>
       <div class="qrow"><span>3. What does the point (p, q) tell us?</span>${selBox('moldPQ', [['sum', 'Together the molds cover q square inches'], ['both', 'After p months, both molds cover q square inches'], ['stop', 'The molds stop growing after p months'], ['swap', 'After q months, both molds cover p square inches']])}</div>
-      <div class="row"><button class="btn" data-act="ckcase">Check my answers</button></div>
+      ${checkRow(c)}
       ${respBox('moldwhy', 'How did you decide which graph is mold A and which is mold B?')}`;
   }
   const i = CASES.indexOf(c);
@@ -687,7 +714,7 @@ function caseBody(c) {
   return h;
 }
 function tabsHTML() {
-  return `<div class="ctabs">${CASES.map((c, i) => { const done = solvedFor(KIT.myChecks, KIT.myResp, c);
+  return `<div class="ctabs">${CASES.map((c, i) => { const done = doneFor(KIT.myChecks, KIT.mySub, c);
     const locked = i > maxOpen();
     return `<button class="ctab ${i === D.cur ? 'cur' : ''} ${done ? 'done' : ''} ${locked ? 'locked' : ''}" data-act="gocase" data-i="${i}" ${locked ? 'disabled aria-disabled="true" title="Your teacher will open this part"' : ''}><span>${esc(c.tab)}${locked ? ' · Locked' : ''}</span>${esc(c.title)}${done ? ' ✓' : ''}</button>`; }).join('')}</div>`;
 }
@@ -702,9 +729,10 @@ H.gocase = b => { const i = +b.dataset.i; if (S.role === 'student' && i > maxOpe
 H.invset = b => { D.inv = b.dataset.s; renderStudent(); };
 H.ckcase = () => {
   const c = CASES[D.cur]; runChecks(c.checks);
+  const y = window.scrollY; renderStudent(); window.scrollTo(0, y);
   const g = $('#cg'); if (g) g.innerHTML = caseGraph(c.id, true);
-  const t = $('.ctabs'); if (t) { t.outerHTML = tabsHTML(); scrollTab(); }
 };
+APP.afterSubmit = () => { const t = $('.ctabs'); if (t) { t.outerHTML = tabsHTML(); scrollTab(); } };
 document.addEventListener('input', e => {
   if (e.target.id === 'sa' || e.target.id === 'sb') {
     D.a = +$('#sa').value; D.b = +$('#sb').value;
@@ -728,9 +756,11 @@ function renderTeacher() {
   const grid = `<div class="scroll gridwrap"><table class="data pgrid"><tr><th>Student</th>${CASES.map((c, i) => `<th title="${esc(c.title)}" class="${lk(i) ? 'lockcol' : ''} ${led && i === open ? 'nowcol' : ''}">${esc(shortTab(c))}</th>`).join('')}</tr>
     ${ids.map(k => `<tr><td>${esc(D.students[k].name)}</td>${CASES.map((c, ci) => { if (lk(ci)) return '<td class="lockcol"></td>';
       const ch = KIT.checks[k] || {}, rs = KIT.resp[k] || {};
-      if (solvedFor(ch, rs, c)) return '<td><span class="cell ok">Solved</span></td>';
+      const sb = KIT.sub[k] || {}, tot = c.checks.length + c.resp.length;
+      if (solvedFor(ch, rs, c) && doneFor(ch, sb, c)) return '<td><span class="cell ok">Solved</span></td>';
+      if (doneFor(ch, sb, c)) return `<td><span class="cell stuck" title="Finished with some answers wrong">Done: ${c.checks.filter(x => ch[x].ok).length + c.resp.length} of ${tot}</span></td>`;
       if (!startedFor(ch, rs, c)) return '<td><span class="cell">—</span></td>';
-      const n = c.checks.filter(x => ch[x] && ch[x].ok).length + c.resp.filter(x => (rs[x] || '').trim()).length, tot = c.checks.length + c.resp.length;
+      const n = c.checks.filter(x => ch[x] && ch[x].ok).length + c.resp.filter(x => (sb[x])).length;
       const stuck = c.checks.some(x => ch[x] && !ch[x].ok);
       return `<td><span class="cell ${stuck ? 'stuck' : 'part'}">${n} of ${tot}</span></td>`; }).join('')}</tr>`).join('') || `<tr><td colspan="${CASES.length + 1}" class="hint">Waiting for students to join…</td></tr>`}</table></div>`;
   const tags = {}; ids.forEach(k => Object.values(KIT.checks[k] || {}).forEach(c => { if (c && !c.ok && c.tag) (tags[c.tag] = tags[c.tag] || new Set()).add(k); }));
@@ -738,7 +768,7 @@ function renderTeacher() {
     `<li><b>${set.size}</b> ${esc(TAGS[t] || t)}${KIT.showNames ? `<small>${[...set].map(k => esc(D.students[k].name)).join(', ')}</small>` : ''}</li>`).join('')}</ul>` : '<p class="hint">No common mistakes yet. This lists wrong answers that show a specific misconception, like using a difference instead of a factor.</p>';
   $('#app').innerHTML = `<div class="t-wrap">${teacherTop(`<button class="ghost" data-act="bots">${hasBots ? 'Remove sample class' : 'Add sample class'}</button>`)}
     <div class="layout">
-      <section class="card">${paceHTML(ids)}<h3 class="side-h" style="margin-top:18px">Class progress</h3><p class="hint" style="margin-bottom:8px">“2 of 5” means two parts are correct. Red means a wrong answer they haven’t fixed yet.${led ? ' Shaded columns are still locked for students.' : ''}</p>${grid}
+      <section class="card">${paceHTML(ids)}<h3 class="side-h" style="margin-top:18px">Class progress</h3><p class="hint" style="margin-bottom:8px">Answers lock once students check or submit them. “2 of 5” means two parts are correct so far. “Done” in red means they finished with some answers wrong.${led ? ' Shaded columns are still locked for students.' : ''}</p>${grid}
         <h3 class="side-h" style="margin-top:18px">Common mistakes</h3>${tagHTML}
         <h3 class="side-h" style="margin-top:18px">Project a graph</h3>
         <div class="steps" style="margin-bottom:8px">${CASES.map((c, i) => `<button class="${D.proj === c.id ? 'cur' : ''}" data-act="proj" data-c="${c.id}">${esc(shortTab(c))}</button>`).join('')}</div>
@@ -751,7 +781,7 @@ function renderTeacher() {
 H.proj = b => { D.proj = b.dataset.c; renderTeacher(); };
 function paceHTML(ids) {
   const led = D.st.paced !== false, open = Math.min(CASES.length - 1, D.st.open || 0), c = CASES[open];
-  const solved = ids.filter(k => solvedFor(KIT.checks[k], KIT.resp[k], c)).length;
+  const solved = ids.filter(k => doneFor(KIT.checks[k], KIT.sub[k], c)).length;
   if (!led) return `<div class="pacebar self"><div><div class="pace-h">Self-paced</div><p class="hint">Students can open any activity and move ahead on their own.</p></div>
     <button class="ghost" data-act="pacemode" data-m="led">Switch to teacher-led</button></div>`;
   return `<div class="pacebar"><div class="pace-now"><div class="pace-h">The class is on ${esc(c.tab)}: ${esc(c.title)}</div>
@@ -770,7 +800,7 @@ H.pace = b => {
 H.pacemode = b => APP.setState({ paced: b.dataset.m === 'led' });
 H.bots = async () => {
   const bots = Object.keys(D.students).filter(k => k.startsWith('bot')), u = {};
-  if (bots.length) { bots.forEach(k => ['students', 'responses', 'checks'].forEach(n => { u[n + '/' + k] = null; })); return DB.update(base(), u); }
+  if (bots.length) { bots.forEach(k => ['students', 'responses', 'checks', 'submitted'].forEach(n => { u[n + '/' + k] = null; })); return DB.update(base(), u); }
   const ans = { bA: 'q', bB: 'p', bC: 'n', bD: 'm', fast: 'f', cp: '400', c1: '200', cf: '1/2', ca: '400', cb: '0.5', c10: 'no', ma: '5', mb: '3', m5: '1215', na: '20', nb: '1/2', n5: '0.625', moldA: 'dashed', moldMore: 'A', moldPQ: 'both' };
   const wrong = { bA: ['m', 'intercept'], cf: ['-150', 'diff'], cb: ['0.25', 'twostep'], c1: ['250', 'linear'], mb: ['10', 'diff'], m5: ['75', 'mult'], na: ['40', 'start'], nb: ['2', 'growth'], moldA: ['solid', 'intercept'] };
   for (let i = 0; i < 20; i++) {
@@ -784,7 +814,7 @@ H.bots = async () => {
         fastwhy: ['f because 1/10 leaves less each year than 9/10.', 'f, it keeps only 10% each year', 'g because 9/10 is bigger'],
         moldwhy: ['Tripling grows faster so it is the steeper solid one.', 'the dashed one starts higher so it is mold A?', 'B triples so it passes A eventually'] })[x][i % 3]; });
     });
-    u['students/' + k] = { name: NAMES[i], bot: true }; u['checks/' + k] = ch; u['responses/' + k] = rs;
+    u['students/' + k] = { name: NAMES[i], bot: true }; u['checks/' + k] = ch; u['responses/' + k] = rs; u['submitted/' + k] = Object.fromEntries(Object.keys(rs).map(x => [x, true]));
   }
   await DB.update(base(), u);
 };
