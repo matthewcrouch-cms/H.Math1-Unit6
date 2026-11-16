@@ -317,7 +317,7 @@ H.join = async () => {
     APP.startStudent();
   } catch (e) { $('#err').textContent = 'Could not reach the class. Check your internet connection.'; }
 };
-H.leave = () => { unwatchAll(); ls.del(APP.id + ':student'); renderLanding('', false); };
+H.leave = () => { if (S.preview) return H.resetpreview(); unwatchAll(); ls.del(APP.id + ':student'); renderLanding('', false); };
 function endedScreen() {
   unwatchAll();
   $('#app').innerHTML = `<div class="s-wrap"><div class="card" style="margin-top:18vh;text-align:center"><h2 class="s-title">This session has ended</h2><p>Thanks for joining. You can close this page.</p><div class="row" style="justify-content:center;margin-top:16px"><button class="ghost" data-act="leave">Join another</button></div></div></div>`;
@@ -328,12 +328,40 @@ function teacherTop(extraTools) {
     <div><div class="brand">${esc(APP.title)}</div>
       <div class="join">Join at <b>${esc(url.replace(/^https?:\/\//, ''))}</b> with code <span class="code">${esc(S.code)}</span>
       <span class="muted" id="joined"></span></div></div>
-    <div class="t-tools">${extraTools || ''}<button class="ghost danger" data-act="end">End session</button></div>
+    <div class="t-tools"><button class="ghost" data-act="preview" title="Open the student screen in a new tab">View as student</button>${extraTools || ''}<button class="ghost danger" data-act="end">End session</button></div>
   </div>${DB.mode === 'local' ? `<div class="banner"><b>Practice mode.</b> Open a second tab of this page to try the student view.</div>` : ''}`;
 }
+/* --- Teacher preview: "View as student" opens the real student screen as a
+   hidden student that never appears in class counts, results, or responses. --- */
+const PREVIEW_SID = 'tpreview';
+const noPreview = v => { const o = Object.assign({}, v || {}); delete o[PREVIEW_SID]; return o; };
+H.preview = () => {
+  const url = location.pathname + '?code=' + encodeURIComponent(S.code) + '&preview=1';
+  const w = window.open(url, 'u6-preview-' + APP.id);
+  if (!w) alert('Your browser blocked the new tab. Allow pop-ups for this site, then click View as student again.');
+  else w.focus();
+};
+H.resetpreview = async () => {
+  if (!confirm('Clear your preview answers and start this activity over as a new student?')) return;
+  const u = {}; ['students', 'votes', 'answers', 'entries', 'responses', 'checks'].forEach(n => { u[`${n}/${PREVIEW_SID}`] = null; });
+  try { await DB.update(base(), u); } catch (e) {}
+  location.reload();
+};
 async function boot() {
   const t = ls.get(APP.id + ':teacher'), s = ls.get(APP.id + ':student');
   const qp = new URLSearchParams(location.search);
+  if (qp.has('preview') && qp.get('code')) {
+    const code = qp.get('code').toUpperCase();
+    try {
+      const a = await DB.once(`sessions/${code}/app`);
+      if (a === APP.id) {
+        Object.assign(S, { role: 'student', code, sid: PREVIEW_SID, name: 'Teacher preview', preview: true });
+        document.title += ' (student view)';
+        await APP.joinStudent(); return APP.startStudent();
+      }
+    } catch (e) {}
+    return renderLanding('That session has ended. Start a new session, then click View as student again.', false);
+  }
   if (qp.has('teacher') && t) return H.resume();
   if (!qp.has('teacher') && s && s.code && s.sid) {
     try {
@@ -636,7 +664,7 @@ function tabsHTML() {
 function scrollTab() { const t = $('.ctab.cur'); if (t && t.scrollIntoView) t.scrollIntoView({ block: 'nearest', inline: 'center' }); }
 function renderStudent() {
   const c = CASES[D.cur];
-  $('#app').innerHTML = `<div class="s-wrap wide"><div class="s-top"><span class="pill">Graph Detective</span><div class="who">${esc(S.name)} <button data-act="leave">Leave</button></div></div>
+  $('#app').innerHTML = `<div class="s-wrap wide"><div class="s-top"><span class="pill">Graph Detective</span><div class="who">${esc(S.name)} <button data-act="leave">${S.preview ? 'Reset preview' : 'Leave'}</button></div></div>
     ${tabsHTML()}<section class="card" id="sbody">${caseBody(c)}</section></div>`;
   scrollTab();
 }
@@ -660,7 +688,7 @@ document.addEventListener('focusout', e => { if (S.role === 'student' && e.targe
    ===================================================================== */
 function startTeacher() {
   watch('state', `${base()}/state`, st => { if (!st) return; D.st = st; renderTeacher(); });
-  watch('students', `${base()}/students`, v => { D.students = v || {}; renderTeacher(); });
+  watch('students', `${base()}/students`, v => { D.students = noPreview(v); renderTeacher(); });
   watchClassWork(() => renderTeacher());
 }
 function renderTeacher() {
