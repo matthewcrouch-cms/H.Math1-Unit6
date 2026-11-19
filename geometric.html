@@ -102,6 +102,15 @@ table.t td.hl{background:var(--orange-l);font-weight:600}
 .summary li{margin:4px 0}
 footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 0 30px}
 footer button{all:unset;cursor:pointer;text-decoration:underline}
+.stats{display:flex;gap:12px;margin:6px 0 14px;flex-wrap:wrap}
+.stats div{flex:1;min-width:110px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;color:var(--muted);font-size:14px}
+.stats b{display:block;font-size:28px;color:var(--ink)}
+table.dash{width:100%;font-size:15px}
+table.dash td{vertical-align:middle}
+.pill{display:inline-block;border-radius:20px;padding:2px 10px;font-size:13px;font-weight:600;white-space:nowrap}
+.pill.fin{background:var(--good-l);color:#15603a}.pill.work{background:var(--blue-l);color:var(--blue-d)}.pill.none{background:#eef1f4;color:#7a8794}
+.mini{height:6px;background:#e3eaf1;border-radius:3px;overflow:hidden;width:70px;margin:0 auto 2px}.mini i{display:block;height:100%;background:var(--orange)}
+details summary{cursor:pointer;color:var(--blue-d);font-weight:600}
 .keylist .k{border-bottom:1px solid var(--line);padding:8px 0}
 .keylist .k b{color:var(--blue-d)}
 @media (max-width:820px){
@@ -127,11 +136,23 @@ footer button{all:unset;cursor:pointer;text-decoration:underline}
   <nav><ol id="nav"></ol></nav>
   <main id="main"></main>
 </div>
-<footer>Ballantyne Ridge Wolves · <button id="teacherBtn">Teacher answer key</button></footer>
+<footer>Ballantyne Ridge Wolves · <button id="teacherBtn">Teacher view</button></footer>
 
 <script>
 /* ================= SETTINGS ================= */
 const TEACHER_PIN = "wolves";           // change this to whatever you like
+
+// Google Form that receives progress (from the form's "Get pre-filled link").
+const FORM = {
+  action: "",   // https://docs.google.com/forms/d/e/....../formResponse
+  fields: { name:"", pages:"", last:"", first:"", revealed:"" }   // entry.123456 ids
+};
+// "Publish to web" CSV link of the form's response Sheet (for the teacher dashboard).
+const RESULTS_CSV = "";
+
+// 4th Block roster (same as Cool Downs), alphabetical by last name.
+const ROSTER = ["Destiny B.","Valentino D.","Gracie D.","Daniel G.","Theo H.","Dario H.","Aubrey J.","Brody J.","Patrick M.","Celeste M.",
+  "Zoie N.","Paula N.","Uchechi N.","Yaduraj P.","Jackson P.","Asha R.","Crystal S.","Isaiah T.","Davien T.","Ellis W."];
 const STORE_KEY  = "geoSeqNotes_v1";
 const REVEAL_AFTER = 3;                 // wrong tries before "Show me" appears
 
@@ -546,7 +567,7 @@ function render(){
   nx.innerHTML = back + `<button class="b o" id="nextB" ${done?'':'disabled'}>${done?'Next →':'Finish this page to continue'}</button>`;
   card.appendChild(nx);
   $('#backB') && ($('#backB').onclick=()=>{S.step--;save();render();window.scrollTo(0,0);});
-  $('#nextB').onclick=()=>{ S.step++; S.max=Math.max(S.max,S.step); save(); render(); window.scrollTo(0,0); };
+  $('#nextB').onclick=()=>{ const newPage = S.step+1 > S.max; S.step++; S.max=Math.max(S.max,S.step); save(); render(); window.scrollTo(0,0); if(newPage && !STEPS[S.step].special) report(); };
 }
 
 function renderStart(main){
@@ -556,16 +577,22 @@ function renderStart(main){
    <ul><li>Answer each question to unlock the next one.</li>
    <li>Wrong answer? You'll get a hint. After ${REVEAL_AFTER} tries you can see the answer — but copy it onto your paper and make sure you understand why.</li>
    <li>Your progress saves on this device, so you can come back to it.</li></ul>
-   <p><label>Your first and last name:<br><input class="f w" id="nm" style="width:280px;text-align:left" value="${esc(S.name)}"></label></p>
+   <p><label>Choose your name:<br><select class="f" id="nm" style="min-width:240px">
+     <option value="">choose…</option>${ROSTER.map(n=>`<option ${n===S.name?'selected':''}>${esc(n)}</option>`).join('')}
+     <option value="__other" ${S.name&&!ROSTER.includes(S.name)?'selected':''}>My name isn't listed</option></select></label>
+     <span id="otherWrap" style="display:${S.name&&!ROSTER.includes(S.name)?'inline':'none'}"> <input class="f w" id="nmOther" placeholder="First name + last initial" style="width:240px;text-align:left" value="${S.name&&!ROSTER.includes(S.name)?esc(S.name):''}"></span></p>
    <div class="btns"><button class="b o" id="go">Let's go →</button>${S.name?'<button class="b g" id="reset">Start over (new student)</button>':''}</div></div>`;
-  $('#go').onclick=()=>{ const n=$('#nm').value.trim(); if(!n){ $('#nm').classList.add('no'); $('#nm').focus(); return; }
-    S.name=n; S.started ||= Date.now(); S.step=Math.max(1,S.step); S.max=Math.max(S.max,1); save(); render(); };
+  $('#nm').onchange=()=>{ $('#otherWrap').style.display = $('#nm').value==='__other'?'inline':'none'; };
+  $('#go').onclick=()=>{ let n=$('#nm').value; if(n==='__other') n=$('#nmOther').value.trim();
+    if(!n){ $('#nm').classList.add('no'); return; }
+    const isNew = S.name!==n; S.name=n; S.started ||= Date.now(); S.step=Math.max(1,S.step); S.max=Math.max(S.max,1); save(); render();
+    if(isNew) report(); };
   $('#reset') && ($('#reset').onclick=()=>{ if(confirmInline()) { S=fresh(); save(); render(); } });
 }
 function confirmInline(){ const b=$('#reset'); if(b.dataset.c){ return true;} b.dataset.c=1; b.textContent='Click again to erase all progress'; return false; }
 
 function renderFinish(main){
-  if(!S.finished){ S.finished=Date.now(); save(); renderNav(); }
+  if(!S.finished){ S.finished=Date.now(); save(); renderNav(); report(); }
   const all = STEPS.flatMap(s=>allQs(s).map(q=>({q,step:s.title})));
   const first = all.filter(x=>{const st=qs(x.q.id); return st.done && !st.rev && st.tries===0;}).length;
   const rev = all.filter(x=>qs(x.q.id).rev);
@@ -705,19 +732,92 @@ function dotGraph(vals,color){
   return s;
 }
 
-/* ================= TEACHER KEY ================= */
-$('#teacherBtn').onclick=()=>{
+/* ================= PROGRESS REPORTING ================= */
+const CONTENT = STEPS.map((s,i)=>i).filter(i=>!STEPS[i].special);   // the 10 lesson pages
+function qLabel(q, st){
+  const src = q.src ? q.src.replace(/<[^>]+>/g,'').replace(/\s*\((left|right)\)\s*$/,'') : '';
+  return st.title + (src ? ': ' + (src.length>55 ? src.slice(0,55)+'…' : src) : '');
+}
+function report(){
+  if(!FORM.action || !S.name) return;
+  const all = STEPS.flatMap(s=>allQs(s).map(q=>({q,s})));
+  const pages = CONTENT.filter(i=>stepDone(i)).length;
+  const first = all.filter(x=>{const t=qs(x.q.id); return t.done && !t.rev && t.tries===0;}).length;
+  const rev = all.filter(x=>qs(x.q.id).rev).map(x=>qLabel(x.q,x.s));
+  const last = S.finished ? 'FINISHED' : STEPS[S.step].title;
+  const body = new URLSearchParams();
+  body.set(FORM.fields.name, S.name);
+  body.set(FORM.fields.pages, `${pages}/${CONTENT.length}`);
+  body.set(FORM.fields.last, last);
+  body.set(FORM.fields.first, `${first}/${all.length}`);
+  body.set(FORM.fields.revealed, rev.join(' | '));
+  try{ fetch(FORM.action,{method:'POST',mode:'no-cors',body}); }catch(e){}
+}
+
+/* ================= TEACHER VIEW ================= */
+function parseCsv(t){
+  const rows=[];let row=[],cur="",q=false;
+  for(let i=0;i<t.length;i++){const c=t[i];
+    if(q){ if(c==='"'){ if(t[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+    else if(c==='"') q=true; else if(c===","){row.push(cur);cur="";}
+    else if(c==="\n"){row.push(cur);rows.push(row);row=[];cur="";} else if(c!=="\r") cur+=c;
+  }
+  if(cur||row.length){row.push(cur);rows.push(row);} return rows;
+}
+let TEACHER_OK=false;
+function teacherView(tab){
   const main=$('#main');
-  main.innerHTML=`<div class="card"><h2>Teacher answer key</h2><p><input class="f w" id="pin" type="password" placeholder="PIN" style="width:160px"> <button class="b" id="pinB">Open</button> <button class="b g" id="kBack">Back to lesson</button></p><div id="keyOut"></div></div>`;
-  $('#kBack').onclick=render;
-  $('#pinB').onclick=()=>{
-    if($('#pin').value.trim().toLowerCase()!==TEACHER_PIN){ $('#pin').classList.add('no'); return; }
-    let h='<div class="keylist">';
+  if(!TEACHER_OK){
+    main.innerHTML=`<div class="card"><h2>Teacher view</h2><p><input class="f w" id="pin" type="password" placeholder="PIN" style="width:160px"> <button class="b" id="pinB">Open</button> <button class="b g" id="kBack">Back to lesson</button></p></div>`;
+    $('#kBack').onclick=render;
+    const go=()=>{ if($('#pin').value.trim().toLowerCase()!==TEACHER_PIN.toLowerCase()){ $('#pin').classList.add('no'); return; } TEACHER_OK=true; teacherView('dash'); };
+    $('#pinB').onclick=go; $('#pin').onkeydown=e=>{ if(e.key==='Enter') go(); };
+    return;
+  }
+  main.innerHTML=`<div class="card"><div class="btns" style="margin:0 0 14px">
+      <button class="b ${tab==='dash'?'':'g'}" id="tD">Student progress</button>
+      <button class="b ${tab==='key'?'':'g'}" id="tK">Answer key</button>
+      <button class="b g" id="kBack" style="margin-left:auto">Back to lesson</button></div><div id="tOut"></div></div>`;
+  $('#tD').onclick=()=>teacherView('dash'); $('#tK').onclick=()=>teacherView('key'); $('#kBack').onclick=render;
+  if(tab==='key') showKey($('#tOut')); else showDash($('#tOut'));
+}
+async function showDash(out){
+  if(!RESULTS_CSV){ out.innerHTML=`<h2>Student progress</h2><div class="fb hint">Not connected yet. Add your Google Form and published Sheet links at the top of this file.</div>`; return; }
+  out.innerHTML=`<h2>Student progress</h2><p class="lead">Loading…</p>`;
+  let rows=[];
+  try{ const t=await (await fetch(RESULTS_CSV+(RESULTS_CSV.includes('?')?'&':'?')+'t='+Date.now(),{cache:'no-store'})).text(); rows=parseCsv(t).slice(1).filter(r=>r.length>=2&&r[1]); }
+  catch(e){ out.innerHTML=`<h2>Student progress</h2><div class="fb no">Couldn't load the Sheet. Check your internet connection and the published CSV link.</div>`; return; }
+  // latest row per student (rows are in time order)
+  const by={};
+  rows.forEach(r=>{ const [ts,name,pages,last,first,revealed]=r; const p=parseInt(pages)||0; const o=by[name];
+    if(!o || p>=o.p) by[name]={name,ts,p,pages,last,first,revealed:revealed?revealed.split(' | ').filter(Boolean):[]}; });
+  const names=[...ROSTER, ...Object.keys(by).filter(n=>!ROSTER.includes(n)).sort()];
+  const list=names.map(n=>by[n]||{name:n,p:-1});
+  const fin=list.filter(s=>s.last==='FINISHED'), work=list.filter(s=>s.p>=0&&s.last!=='FINISHED'), none=list.filter(s=>s.p<0);
+  const revCount={}; list.forEach(s=>(s.revealed||[]).forEach(x=>revCount[x]=(revCount[x]||0)+1));
+  const topRev=Object.entries(revCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const pill=(s)=> s.p<0?`<span class="pill none">Not started</span>`: s.last==='FINISHED'?`<span class="pill fin">Finished</span>`:`<span class="pill work">Working</span>`;
+  const when=ts=>{ const d=new Date(ts); return isNaN(d)?(ts||''):d.toLocaleString([], {weekday:'short',hour:'numeric',minute:'2-digit'}); };
+  out.innerHTML=`<h2>Student progress</h2>
+   <p class="lead">Geometric Sequences guided notes · 4th Block · <button class="b g" id="rf" style="padding:4px 12px;font-size:14px">Refresh</button></p>
+   <p style="font-size:14px;color:var(--muted);margin:0 0 10px">Google updates the published Sheet every few minutes, so the newest activity can take about 5 minutes to show up here.</p>
+   <div class="stats"><div><b>${fin.length}</b>Finished</div><div><b>${work.length}</b>Working</div><div><b>${none.length}</b>Not started</div></div>
+   <div style="overflow-x:auto"><table class="t dash"><tr><th>Student</th><th>Status</th><th>Pages</th><th>Last page</th><th>1st try</th><th>Revealed</th><th>Last update</th></tr>
+   ${list.map(s=>`<tr><td style="text-align:left;white-space:nowrap">${esc(s.name)}</td><td>${pill(s)}</td>
+     <td>${s.p<0?'':`<div class="mini"><i style="width:${100*s.p/CONTENT.length}%"></i></div>${esc(s.pages)}`}</td>
+     <td style="text-align:left">${s.p<0?'':esc(s.last==='FINISHED'?'—':s.last)}</td><td>${esc(s.first||'')}</td>
+     <td style="text-align:left">${s.revealed&&s.revealed.length?`<details><summary>${s.revealed.length}</summary><ul style="margin:4px 0;padding-left:18px;font-size:13px">${s.revealed.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`:(s.p<0?'':'0')}</td>
+     <td style="font-size:13px;white-space:nowrap">${s.p<0?'':esc(when(s.ts))}</td></tr>`).join('')}</table></div>
+   ${topRev.length?`<h3 style="margin-top:18px">Most-revealed questions (reteach these)</h3><ul>${topRev.map(([q,k])=>`<li>${esc(q)} <b>· ${k} student${k>1?'s':''}</b></li>`).join('')}</ul>`:''}`;
+  $('#rf').onclick=()=>showDash(out);
+}
+$('#teacherBtn').onclick=()=>teacherView('dash');
+function showKey(out){
+    let h='<h2>Answer key</h2><div class="keylist">';
     STEPS.forEach(st=>{ const q=allQs(st); if(!q.length) return; h+=`<h3 style="margin-top:16px">${st.title}</h3>`;
       q.forEach(x=>{ h+=`<div class="k">${x.src?`<i>${x.src}</i><br>`:''}${x.prompt?x.prompt.replace(/<table[\s\S]*?<\/table>|<div class="cols">[\s\S]*<\/div><\/div><\/div>/g,'').slice(0,400):''}<br><b>Answer:</b> ${x.key}</div>`; }); });
-    $('#keyOut').innerHTML=h+'</div><div class="btns"><button class="b" onclick="window.print()">Print key</button></div>';
-  };
-};
+    out.innerHTML=h+'</div><div class="btns"><button class="b" onclick="window.print()">Print key</button></div>';
+}
 
 render();
 // "Teacher view" link on the Unit 6 landing page adds ?teacher → open the answer key
