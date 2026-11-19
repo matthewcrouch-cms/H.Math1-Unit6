@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Geometric Sequences · H. Math 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#4B9CD3; --blue-d:#2f7fb8; --blue-l:#e8f3fb;
+  --orange:#F56600; --orange-l:#fff1e6;
+  --ink:#1d2a36; --muted:#5b6b7a; --line:#d7e2ec;
+  --bg:#f5f8fb; --card:#ffffff;
+  --good:#1f9d55; --good-l:#e6f6ed; --bad:#d64545; --bad-l:#fdecec;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Lexend,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg);font-size:17px;line-height:1.5}
+header{background:var(--blue);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:5;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+header .logo{width:40px;height:40px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:22px;flex:none}
+header h1{font-size:20px;margin:0;font-weight:600}
+header .sub{font-size:13px;opacity:.9}
+header .who{margin-left:auto;font-size:14px;text-align:right}
+.bar{height:6px;background:rgba(255,255,255,.35);border-radius:3px;overflow:hidden;margin-top:4px;width:160px;margin-left:auto}
+.bar>i{display:block;height:100%;background:var(--orange);width:0;transition:width .4s}
+.wrap{display:flex;max-width:1180px;margin:0 auto;gap:22px;padding:22px 16px}
+nav{width:250px;flex:none}
+nav ol{list-style:none;margin:0;padding:0;position:sticky;top:86px}
+nav li button{all:unset;display:flex;gap:10px;align-items:center;width:100%;padding:9px 12px;border-radius:10px;cursor:pointer;font-size:15px;color:var(--ink)}
+nav li button .n{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#e3eaf1;font-size:13px;font-weight:600;flex:none}
+nav li button.cur{background:var(--blue-l);font-weight:600}
+nav li button.cur .n{background:var(--blue);color:#fff}
+nav li button.done .n{background:var(--good);color:#fff}
+nav li button.lock{color:#a3b0bc;cursor:not-allowed}
+main{flex:1;min-width:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px 26px;margin-bottom:18px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+h2{margin:0 0 4px;font-size:26px;color:var(--blue-d)}
+.lead{color:var(--muted);margin:0 0 6px}
+h3{font-size:18px;margin:0 0 8px}
+.handout{background:var(--orange-l);border-left:6px solid var(--orange);border-radius:10px;padding:12px 16px;margin:14px 0}
+.handout b.tag{color:var(--orange);display:block;font-size:13px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.box{border:2px dashed #b9c7d4;border-radius:12px;padding:14px 18px;margin:12px 0;background:#fbfdff}
+.big{font-size:24px;text-align:center;margin:8px 0}
+.q{border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:16px 0;background:#fff}
+.q.done{border-color:#bfe3cd;background:#fbfefc}
+.q .src{font-size:13px;color:var(--muted);margin-bottom:6px}
+.q .src b{color:var(--orange)}
+.q .prompt{margin-bottom:10px}
+.line{margin:8px 0;font-size:19px;line-height:2.4}
+.line span[style*="flex-basis"]{display:block;height:4px}
+.line input.f,.line select.f{margin:0 3px;vertical-align:middle}
+.line sup input.f{vertical-align:baseline}
+input.f{font:inherit;font-size:17px;width:84px;padding:5px 8px;border:2px solid #b9c7d4;border-radius:8px;text-align:center}
+input.f.w{width:130px}
+input.f.s{width:64px}
+sup input.f{width:60px;font-size:14px;padding:2px 4px}
+select.f{font:inherit;font-size:16px;padding:5px 8px;border:2px solid #b9c7d4;border-radius:8px;background:#fff}
+.f.ok{border-color:var(--good);background:var(--good-l)}
+.f.no{border-color:var(--bad);background:var(--bad-l)}
+.f.rev{border-color:var(--orange);background:var(--orange-l)}
+textarea{font:inherit;width:100%;min-height:80px;border:2px solid #b9c7d4;border-radius:10px;padding:8px}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+button.b{font:inherit;font-weight:600;border:none;border-radius:10px;padding:9px 18px;cursor:pointer;background:var(--blue);color:#fff}
+button.b:hover{background:var(--blue-d)}
+button.b.o{background:var(--orange)}
+button.b.g{background:#e3eaf1;color:var(--ink)}
+button.b:disabled{opacity:.45;cursor:not-allowed}
+.choices{display:grid;gap:8px}
+.choices button{all:unset;cursor:pointer;border:2px solid var(--line);border-radius:10px;padding:10px 14px;background:#fff}
+.choices button:hover{border-color:var(--blue)}
+.choices button.ok{border-color:var(--good);background:var(--good-l)}
+.choices button.no{border-color:var(--bad);background:var(--bad-l)}
+.fb{margin-top:10px;padding:10px 14px;border-radius:10px;font-size:16px}
+.fb.ok{background:var(--good-l);color:#15603a}
+.fb.no{background:var(--bad-l);color:#8d2424}
+.fb.hint{background:#fff8e1;color:#6b5300}
+.fb.rev{background:var(--orange-l);color:#7a3500}
+.write{display:block;margin-top:8px;font-weight:600;color:var(--orange)}
+.nextrow{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+table.t{border-collapse:collapse;margin:8px 0;font-size:16px}
+table.t td,table.t th{border:1px solid var(--line);padding:6px 12px;text-align:center}
+table.t th{background:var(--blue-l)}
+table.t td.hl{background:var(--orange-l);font-weight:600}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.colcard{border:2px solid var(--line);border-radius:12px;padding:12px 14px}
+.colcard h4{margin:0 0 6px;text-align:center;letter-spacing:.05em}
+.colcard.a h4{color:var(--blue-d)} .colcard.g h4{color:var(--orange)}
+.colcard ul{margin:0;padding-left:20px}
+.seq{font-size:20px;letter-spacing:.02em}
+.arrows{display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;font-size:22px;margin:10px 0}
+.arrows .t{background:var(--blue-l);border-radius:8px;padding:4px 12px;font-weight:600}
+.arrows .m{color:var(--orange);font-size:15px;font-weight:600;display:flex;flex-direction:column;align-items:center;line-height:1}
+.explorer{border:2px solid var(--blue);border-radius:14px;padding:14px 16px;margin:14px 0;background:#fbfdff}
+.ctrl{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-bottom:10px}
+.ctrl label{font-size:15px;color:var(--muted)}
+.expand{font-size:20px;text-align:center;margin:8px 0;padding:10px;background:#fff;border-radius:10px;border:1px solid var(--line)}
+.expand .r{color:var(--orange);font-weight:600}
+.svgrow{display:flex;gap:14px;flex-wrap:wrap}
+.svgrow figure{margin:0;flex:1;min-width:220px;text-align:center;font-size:14px;color:var(--muted)}
+.mono{font-variant-numeric:tabular-nums}
+.typo{font-size:14px;background:#fff8e1;border-radius:8px;padding:6px 10px;margin-top:6px;color:#6b5300}
+.summary li{margin:4px 0}
+footer{text-align:center;color:var(--muted);font-size:13px;padding:10px 0 30px}
+footer button{all:unset;cursor:pointer;text-decoration:underline}
+.keylist .k{border-bottom:1px solid var(--line);padding:8px 0}
+.keylist .k b{color:var(--blue-d)}
+@media (max-width:820px){
+  .wrap{flex-direction:column;padding:14px 16px}
+  nav{width:auto}
+  nav ol{position:static;display:flex;overflow-x:auto;gap:4px}
+  nav li button{width:auto;white-space:nowrap}
+  nav li button .lbl{display:none}
+  .cols{grid-template-columns:1fr}
+  .card{padding:18px 16px}
+  header .who{display:none}
+}
+@media print{header,nav,footer,.btns{display:none}.wrap{display:block}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🐺</div>
+  <div><h1>Geometric Sequences</h1><div class="sub">H. Math 1 · Unit 6 · Guided Notes</div></div>
+  <div class="who"><span id="who"></span><div class="bar"><i id="prog"></i></div></div>
+</header>
+<div class="wrap">
+  <nav><ol id="nav"></ol></nav>
+  <main id="main"></main>
+</div>
+<footer>Ballantyne Ridge Wolves · <button id="teacherBtn">Teacher answer key</button></footer>
+
+<script>
+/* ================= SETTINGS ================= */
+const TEACHER_PIN = "wolves";           // change this to whatever you like
+const STORE_KEY  = "geoSeqNotes_v1";
+const REVEAL_AFTER = 3;                 // wrong tries before "Show me" appears
+
+/* ================= HELPERS ================= */
+const A = s => `a<sub>${s}</sub>`;
+const AN = A('n'), AN1 = A('n−1'), A1 = A('1');
+const M = "−"; // display minus
+const $ = (s,el=document)=>el.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function parseNum(raw){
+  if(raw==null) return NaN;
+  let s=String(raw).trim().replace(/[−–—]/g,'-').replace(/[,\s$]/g,'').replace(/^\+/,'');
+  if(s==='') return NaN;
+  let m=s.match(/^(-?\d*\.?\d+)\/(-?\d*\.?\d+)$/);
+  if(m){const d=+m[2]; return d===0?NaN:(+m[1])/d;}
+  if(/^-?\d*\.?\d+$/.test(s)) return +s;
+  return NaN;
+}
+const eq = (a,b)=> Number.isFinite(a) && Math.abs(a-b) <= 1e-9*Math.max(1,Math.abs(b));
+function fmt(x){
+  if(!Number.isFinite(x)) return '';
+  let r=Math.round(x*10000)/10000;
+  let s=Math.abs(r).toLocaleString('en-US',{maximumFractionDigits:4});
+  return (r<0?M:'')+s;
+}
+
+/* ================= CONTENT =================
+   Block types: html | handout | widget | q
+   Question kinds: fields (tpl with {{id}}), choice, text
+   field: {k:'num'|'sel', ans, opts, w}
+*/
+const SEL_TYPE = ['','arithmetic','geometric','neither'];
+
+function classifyQ(id, seqHtml, type, val, note){
+  return {type:'q', id, kind:'fields',
+    tpl:`<span class="seq">${seqHtml}</span><span style="flex-basis:100%"></span>Type: {{t}} &nbsp; Common difference / ratio: {{v}}`,
+    fields:{t:{k:'sel',opts:SEL_TYPE,ans:type}, v:{k:'num',ans:val, s:true}},
+    key: type==='neither' ? 'Neither (no common difference or ratio)' : `${type[0].toUpperCase()+type.slice(1)}, ${type==='arithmetic'?'d':'r'} = ${note||fmt(val)}`,
+    diagnose(v){
+      if(v.t==='geometric' && type==='arithmetic') return "Try dividing one term by the one before it. Do you get the same number each time? If not, check the differences instead.";
+      if(v.t==='arithmetic' && type==='geometric') return "Subtract consecutive terms — are the differences really all the same? Try dividing instead.";
+      if(type==='neither' && v.t!=='neither') return "Check every pair of terms, not just the first two. Is the pattern the same all the way through?";
+      if(v.t===type && type==='geometric' && eq(v.v, 1/val)) return "You divided the wrong way. Common ratio = (a term) ÷ (the term BEFORE it).";
+      if(v.t===type && type==='geometric' && eq(v.v,-val)) return "Check the sign! Is the sequence switching between positive and negative, or staying the same sign?";
+      if(v.t===type && type==='arithmetic' && eq(v.v,-val)) return "Check the sign of your common difference. Are the terms going up or down?";
+      return null;
+    }};
+}
+
+const STEPS = [
+/* ---------- 0 START ---------- */
+{ title:"Start here", special:'start' },
+
+/* ---------- 1 WARM-UP ---------- */
+{ title:"Warm-up: Unit 6 flashback",
+  blocks:[
+  {type:'html', html:`<p>You just finished exponential functions. Today you'll see that <b>geometric sequences are the same idea</b> — just written as a list of numbers instead of a function. Let's warm up with something you already know.</p>`},
+  {type:'q', id:'w1', kind:'fields',
+    prompt:`Complete the table for the exponential function <b>f(x) = 3 · 2<sup>x</sup></b>.`,
+    tpl:`<table class="t"><tr><th>x</th><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td></tr>
+      <tr><th>f(x)</th><td>{{a}}</td><td>{{b}}</td><td>{{c}}</td><td>{{d}}</td><td>{{e}}</td></tr></table>`,
+    fields:{a:{k:'num',ans:3,s:true},b:{k:'num',ans:6,s:true},c:{k:'num',ans:12,s:true},d:{k:'num',ans:24,s:true},e:{k:'num',ans:48,s:true}},
+    key:'3, 6, 12, 24, 48',
+    diagnose(v){ if(eq(v.a,6)||eq(v.a,0)) return "Remember: anything to the 0 power is 1. So f(0) = 3 · 2⁰ = 3 · 1.";
+                 if(eq(v.c,36)) return "Careful — 2² = 4 so f(2) = 3 · 4. Do the exponent first, then multiply by 3."; return null;},
+    hint:"Plug in each x: f(1) = 3 · 2¹ = 3 · 2. Do the exponent first, then multiply by 3."},
+  {type:'q', id:'w2', kind:'choice',
+    prompt:`Look at your outputs: 3, 6, 12, 24, 48. Each time x goes up by 1, what happens to the output?`,
+    opts:[
+      {t:"We add 3 each time",why:"6 − 3 = 3, but 12 − 6 = 6. The amount we add keeps changing."},
+      {t:"We multiply by 2 each time",ok:true},
+      {t:"We add 2 each time",why:"3 + 2 = 5, not 6. Try dividing each output by the one before it."},
+      {t:"We multiply by 3 each time",why:"3 × 3 = 9, not 6. The 3 is the starting value — what is the growth factor?"}],
+    key:'Multiply by 2 each time',
+    after:`Right — exponential functions <b>multiply by the same number</b> (the base, or growth factor) each step.`},
+  {type:'q', id:'w3', kind:'fields',
+    prompt:`Now a flashback to <b>arithmetic sequences</b>: 5, 8, 11, 14, …`,
+    tpl:`Next term: {{n}} &nbsp; Common difference: {{d}}`,
+    fields:{n:{k:'num',ans:17},d:{k:'num',ans:3}}, key:'17; d = 3'},
+  {type:'q', id:'w4', kind:'choice',
+    prompt:`An arithmetic sequence <b>adds</b> the same amount each time. Which kind of function does that remind you of?`,
+    opts:[{t:"Linear",ok:true},{t:"Exponential",why:"Exponential functions multiply by the same amount. Adding the same amount each time is a constant rate of change."},{t:"Quadratic",why:"Not quite. Adding the same amount every time = constant rate of change = …?"}],
+    key:'Linear',
+    after:`Exactly. Here's the big idea for today:
+      <div class="cols" style="margin-top:10px">
+        <div class="colcard a"><h4>ADD the same amount</h4>linear function ⟷ <b>arithmetic</b> sequence</div>
+        <div class="colcard g"><h4>MULTIPLY by the same amount</h4>exponential function ⟷ <b>geometric</b> sequence</div>
+      </div>`}
+  ]},
+
+/* ---------- 2 DEFINITION ---------- */
+{ title:"What is a geometric sequence?",
+  blocks:[
+  {type:'html', html:`<p>Here is the list version of f(x) = 3 · 2<sup>x</sup>:</p>
+     <div class="arrows"><span class="t">3</span><span class="m">×2<br>→</span><span class="t">6</span><span class="m">×2<br>→</span><span class="t">12</span><span class="m">×2<br>→</span><span class="t">24</span><span class="m">×2<br>→</span><span class="t">48</span><span>, …</span></div>
+     <p>A list like this — where you <b>multiply by the same number</b> to get from one term to the next — is a <b>geometric sequence</b>.</p>`},
+  {type:'q', id:'d1', kind:'fields',
+    prompt:`How do you <i>find</i> the number you're multiplying by? Divide a term by the term before it:`,
+    tpl:`6 ÷ 3 = {{a}} &nbsp;&nbsp; 12 ÷ 6 = {{b}} &nbsp;&nbsp; 48 ÷ 24 = {{c}}`,
+    fields:{a:{k:'num',ans:2,s:true},b:{k:'num',ans:2,s:true},c:{k:'num',ans:2,s:true}}, key:'2, 2, 2',
+    after:`Same answer every time. When you divide two numbers, the answer is called a <b>ratio</b>. Since this ratio is the same (it's "shared" or <b>common</b>) between every pair of terms, we call it the <b>common ratio</b>, <b><i>r</i></b>.`},
+  {type:'handout', html:`<b>Page 1 — "GEOMETRIC SEQUENCE" box (top).</b> Use the word bank to fill in the three blanks below, then copy them onto your handout.`},
+  {type:'q', id:'d2', kind:'fields',
+    prompt:`Fill in the definition. <span style="color:var(--muted)">(Word bank: ratio, common, difference, sum)</span>`,
+    tpl:`<div style="font-size:17px">• A sequence where the {{a}} between consecutive terms is constant.<br><br>• This constant {{b}} between terms is called the {{c}} ratio.</div>`,
+    fields:{a:{k:'sel',opts:['','sum','difference','ratio','common'],ans:'ratio'},
+            b:{k:'sel',opts:['','sum','difference','ratio','common'],ans:'ratio'},
+            c:{k:'sel',opts:['','sum','difference','ratio','common'],ans:'common'}},
+    key:'ratio · ratio · common',
+    diagnose(v){ if(v.a==='difference'||v.b==='difference') return "\"Difference\" is for arithmetic sequences (subtracting). Geometric sequences are about dividing."; return null;},
+    write:`On your handout write: ratio, ratio, common`}
+  ]},
+
+/* ---------- 3 ARITH vs GEO ---------- */
+{ title:"Arithmetic vs. Geometric",
+  blocks:[
+  {type:'html', html:`<p>Both start at 2. One adds 3 each time; the other multiplies by 2 each time. Look at how differently they grow:</p>
+    <div class="svgrow"><figure id="g1"></figure><figure id="g2"></figure></div>`,
+    onRender(){ $('#g1').innerHTML = dotGraph([2,5,8,11,14],'var(--blue)')+'<figcaption>Arithmetic: 2, 5, 8, 11, 14 (+3) — dots on a <b>line</b></figcaption>';
+                $('#g2').innerHTML = dotGraph([2,4,8,16,32],'var(--orange)')+'<figcaption>Geometric: 2, 4, 8, 16, 32 (×2) — dots on an <b>exponential curve</b></figcaption>'; }},
+  {type:'html', html:`<div class="cols">
+      <div class="colcard a"><h4>ARITHMETIC</h4><ul>
+        <li><b>Add</b> the same number each time</li>
+        <li>That number is the <b>common difference, d</b></li>
+        <li>Find d by <b>subtracting</b>: a<sub>2</sub> − a<sub>1</sub></li>
+        <li>Behaves like a <b>linear</b> function</li>
+        <li>Ex: 2, 5, 8, 11, … (d = 3)</li></ul></div>
+      <div class="colcard g"><h4>GEOMETRIC</h4><ul>
+        <li><b>Multiply</b> by the same number each time</li>
+        <li>That number is the <b>common ratio, r</b></li>
+        <li>Find r by <b>dividing</b>: a<sub>2</sub> ÷ a<sub>1</sub></li>
+        <li>Behaves like an <b>exponential</b> function</li>
+        <li>Ex: 2, 4, 8, 16, … (r = 2)</li></ul></div></div>`},
+  {type:'handout', html:`<b>Page 1 — ARITHMETIC | GEOMETRIC table.</b> Copy the key points from each column above into the matching column on your handout (add/multiply, common difference/common ratio, subtract/divide, linear/exponential, and an example).`},
+  {type:'q', id:'c1', kind:'choice',
+    prompt:`To find the common ratio of 2, 6, 18, 54, … which calculation do you do?`,
+    opts:[{t:"6 − 2",why:"Subtracting finds a common <i>difference</i> — that's for arithmetic sequences."},{t:"6 ÷ 2",ok:true},{t:"2 ÷ 6",why:"Close! But divide a term by the term <b>before</b> it (later ÷ earlier)."},{t:"6 × 2",why:"We're trying to find what we multiply by, so we undo multiplication by dividing."}],
+    key:'6 ÷ 2 = 3', after:`Yes: 6 ÷ 2 = 3, so r = 3. Check: 6 × 3 = 18 ✓, 18 × 3 = 54 ✓`},
+  {type:'q', id:'c2', kind:'fields',
+    prompt:`Geometric sequences can shrink, too! Find the common ratio of 40, 20, 10, 5, …`,
+    tpl:`r = {{r}}`, fields:{r:{k:'num',ans:0.5}}, key:'r = 1/2 (or 0.5)',
+    diagnose(v){ if(eq(v.r,-20)) return "−20 is the common difference. For a geometric sequence, divide: 20 ÷ 40 = ?"; if(eq(v.r,2)) return "You divided the wrong way (40 ÷ 20). Do later ÷ earlier: 20 ÷ 40."; return null;},
+    after:`r = ½. When <b>0 &lt; r &lt; 1</b> the sequence shrinks — just like <b>exponential decay</b> from Unit 6!`}
+  ]},
+
+/* ---------- 4 RECURSIVE ---------- */
+{ title:"Recursive formula",
+  blocks:[
+  {type:'html', html:`<p>A <b>recursive</b> formula tells you how to get the <b>next</b> term from the term <b>before</b> it. "Next = previous × r."</p>
+    <div class="box"><div class="big">${AN} = ${AN1} · r &nbsp;&nbsp;&nbsp; or &nbsp;&nbsp;&nbsp; f(n) = f(n − 1) · r</div>
+    <ul><li>${AN} (or f(n)) — the term you're finding</li><li>${AN1} (or f(n − 1)) — the <b>previous term</b></li><li>r — the <b>common ratio</b></li></ul>
+    <p style="margin:0">⚠️ A recursive formula <b>always needs a starting term</b> too, like ${A1} = 3. Without it, you'd have nothing to multiply!</p></div>
+    <p>Example: 3, 6, 12, 24, … &nbsp;→&nbsp; <b>${A1} = 3; ${AN} = ${AN1} · 2</b> &nbsp;(also written ${AN} = 2${AN1})</p>`},
+  {type:'handout', html:`<b>Page 1 — "RECURSIVE FORMULAS" box.</b> There are two arrows under each formula. Answer the question below, then label the arrows on your handout.`},
+  {type:'q', id:'r1', kind:'fields',
+    prompt:`What does each arrow point to?`,
+    tpl:`${AN1} (or f(n − 1)) is the {{a}}<span style="flex-basis:100%"></span>r is the {{b}}`,
+    fields:{a:{k:'sel',opts:['','first term','previous term','common ratio','term number'],ans:'previous term'},
+            b:{k:'sel',opts:['','first term','previous term','common ratio','term number'],ans:'common ratio'}},
+    key:'previous term; common ratio', write:`Label the arrows: "previous term" and "common ratio"`},
+  {type:'q', id:'r2', kind:'fields',
+    prompt:`Use the recursive formula <b>${A1} = 4; ${AN} = 3 · ${AN1}</b> to find the next terms.`,
+    tpl:`${A1} = 4, &nbsp; ${A(2)} = {{a}}, &nbsp; ${A(3)} = {{b}}, &nbsp; ${A(4)} = {{c}}`,
+    fields:{a:{k:'num',ans:12},b:{k:'num',ans:36},c:{k:'num',ans:108}}, key:'12, 36, 108',
+    diagnose(v){ if(eq(v.a,7)) return "That's adding 3. The formula says multiply: 3 · (previous term)."; return null;}},
+  {type:'q', id:'r3', kind:'fields',
+    prompt:`Write a recursive formula for 5, 10, 20, 40, …`,
+    tpl:`${A1} = {{a}} ; &nbsp; ${AN} = {{r}} · ${AN1}`,
+    fields:{a:{k:'num',ans:5},r:{k:'num',ans:2}}, key:'a₁ = 5; aₙ = 2 · aₙ₋₁',
+    diagnose(v){ if(eq(v.r,5)) return "The common ratio is what you multiply by: 10 ÷ 5 = ?"; return null;}}
+  ]},
+
+/* ---------- 5 EXPLICIT ---------- */
+{ title:"Explicit formula (the n − 1 mystery)",
+  blocks:[
+  {type:'html', html:`<p>Recursive formulas are slow if you want, say, the 50th term — you'd need all 49 terms before it! An <b>explicit</b> formula jumps straight to any term. And it looks a LOT like your Unit 6 exponential functions…</p>
+    <div class="cols"><div class="colcard a"><h4>Exponential function</h4><div class="big">f(x) = a · b<sup>x</sup></div></div>
+    <div class="colcard g"><h4>Geometric sequence</h4><div class="big">${AN} = ${A1} · r<sup>n − 1</sup></div></div></div>
+    <p><b>Why "n − 1"?</b> Functions start counting at <b>x = 0</b>. Sequences start at <b>term 1</b>. Play with the explorer below and watch how many times r gets multiplied.</p>`},
+  {type:'widget', id:'explorer'},
+  {type:'q', id:'e0', kind:'choice',
+    prompt:`To get from ${A1} to the <b>5th</b> term, how many times do you multiply by r?`,
+    opts:[{t:"5 times",why:"Use the explorer: set n = 5 and count the r's. You're already AT term 1 before you multiply at all."},{t:"4 times",ok:true},{t:"6 times",why:"Use the explorer: set n = 5 and count the r's."}],
+    key:'4 times (n − 1)',
+    after:`Right! Term 1 → 0 multiplications, term 2 → 1, … term n → <b>n − 1</b> multiplications. That's where the exponent n − 1 comes from.`},
+  {type:'handout', html:`<b>Page 1 — "EXPLICIT FORMULA" box.</b> Answer below, then fill in what n, ${A1}, and r stand for on your handout.`},
+  {type:'q', id:'e1', kind:'fields',
+    prompt:`In ${AN} = ${A1} · r<sup>n − 1</sup>, what does each letter mean?`,
+    tpl:`n: {{n}}<span style="flex-basis:100%"></span>${A1}: {{a}}<span style="flex-basis:100%"></span>r: {{r}}`,
+    fields:{n:{k:'sel',opts:['','term number (position)','first term','common ratio','previous term'],ans:'term number (position)'},
+            a:{k:'sel',opts:['','term number (position)','first term','common ratio','previous term'],ans:'first term'},
+            r:{k:'sel',opts:['','term number (position)','first term','common ratio','previous term'],ans:'common ratio'}},
+    key:'n = term number; a₁ = first term; r = common ratio', write:`n: term number (position) · a₁: first term · r: common ratio`},
+  {type:'q', id:'e2', kind:'fields',
+    prompt:`Write the explicit formula for 5, 10, 20, 40, …`,
+    tpl:`${AN} = {{a}} ( {{r}} )<sup>n − 1</sup>`,
+    fields:{a:{k:'num',ans:5},r:{k:'num',ans:2}}, key:'aₙ = 5(2)ⁿ⁻¹',
+    diagnose(v){ if(eq(v.a,2)&&eq(v.r,5)) return "You swapped them. The number in front is the first term; the number in the parentheses (the base) is r."; return null;}},
+  {type:'q', id:'e3', kind:'fields',
+    prompt:`Use your formula to find the <b>8th</b> term of 5, 10, 20, 40, …`,
+    tpl:`${A(8)} = 5(2)<sup>8 − 1</sup> = {{x}}`,
+    fields:{x:{k:'num',ans:640}}, key:'640',
+    diagnose(v){ if(eq(v.x,1280)) return "Looks like you used 2⁸. The exponent is n − 1 = 7."; if(eq(v.x,10**7)||eq(v.x,1e8)) return "Do the exponent first: 2⁷ = 128, then multiply by 5. (Don't multiply 5 · 2 first!)"; return null;},
+    hint:"2⁷ = 128. Then 5 · 128 = ?"},
+  {type:'q', id:'e4', kind:'choice',
+    prompt:`Back to the warm-up: the sequence 3, 6, 12, 24, … Which explicit formula matches it?`,
+    opts:[{t:`${AN} = 3(2)<sup>n</sup>`,why:"Test n = 1: 3 · 2¹ = 6. But the first term is 3! That's the n − 1 issue."},{t:`${AN} = 3(2)<sup>n − 1</sup>`,ok:true},{t:`${AN} = 2(3)<sup>n − 1</sup>`,why:"The first term is 3 and the ratio is 2 — these are swapped."},{t:`${AN} = 3 + 2(n − 1)`,why:"That's an arithmetic formula (adding 2). This sequence multiplies."}],
+    key:'aₙ = 3(2)ⁿ⁻¹',
+    after:`Notice: the <i>function</i> was f(x) = 3 · 2<sup>x</sup> and the <i>sequence</i> is ${AN} = 3 · 2<sup>n − 1</sup>. Same numbers, same pattern — the only change is counting from 1 instead of 0.`}
+  ]},
+
+/* ---------- 6 CLASSIFY ---------- */
+{ title:"Classify the sequences",
+  blocks:[
+  {type:'handout', html:`<b>Page 1 — "Classify each sequence" table.</b> For each one, choose arithmetic, geometric, or neither, and type the common difference (d) or common ratio (r). If it's <i>neither</i>, leave the number box blank. Copy each answer onto your handout.`},
+  classifyQ('k1',`${M}3, ${M}6, ${M}12, ${M}24, …`,'geometric',2),
+  classifyQ('k2',`21, 18, 15, 12, 9, …`,'arithmetic',-3),
+  classifyQ('k3',`16, 8, 4, 2, 1, ½, …`,'geometric',0.5,'1/2'),
+  classifyQ('k4',`${M}19, ${M}17, ${M}15, ${M}13, …`,'arithmetic',2),
+  classifyQ('k5',`144, 72, 36, 18, 9, …`,'geometric',0.5,'1/2'),
+  classifyQ('k6',`${M}1, 5, ${M}25, 125, …`,'geometric',-5),
+  classifyQ('k7',`20, 15, 10, 5, …`,'arithmetic',-5),
+  classifyQ('k8',`8, 12, 22, 28, …`,'neither',null),
+  classifyQ('k9',`3, 2, 4/3, 8/9, 16/27, …`,'geometric',2/3,'2/3')
+  ]},
+
+/* ---------- 7 PRACTICE A ---------- */
+{ title:"Practice: Part 1",
+  blocks:[
+  {type:'handout', html:`<b>Practice problems.</b> Each problem below shows the first words of the matching box on your handout so you can find it. Work it out on paper first, then type your answers to check.`},
+  {type:'q', id:'p1a', kind:'fields', src:'"The table shows a beetle species population…" (left)',
+    prompt:`<table class="t"><tr><th>Years since 2000</th><td>1</td><td>2</td><td>3</td><td>4</td></tr><tr><th>Population</th><td>60</td><td>180</td><td>540</td><td>1,620</td></tr></table>Write a <b>recursive</b> formula for the beetle population.`,
+    tpl:`${A1} = {{a}} ; &nbsp; ${AN} = {{r}} · ${AN1}`, fields:{a:{k:'num',ans:60},r:{k:'num',ans:3}}, key:'a₁ = 60; aₙ = 3aₙ₋₁',
+    diagnose(v){ if(eq(v.r,120)) return "120 is the difference between the first two terms. Divide instead: 180 ÷ 60."; return null;}},
+  {type:'q', id:'p1b', kind:'fields', src:'Beetle problem, continued',
+    prompt:`Write an <b>explicit</b> formula for the beetle population.`,
+    tpl:`${AN} = {{a}} ( {{r}} )<sup>n − 1</sup>`, fields:{a:{k:'num',ans:60},r:{k:'num',ans:3}}, key:'aₙ = 60(3)ⁿ⁻¹'},
+  {type:'q', id:'p1c', kind:'fields', src:'Beetle problem, continued',
+    prompt:`Use your formula to predict the beetle population in <b>2008</b>.`,
+    tpl:`n = {{n}} &nbsp;&nbsp; population = {{p}}`, fields:{n:{k:'num',ans:8,s:true},p:{k:'num',ans:131220,w:true}}, key:'n = 8; 60(3)⁷ = 131,220',
+    diagnose(v){ if(eq(v.n,2008)) return "n is years since 2000. 2008 is how many years after 2000?"; if(eq(v.p,393660)) return "You used 3⁸. The exponent is n − 1."; if(eq(v.p,180**7)) return "Exponent first! 3⁷ = 2187, then multiply by 60."; return null;},
+    hint:"n = 8, so the exponent is 8 − 1 = 7. 3⁷ = 2,187."},
+  {type:'q', id:'p2', kind:'fields', src:'"Create a sequence with at least 4 terms…" (right)',
+    prompt:`Write the next three terms of each sequence (the first term is given).`,
+    tpl:`a. Arithmetic, common difference ${M}4: &nbsp; 1, {{a2}}, {{a3}}, {{a4}}<span style="flex-basis:100%"></span>b. Geometric, common ratio ${M}4: &nbsp; 1, {{b2}}, {{b3}}, {{b4}}`,
+    fields:{a2:{k:'num',ans:-3,s:true},a3:{k:'num',ans:-7,s:true},a4:{k:'num',ans:-11,s:true},b2:{k:'num',ans:-4,s:true},b3:{k:'num',ans:16,s:true},b4:{k:'num',ans:-64,s:true}},
+    key:'a. 1, −3, −7, −11   b. 1, −4, 16, −64',
+    diagnose(v){ if(eq(v.b3,-16)) return "A negative times a negative is positive: −4 · −4 = 16."; return null;},
+    after:`Notice: a <b>negative common ratio</b> makes the signs flip back and forth.`,
+    typo:`On your handout, part b says "common <i>ration</i>" — it means common <b>ratio</b>.`},
+  {type:'q', id:'p3', kind:'fields', src:'"For the geometric sequence below, find the common ratio and the missing term" (left)',
+    prompt:`128, ?, 8, 2, 0.5, …`,
+    tpl:`Common ratio: {{r}} &nbsp;&nbsp; Missing term: {{m}}`, fields:{r:{k:'num',ans:0.25},m:{k:'num',ans:32}}, key:'r = 1/4 (0.25); missing term = 32',
+    diagnose(v){ if(eq(v.r,4)) return "The terms are getting smaller, so r is between 0 and 1. Divide later ÷ earlier: 2 ÷ 8."; if(eq(v.r,-6)||eq(v.r,-1.5)) return "That's a difference. For geometric, divide: 2 ÷ 8 = ?"; if(eq(v.m,68)) return "68 is halfway by adding. In a geometric sequence, multiply: 128 · r."; return null;}},
+  {type:'q', id:'p4', kind:'choice', src:'"The recursive formula shown represents a geometric sequence…" (right)',
+    prompt:`<div class="big" style="font-size:20px">${A1} = 6 &nbsp;&nbsp; ${AN} = ${M}5${AN1}</div>Which statement is <b>NOT</b> true?`,
+    opts:[{t:"a. The first term is 6.",why:"That one's true — a₁ = 6 is the first term. Find the FALSE one."},
+          {t:"b. The common ratio is −5.",why:"That's true — we multiply by −5 each time. Find the FALSE one."},
+          {t:"c. Adding −5 to 6 will give you the value of the second term.",ok:true},
+          {t:"d. The third term in the sequence is 150.",why:"Check: 6 · (−5) = −30, then −30 · (−5) = 150. True! Find the FALSE one."}],
+    key:'c', after:`Right — in a geometric sequence you <b>multiply</b> by −5, not add. The second term is 6 · (−5) = −30.`,
+    typo:`On your handout, choice b says "common <i>ration</i>" — it means common <b>ratio</b>.`}
+  ]},
+
+/* ---------- 8 PRACTICE B ---------- */
+{ title:"Practice: Part 2",
+  blocks:[
+  {type:'q', id:'p5', kind:'fields', src:'"Use the recursive formula and write the first five terms…" (left)',
+    prompt:`<div class="big" style="font-size:20px">f(1) = 625; &nbsp; f(n) = ⅕ · f(n − 1)</div>`,
+    tpl:`{{a}}, {{b}}, {{c}}, {{d}}, {{e}}`, fields:{a:{k:'num',ans:625,s:true},b:{k:'num',ans:125,s:true},c:{k:'num',ans:25,s:true},d:{k:'num',ans:5,s:true},e:{k:'num',ans:1,s:true}},
+    key:'625, 125, 25, 5, 1',
+    typo:`Typo alert: your handout shows "f(n) = ⅕(n − 1)". It should be <b>f(n) = ⅕ · f(n − 1)</b> — multiply the previous term by ⅕. Fix it on your paper!`},
+  {type:'q', id:'p6', kind:'fields', src:'"Use the recursive formula and write the first five terms…" (right)',
+    prompt:`<div class="big" style="font-size:20px">${A1} = 1; &nbsp; ${AN} = 8${AN1}</div>`,
+    tpl:`{{a}}, {{b}}, {{c}}, {{d}}, {{e}}`, fields:{a:{k:'num',ans:1,s:true},b:{k:'num',ans:8,s:true},c:{k:'num',ans:64,s:true},d:{k:'num',ans:512,s:true},e:{k:'num',ans:4096}},
+    key:'1, 8, 64, 512, 4,096', diagnose(v){ if(eq(v.c,16)) return "Multiply, don't add: 8 · 8 = 64."; return null;}},
+  {type:'q', id:'p7', kind:'fields', src:'"Ms. Jones wrote several terms of a geometric sequence…" (left)',
+    prompt:`<div class="big" style="font-size:20px">${A(3)} = 44, &nbsp;${A(4)} = 88, &nbsp;${A(5)} = 176</div>These start at the <b>3rd</b> term, so work backwards to find ${A1}.`,
+    tpl:`r = {{r}} &nbsp; ${A(2)} = {{a2}} &nbsp; ${A1} = {{a1}}<span style="flex-basis:100%"></span>Explicit formula: ${AN} = {{c}} ( {{b}} )<sup>n − 1</sup>`,
+    fields:{r:{k:'num',ans:2,s:true},a2:{k:'num',ans:22,s:true},a1:{k:'num',ans:11,s:true},c:{k:'num',ans:11},b:{k:'num',ans:2}},
+    key:'r = 2; a₁ = 11; aₙ = 11(2)ⁿ⁻¹',
+    diagnose(v){ if(eq(v.c,44)) return "44 is the 3rd term, not the first. The number in front of the formula must be a₁."; return null;},
+    hint:"Going backwards means dividing by r: 44 ÷ 2 = a₂, then a₂ ÷ 2 = a₁."},
+  {type:'q', id:'p8a', kind:'text', src:'"A sequence is defined by the formula… How would you write the recursive formula…" (right)',
+    prompt:`<div class="big" style="font-size:20px">${AN} = ${M}2(${M}5)<sup>n − 1</sup></div>In your own words: how would you write the recursive formula if you're given the explicit formula?`,
+    model:`The number in front (${M}2) is the <b>first term</b>, so ${A1} = ${M}2. The base (${M}5) is the <b>common ratio</b>, so each term is the previous term times ${M}5.`,
+    key:'Number in front = a₁; base = r'},
+  {type:'q', id:'p8b', kind:'fields', src:'Same problem, continued',
+    prompt:`Now write the recursive formula for ${AN} = ${M}2(${M}5)<sup>n − 1</sup>.`,
+    tpl:`${A1} = {{a}} ; &nbsp; ${AN} = {{r}} · ${AN1}`, fields:{a:{k:'num',ans:-2},r:{k:'num',ans:-5}}, key:'a₁ = −2; aₙ = −5aₙ₋₁',
+    diagnose(v){ if(eq(v.a,-5)&&eq(v.r,-2)) return "Swapped! The number in front is a₁ and the base is r."; if(eq(v.a,2)||eq(v.r,5)) return "Keep the negative signs — they matter."; return null;}}
+  ]},
+
+/* ---------- 9 PRACTICE C ---------- */
+{ title:"Practice: Part 3",
+  blocks:[
+  {type:'q', id:'p9a', kind:'fields', src:'"Akhil wrote the recursive formula for a geometric sequence…" (left)',
+    prompt:`<div class="big" style="font-size:20px">${A1} = 12; &nbsp; ${AN} = 4${AN1}</div>Write an explicit formula.`,
+    tpl:`${AN} = {{a}} ( {{r}} )<sup>n − 1</sup>`, fields:{a:{k:'num',ans:12},r:{k:'num',ans:4}}, key:'aₙ = 12(4)ⁿ⁻¹'},
+  {type:'q', id:'p9b', kind:'fields', src:'Akhil problem, continued',
+    prompt:`Find the 3rd and 10th terms.`,
+    tpl:`${A(3)} = {{t3}} &nbsp;&nbsp; ${A(10)} = {{t10}}`, fields:{t3:{k:'num',ans:192},t10:{k:'num',ans:3145728,w:true}}, key:'a₃ = 192; a₁₀ = 3,145,728',
+    diagnose(v){ if(eq(v.t3,768)||eq(v.t10,12582912)) return "Looks like the exponent was n instead of n − 1. For the 10th term, use 4⁹."; if(eq(v.t10,48**9)||eq(v.t3,2304)) return "Exponent first! Compute 4⁹, THEN multiply by 12. Don't multiply 12 · 4 first."; return null;},
+    hint:"a₃ = 12 · 4² and a₁₀ = 12 · 4⁹. (4⁹ = 262,144)"},
+  {type:'q', id:'p10', kind:'choice', src:'"Ms. Jones asked her students to write an explicit formula… common ratio of 5 and an initial value of −1" (right)',
+    prompt:`Who wrote it correctly? (common ratio 5, first term ${M}1)`,
+    opts:[{t:`Jordy: ${AN} = 5(${M}1)<sup>n − 1</sup>`,why:"Jordy swapped them — the first term goes in front and the ratio is the base."},
+          {t:`Taryn: ${AN} = ${M}1 + (n − 1)(5)`,why:"That's an arithmetic formula (adding 5). Geometric sequences use an exponent."},
+          {t:`Ahmed: ${AN} = ${M}1 + (n − 1)<sup>5</sup>`,why:"Ahmed mixed up the forms — the ratio should be the base, with n − 1 as the exponent."},
+          {t:`Evelyn: ${AN} = ${M}1(5)<sup>n − 1</sup>`,ok:true}],
+    key:'Evelyn', after:`Evelyn's formula has the first term (${M}1) in front and the ratio (5) as the base. ✔`},
+  {type:'q', id:'p11a', kind:'fields', src:'"Izzy has a goal to double the amount in her short-term savings…" (left)',
+    prompt:`<div class="big" style="font-size:20px">25, 50, 100, 200, …</div>Write a recursive formula. Then find the amount after 6 weeks (the 6th term).`,
+    tpl:`${A1} = {{a}} ; &nbsp; ${AN} = {{r}} · ${AN1}<span style="flex-basis:100%"></span>After 6 weeks: $ {{x}}`, fields:{a:{k:'num',ans:25},r:{k:'num',ans:2},x:{k:'num',ans:800}}, key:'a₁ = 25; aₙ = 2aₙ₋₁; a₆ = $800',
+    diagnose(v){ if(eq(v.x,1600)) return "You went one term too far. Count the list: 25 is term 1, 50 is term 2, … find term 6."; return null;}},
+  {type:'q', id:'p11b', kind:'choice', src:'Izzy problem, continued',
+    prompt:`Izzy wants to know the amount after <b>15</b> weeks. Would it be practical to use the <b>recursive</b> formula?`,
+    opts:[{t:"Yes — the recursive formula is always the fastest way.",why:"To use the recursive formula for term 15 you'd have to find terms 2, 3, 4, … 14 first. That's a lot of steps!"},
+          {t:"No — you'd have to find every term before the 15th. The explicit formula jumps straight there.",ok:true}],
+    key:'No — use explicit: 25(2)¹⁴ = $409,600',
+    after:`With the explicit formula: ${A(15)} = 25(2)<sup>14</sup> = <b>$409,600</b> in one step. Write your "why" on the handout.`},
+  {type:'q', id:'p12', kind:'fields', src:'"Write a recursive and explicit formula to represent the sequence" (right)',
+    prompt:`<div class="big" style="font-size:20px">6, ${M}12, 24, ${M}48, …</div>`,
+    tpl:`Recursive: ${A1} = {{a}} ; &nbsp; ${AN} = {{r}} · ${AN1}<span style="flex-basis:100%"></span>Explicit: ${AN} = {{c}} ( {{b}} )<sup>n − 1</sup>`,
+    fields:{a:{k:'num',ans:6},r:{k:'num',ans:-2},c:{k:'num',ans:6},b:{k:'num',ans:-2}}, key:'a₁ = 6; aₙ = −2aₙ₋₁; aₙ = 6(−2)ⁿ⁻¹',
+    diagnose(v){ if(eq(v.r,2)||eq(v.b,2)) return "The signs flip back and forth, so the common ratio is negative: −12 ÷ 6 = ?"; return null;}}
+  ]},
+
+/* ---------- 10 PRACTICE D ---------- */
+{ title:"Practice: Part 4",
+  blocks:[
+  {type:'q', id:'p13', kind:'fields', src:'"Two students wrote formulas for sequences…" (left)',
+    prompt:`<div class="cols"><div class="colcard"><h4>TYLER</h4><div class="big" style="font-size:19px">${AN} = (10)3<sup>n − 1</sup></div></div><div class="colcard"><h4>BRIELLE</h4><div class="big" style="font-size:19px">${AN} = 10 + (n − 1)(3)</div></div></div>Mark each statement TRUE or FALSE.`,
+    tpl:`a. The first term of both sequences is 10. {{a}}<span style="flex-basis:100%"></span>b. Both sequences have a common ratio of 3. {{b}}<span style="flex-basis:100%"></span>c. The 3rd term of Tyler's sequence is less than the 3rd term of Brielle's. {{c}}`,
+    fields:{a:{k:'sel',opts:['','TRUE','FALSE'],ans:'TRUE'},b:{k:'sel',opts:['','TRUE','FALSE'],ans:'FALSE'},c:{k:'sel',opts:['','TRUE','FALSE'],ans:'FALSE'}},
+    key:'a TRUE; b FALSE (Brielle has a common difference of 3); c FALSE (Tyler 90 > Brielle 16)',
+    hint:"Find the 3rd term of each: Tyler 10 · 3², Brielle 10 + 2 · 3. Is Brielle's sequence arithmetic or geometric?",
+    after:`<b>Rewrite the false statements on your handout:</b><br>b. Tyler's sequence has a common <b>ratio</b> of 3; Brielle's has a common <b>difference</b> of 3.<br>c. Tyler's 3rd term (90) is <b>greater than</b> Brielle's 3rd term (16).`},
+  {type:'q', id:'p14', kind:'fields', src:'"If a₁ = 5 and aₙ = aₙ₋₁ + 10, write the first five terms" (right)',
+    prompt:`<div class="big" style="font-size:20px">${A1} = 5; &nbsp; ${AN} = ${AN1} + 10</div>`,
+    tpl:`{{a}}, {{b}}, {{c}}, {{d}}, {{e}}`, fields:{a:{k:'num',ans:5,s:true},b:{k:'num',ans:15,s:true},c:{k:'num',ans:25,s:true},d:{k:'num',ans:35,s:true},e:{k:'num',ans:45,s:true}},
+    key:'5, 15, 25, 35, 45', diagnose(v){ if(eq(v.b,50)) return "Read the formula carefully — it says + 10, not × 10."; return null;},
+    after:`Careful readers notice: this one <b>adds</b>, so it's <b>arithmetic</b>!`},
+  {type:'q', id:'p15', kind:'fields', src:'"Match the given sequence or recursive formula with its explicit formula…" (left)',
+    prompt:`<table class="t" style="font-size:15px"><tr><td>A. ${AN} = 2,000(½)<sup>n−1</sup></td><td>D. ${AN} = ½(2,000)<sup>n−1</sup></td></tr><tr><td>B. ${AN} = 10(½)<sup>n−1</sup></td><td>E. ${AN} = ${M}2(10)<sup>n−1</sup></td></tr><tr><td>C. ${AN} = 10(${M}2)<sup>n−1</sup></td><td>F. ${AN} = 2(20)<sup>n−1</sup></td></tr></table>`,
+    tpl:`1. 10, ${M}20, 40, ${M}80, 160, … → {{a}}<span style="flex-basis:100%"></span>2. ${A1} = ${M}2; ${AN} = 10${AN1} → {{b}}<span style="flex-basis:100%"></span>3. 2,000, 1,000, 500, 250, 125, … → {{c}}`,
+    fields:{a:{k:'sel',opts:['','A','B','C','D','E','F'],ans:'C'},b:{k:'sel',opts:['','A','B','C','D','E','F'],ans:'E'},c:{k:'sel',opts:['','A','B','C','D','E','F'],ans:'A'}},
+    key:'1 → C, 2 → E, 3 → A',
+    hint:"For each one, find a₁ (goes in front) and r (goes in the parentheses)."},
+  {type:'q', id:'p16', kind:'fields', src:'"The school library has 62 autobiographies…" (left)',
+    prompt:`<div class="big" style="font-size:20px">62, 65, 68, 71, …</div>What will the 12th term be?`,
+    tpl:`${A(12)} = {{x}}`, fields:{x:{k:'num',ans:95}}, key:'95 (arithmetic, d = 3: 62 + 11·3)',
+    diagnose(v){ if(eq(v.x,98)) return "Watch the n − 1! From term 1 to term 12 you add 3 only 11 times."; return null;},
+    hint:"Is this arithmetic or geometric? 65 − 62 = 3 and 65 ÷ 62 isn't a nice number…",
+    after:`This one is <b>arithmetic</b> (add 3). Notice the n − 1 shows up in arithmetic formulas too: ${AN} = 62 + 3(n − 1).`},
+  {type:'q', id:'p17', kind:'choice', src:'"Miss Jones gives her students 3 terms of a sequence…" (right)',
+    prompt:`<div class="big" style="font-size:20px">${A(4)} = 38, &nbsp;${A(5)} = 42, &nbsp;${A(6)} = 46</div>Which formula correctly represents the sequence?`,
+    opts:[{t:`a. ${AN} = 4n + 26`,why:"Test n = 4: 4(4) + 26 = 42, not 38."},{t:`b. ${AN} = 4n + 38`,why:"Test n = 4: 4(4) + 38 = 54, not 38."},{t:`c. ${AN} = 4n + 22`,ok:true},{t:`d. ${AN} = n + 22`,why:"Test n = 4: 4 + 22 = 26, not 38."}],
+    key:'c', after:`Check: n = 4 → 16 + 22 = 38 ✓, n = 5 → 42 ✓, n = 6 → 46 ✓. Plugging in is a great way to test any formula!`}
+  ]},
+
+/* ---------- 11 DONE ---------- */
+{ title:"Finish", special:'finish' }
+];
+
+/* ================= STATE ================= */
+let S = load() || fresh();
+function fresh(){ return {name:'', step:0, max:0, q:{}, started:null, finished:null}; }
+function load(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)); }catch(e){ return null; } }
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){} }
+const qs = id => (S.q[id] ||= {done:false,rev:false,tries:0,vals:{}});
+
+function allQs(step){ return (step.blocks||[]).filter(b=>b.type==='q'); }
+function stepDone(i){ const st=STEPS[i]; if(st.special==='start') return !!S.name; if(st.special==='finish') return !!S.finished; return allQs(st).every(q=>qs(q.id).done); }
+
+/* ================= NAV ================= */
+function renderNav(){
+  const nav=$('#nav'); nav.innerHTML='';
+  STEPS.forEach((st,i)=>{
+    const li=document.createElement('li'); const b=document.createElement('button');
+    const locked = i> S.max;
+    b.className = (i===S.step?'cur ':'')+(stepDone(i)&&i!==S.step?'done ':'')+(locked?'lock':'');
+    b.innerHTML = `<span class="n">${stepDone(i)&&i!==S.step?'✓':i+1}</span><span class="lbl">${st.title}</span>`;
+    b.onclick = ()=>{ if(!locked){ S.step=i; save(); render(); window.scrollTo(0,0);} };
+    li.appendChild(b); nav.appendChild(li);
+  });
+  const total = STEPS.reduce((n,s)=>n+allQs(s).length,0);
+  const done = STEPS.reduce((n,s)=>n+allQs(s).filter(q=>qs(q.id).done).length,0);
+  $('#prog').style.width = (100*done/total)+'%';
+  $('#who').textContent = S.name ? `${S.name} · ${done}/${total}` : '';
+}
+
+/* ================= RENDER ================= */
+function render(){
+  renderNav();
+  const st=STEPS[S.step], main=$('#main'); main.innerHTML='';
+  if(st.special==='start') return renderStart(main);
+  if(st.special==='finish') return renderFinish(main);
+  const card=document.createElement('div'); card.className='card';
+  card.innerHTML=`<h2>${st.title}</h2><p class="lead">Step ${S.step+1} of ${STEPS.length}</p>`;
+  main.appendChild(card);
+  for(const b of st.blocks){
+    const el=document.createElement('div');
+    if(b.type==='html'){ el.innerHTML=b.html; card.appendChild(el); b.onRender&&b.onRender(); }
+    else if(b.type==='handout'){ el.className='handout'; el.innerHTML='<b class="tag">📝 On your handout</b>'+b.html; card.appendChild(el); }
+    else if(b.type==='widget'){ card.appendChild(el); WIDGETS[b.id](el); }
+    else if(b.type==='q'){ card.appendChild(el); renderQ(b, el); if(!qs(b.id).done) break; }
+  }
+  const nx=document.createElement('div'); nx.className='nextrow';
+  const back = S.step>0 ? `<button class="b g" id="backB">← Back</button>` : '<span></span>';
+  const done = stepDone(S.step);
+  nx.innerHTML = back + `<button class="b o" id="nextB" ${done?'':'disabled'}>${done?'Next →':'Finish this page to continue'}</button>`;
+  card.appendChild(nx);
+  $('#backB') && ($('#backB').onclick=()=>{S.step--;save();render();window.scrollTo(0,0);});
+  $('#nextB').onclick=()=>{ S.step++; S.max=Math.max(S.max,S.step); save(); render(); window.scrollTo(0,0); };
+}
+
+function renderStart(main){
+  main.innerHTML=`<div class="card"><h2>Geometric Sequences — Guided Notes</h2>
+   <p>Your teacher is out today, so this app will walk you through the <b>Unit 6 Geometric Sequences</b> handout, one box at a time.</p>
+   <div class="handout"><b class="tag">📝 Before you start</b>Get your paper handout and a pencil. Whenever you see an orange box like this one, it tells you exactly what to write on your handout.</div>
+   <ul><li>Answer each question to unlock the next one.</li>
+   <li>Wrong answer? You'll get a hint. After ${REVEAL_AFTER} tries you can see the answer — but copy it onto your paper and make sure you understand why.</li>
+   <li>Your progress saves on this device, so you can come back to it.</li></ul>
+   <p><label>Your first and last name:<br><input class="f w" id="nm" style="width:280px;text-align:left" value="${esc(S.name)}"></label></p>
+   <div class="btns"><button class="b o" id="go">Let's go →</button>${S.name?'<button class="b g" id="reset">Start over (new student)</button>':''}</div></div>`;
+  $('#go').onclick=()=>{ const n=$('#nm').value.trim(); if(!n){ $('#nm').classList.add('no'); $('#nm').focus(); return; }
+    S.name=n; S.started ||= Date.now(); S.step=Math.max(1,S.step); S.max=Math.max(S.max,1); save(); render(); };
+  $('#reset') && ($('#reset').onclick=()=>{ if(confirmInline()) { S=fresh(); save(); render(); } });
+}
+function confirmInline(){ const b=$('#reset'); if(b.dataset.c){ return true;} b.dataset.c=1; b.textContent='Click again to erase all progress'; return false; }
+
+function renderFinish(main){
+  if(!S.finished){ S.finished=Date.now(); save(); renderNav(); }
+  const all = STEPS.flatMap(s=>allQs(s).map(q=>({q,step:s.title})));
+  const first = all.filter(x=>{const st=qs(x.q.id); return st.done && !st.rev && st.tries===0;}).length;
+  const rev = all.filter(x=>qs(x.q.id).rev);
+  const mins = S.started ? Math.round((S.finished-S.started)/60000) : null;
+  const d=new Date(S.finished);
+  main.innerHTML=`<div class="card"><h2>🎉 Nice work, ${esc(S.name)}!</h2>
+   <p class="lead">Finished ${d.toLocaleDateString()} at ${d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}${mins!=null?` · about ${mins} min`:''}</p>
+   <div class="cols"><div class="colcard"><h4>Correct on 1st try</h4><div class="big">${first} / ${all.length}</div></div>
+   <div class="colcard"><h4>Answers revealed</h4><div class="big">${rev.length}</div></div></div>
+   ${rev.length?`<h3 style="margin-top:16px">Ask about these tomorrow:</h3><ul class="summary">${rev.map(x=>`<li>${x.step}: ${x.q.src?esc(x.q.src.replace(/<[^>]+>/g,'')):'question '+esc(x.q.id)}</li>`).join('')}</ul>`:''}
+   <div class="handout"><b class="tag">📝 Last step</b>Make sure every box on your handout is filled in. Take a screenshot of this screen (or show it to the sub) as proof you finished.</div>
+   <h3>Quick recap</h3>
+   <div class="cols"><div class="colcard a"><h4>Recursive</h4><div class="big" style="font-size:19px">${A1} = ___ ; ${AN} = r · ${AN1}</div>next = previous × r</div>
+   <div class="colcard g"><h4>Explicit</h4><div class="big" style="font-size:19px">${AN} = ${A1} · r<sup>n − 1</sup></div>the "list version" of f(x) = a · b<sup>x</sup></div></div>
+   <div class="btns" style="margin-top:14px"><button class="b g" id="bk">← Review a page</button></div></div>`;
+  $('#bk').onclick=()=>{S.step=STEPS.length-2;save();render();};
+}
+
+/* ---------- questions ---------- */
+function renderQ(q, el){
+  const st=qs(q.id);
+  el.className='q'+(st.done?' done':'');
+  el.innerHTML = (q.src?`<div class="src"><b>Handout:</b> ${q.src}</div>`:'') + (q.prompt?`<div class="prompt">${q.prompt}</div>`:'')
+               + (q.typo?`<div class="typo">✏️ ${q.typo}</div>`:'');
+  const body=document.createElement('div'); el.appendChild(body);
+  const fb=document.createElement('div'); el.appendChild(fb);
+  if(q.kind==='fields') fieldsQ(q,st,body,fb,el);
+  else if(q.kind==='choice') choiceQ(q,st,body,fb,el);
+  else if(q.kind==='text') textQ(q,st,body,fb,el);
+}
+function showDone(q,st,fb){
+  let h = st.rev ? `<div class="fb rev"><b>Here's the answer.</b> Copy it onto your handout and study how it works.</div>` : `<div class="fb ok"><b>✔ Correct!</b></div>`;
+  if(q.after) h+=`<div class="fb ok" style="background:#f2f9ff;color:var(--ink)">${q.after}</div>`;
+  if(q.write) h+=`<span class="write">✏️ ${q.write}</span>`;
+  fb.innerHTML=h;
+}
+function fieldsQ(q,st,body,fb,el){
+  let html='<div class="line">'+q.tpl.replace(/\{\{(\w+)\}\}/g,(_,id)=>{
+    const f=q.fields[id], v=st.vals[id]??'';
+    if(f.k==='sel') return `<select class="f" data-id="${id}">${f.opts.map(o=>`<option ${o===v?'selected':''} value="${esc(o)}">${o||'choose…'}</option>`).join('')}</select>`;
+    return `<input class="f ${f.w?'w':''} ${f.s?'s':''}" data-id="${id}" inputmode="decimal" autocomplete="off" value="${esc(v)}">`;
+  })+'</div>';
+  body.innerHTML=html;
+  const inputs=[...body.querySelectorAll('[data-id]')];
+  if(st.done){ inputs.forEach(i=>{i.disabled=true;i.classList.add(st.rev?'rev':'ok');}); showDone(q,st,fb); return; }
+  const btns=document.createElement('div'); btns.className='btns';
+  btns.innerHTML=`<button class="b">Check</button>`+(st.tries>=REVEAL_AFTER?`<button class="b g">Show me the answer</button>`:'');
+  body.appendChild(btns);
+  inputs.forEach(i=>{ i.addEventListener('input',()=>{st.vals[i.dataset.id]=i.value; i.classList.remove('ok','no'); save();});
+                      i.addEventListener('keydown',e=>{ if(e.key==='Enter') btns.firstChild.click(); }); });
+  btns.firstChild.onclick=()=>{
+    const vals={}; let allOk=true, empty=false;
+    inputs.forEach(i=>{ const f=q.fields[i.dataset.id]; st.vals[i.dataset.id]=i.value;
+      let ok;
+      if(f.k==='sel'){ vals[i.dataset.id]=i.value; ok = i.value===f.ans; if(!i.value) empty=true; }
+      else { const n=parseNum(i.value); vals[i.dataset.id]=n;
+        if(f.ans===null) ok=true; else { ok = Array.isArray(f.ans)? f.ans.some(a=>eq(n,a)) : eq(n,f.ans); if(i.value.trim()==='') empty=true; } }
+      // classify: if correct type is neither, number box ignored
+      i.classList.toggle('ok',ok); i.classList.toggle('no',!ok); if(!ok) allOk=false; });
+    if(q.fields.t && q.fields.v && q.fields.t.ans!=='neither' && vals.t==='neither'){ /* handled by type mismatch */ }
+    if(allOk){ st.done=true; save(); renderNav(); refresh(); return; }
+    if(empty && inputs.every(i=>i.value.trim()===''||i.value==='')){ fb.innerHTML=`<div class="fb hint">Fill in the boxes first, then press Check.</div>`; return; }
+    st.tries++; save();
+    const d = q.diagnose && q.diagnose(vals);
+    let msg = d || "Not quite — the boxes in red need another look.";
+    let h=`<div class="fb no">${msg}</div>`;
+    if(q.hint && st.tries>=2) h+=`<div class="fb hint">💡 Hint: ${q.hint}</div>`;
+    fb.innerHTML=h;
+    if(st.tries>=REVEAL_AFTER && btns.children.length===1){ const r=document.createElement('button'); r.className='b g'; r.textContent='Show me the answer'; btns.appendChild(r); r.onclick=reveal; }
+  };
+  if(btns.children[1]) btns.children[1].onclick=reveal;
+  function reveal(){ for(const [id,f] of Object.entries(q.fields)){ st.vals[id] = f.k==='sel'? f.ans : (f.ans===null?'':fmtAns(f.ans)); } st.done=true; st.rev=true; save(); renderNav(); refresh(); }
+}
+function fmtAns(a){ a=Array.isArray(a)?a[0]:a; const fr={0.5:'1/2',0.25:'1/4'}; if(fr[a]) return fr[a]; if(eq(a,2/3)) return '2/3'; return String(a); }
+function choiceQ(q,st,body,fb){
+  body.innerHTML=`<div class="choices">${q.opts.map((o,i)=>`<button data-i="${i}">${o.t}</button>`).join('')}</div>`;
+  const bs=[...body.querySelectorAll('button')];
+  if(st.done){ bs.forEach((b,i)=>{ b.disabled=true; b.style.cursor='default'; if(q.opts[i].ok) b.classList.add('ok'); }); showDone(q,st,fb); return; }
+  (st.wrong||[]).forEach(i=>bs[i].classList.add('no'));
+  bs.forEach((b,i)=>b.onclick=()=>{
+    if(q.opts[i].ok){ st.done=true; save(); renderNav(); refresh(); return; }
+    st.tries++; (st.wrong ||= []).includes(i)||st.wrong.push(i); save();
+    b.classList.add('no'); fb.innerHTML=`<div class="fb no">${q.opts[i].why||'Not quite — try again.'}</div>`;
+  });
+}
+function textQ(q,st,body,fb){
+  body.innerHTML=`<textarea placeholder="Type your explanation…">${esc(st.vals.t||'')}</textarea>`;
+  const ta=$('textarea',body);
+  if(st.done){ ta.disabled=true; fb.innerHTML=`<div class="fb ok" style="background:#f2f9ff;color:var(--ink)"><b>Compare with this:</b> ${q.model}</div><span class="write">✏️ Write your explanation on the handout.</span>`; return; }
+  const b=document.createElement('div'); b.className='btns'; b.innerHTML='<button class="b">Submit</button>'; body.appendChild(b);
+  ta.oninput=()=>{st.vals.t=ta.value; save();};
+  b.firstChild.onclick=()=>{ if(ta.value.trim().length<8){ fb.innerHTML='<div class="fb hint">Write at least a full sentence first.</div>'; return; } st.done=true; save(); renderNav(); refresh(); };
+}
+function refresh(){ const y=window.scrollY; render(); window.scrollTo(0,y); }
+
+/* ================= WIDGETS ================= */
+const WIDGETS = {
+  explorer(el){
+    let a=3, r='2', n=5;
+    el.innerHTML=`<div class="explorer"><h3>🔍 Function vs. Sequence Explorer</h3>
+      <div class="ctrl">
+        <label>Starting value <select class="f" id="xa">${[1,2,3,4,5,10].map(v=>`<option ${v===a?'selected':''}>${v}</option>`).join('')}</select></label>
+        <label>Multiply by <select class="f" id="xr">${['2','3','1/2','-2'].map(v=>`<option ${v==='2'?'selected':''}>${v}</option>`).join('')}</select></label>
+        <label>Which term? n = <input type="range" id="xn" min="1" max="6" value="${n}" style="vertical-align:middle"> <b id="xnv">${n}</b></label>
+      </div>
+      <div id="xout"></div></div>`;
+    const draw=()=>{
+      const R=parseNum(r), rs=r.replace('-',M);
+      const xs=[0,1,2,3,4,5], ns=[1,2,3,4,5,6];
+      const val=k=>a*Math.pow(R,k);
+      $('#xout',el).innerHTML=`
+       <div class="cols">
+        <div><b>Exponential function</b> &nbsp; f(x) = ${a} · (${rs})<sup>x</sup>
+          <table class="t mono"><tr><th>x</th>${xs.map(x=>`<td class="${x===n-1?'hl':''}">${x}</td>`).join('')}</tr>
+          <tr><th>f(x)</th>${xs.map(x=>`<td class="${x===n-1?'hl':''}">${fmt(val(x))}</td>`).join('')}</tr></table></div>
+        <div><b>Geometric sequence</b> &nbsp; ${AN} = ${a} · (${rs})<sup>n − 1</sup>
+          <table class="t mono"><tr><th>n</th>${ns.map(k=>`<td class="${k===n?'hl':''}">${k}</td>`).join('')}</tr>
+          <tr><th>${AN}</th>${ns.map(k=>`<td class="${k===n?'hl':''}">${fmt(val(k-1))}</td>`).join('')}</tr></table></div>
+       </div>
+       <div class="expand">${A(n)} = ${a}${n>1?' · '+Array(n-1).fill(`<span class="r">(${rs})</span>`).join(' · '):''} = ${a} · (${rs})<sup>${n-1}</sup> = <b>${fmt(val(n-1))}</b>
+         <div style="font-size:15px;color:var(--muted);margin-top:4px">Term <b>${n}</b> → r is multiplied <b class="r">${n-1}</b> time${n-1===1?'':'s'} &nbsp;(n − 1 = ${n-1})</div></div>
+       <p style="font-size:15px;color:var(--muted);margin:0">Same numbers in both tables! The function's <b>x = 0</b> column is the sequence's <b>term 1</b>. That one-step shift is why the exponent is <b>n − 1</b>.</p>`;
+    };
+    $('#xa',el).onchange=e=>{a=+e.target.value;draw();};
+    $('#xr',el).onchange=e=>{r=e.target.value;draw();};
+    $('#xn',el).oninput=e=>{n=+e.target.value;$('#xnv',el).textContent=n;draw();};
+    draw();
+  }
+};
+function dotGraph(vals,color){
+  const W=260,H=180,p=28, max=Math.max(...vals);
+  const x=i=>p+i*(W-p-12)/(vals.length-1), y=v=>H-p-(v/max)*(H-p-12);
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:300px;background:#fff;border:1px solid var(--line);border-radius:10px">`;
+  s+=`<line x1="${p}" y1="${H-p}" x2="${W-6}" y2="${H-p}" stroke="#9aa9b7"/><line x1="${p}" y1="8" x2="${p}" y2="${H-p}" stroke="#9aa9b7"/>`;
+  vals.forEach((v,i)=>{ s+=`<circle cx="${x(i)}" cy="${y(v)}" r="6" fill="${color}"/><text x="${x(i)}" y="${H-p+16}" font-size="11" text-anchor="middle" fill="#5b6b7a">${i+1}</text><text x="${x(i)}" y="${y(v)-10}" font-size="11" text-anchor="middle" fill="#1d2a36">${v}</text>`; });
+  s+=`<text x="${W/2}" y="${H-2}" font-size="10" text-anchor="middle" fill="#5b6b7a">term number (n)</text></svg>`;
+  return s;
+}
+
+/* ================= TEACHER KEY ================= */
+$('#teacherBtn').onclick=()=>{
+  const main=$('#main');
+  main.innerHTML=`<div class="card"><h2>Teacher answer key</h2><p><input class="f w" id="pin" type="password" placeholder="PIN" style="width:160px"> <button class="b" id="pinB">Open</button> <button class="b g" id="kBack">Back to lesson</button></p><div id="keyOut"></div></div>`;
+  $('#kBack').onclick=render;
+  $('#pinB').onclick=()=>{
+    if($('#pin').value.trim().toLowerCase()!==TEACHER_PIN){ $('#pin').classList.add('no'); return; }
+    let h='<div class="keylist">';
+    STEPS.forEach(st=>{ const q=allQs(st); if(!q.length) return; h+=`<h3 style="margin-top:16px">${st.title}</h3>`;
+      q.forEach(x=>{ h+=`<div class="k">${x.src?`<i>${x.src}</i><br>`:''}${x.prompt?x.prompt.replace(/<table[\s\S]*?<\/table>|<div class="cols">[\s\S]*<\/div><\/div><\/div>/g,'').slice(0,400):''}<br><b>Answer:</b> ${x.key}</div>`; }); });
+    $('#keyOut').innerHTML=h+'</div><div class="btns"><button class="b" onclick="window.print()">Print key</button></div>';
+  };
+};
+
+render();
+// "Teacher view" link on the Unit 6 landing page adds ?teacher → open the answer key
+if(new URLSearchParams(location.search).has('teacher')) $('#teacherBtn').click();
+</script>
+</body>
+</html>
