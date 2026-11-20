@@ -567,7 +567,7 @@ function render(){
   nx.innerHTML = back + `<button class="b o" id="nextB" ${done?'':'disabled'}>${done?'Next →':'Finish this page to continue'}</button>`;
   card.appendChild(nx);
   $('#backB') && ($('#backB').onclick=()=>{S.step--;save();render();window.scrollTo(0,0);});
-  $('#nextB').onclick=()=>{ const newPage = S.step+1 > S.max; S.step++; S.max=Math.max(S.max,S.step); save(); render(); window.scrollTo(0,0); if(newPage && !STEPS[S.step].special) report(); };
+  $('#nextB').onclick=()=>{ const newPage = S.step+1 > S.max; S.step++; S.max=Math.max(S.max,S.step); save(); render(); window.scrollTo(0,0); if(!STEPS[S.step].special) report(); };
 }
 
 function renderStart(main){
@@ -586,7 +586,7 @@ function renderStart(main){
   $('#go').onclick=()=>{ let n=$('#nm').value; if(n==='__other') n=$('#nmOther').value.trim();
     if(!n){ $('#nm').classList.add('no'); return; }
     const isNew = S.name!==n; S.name=n; S.started ||= Date.now(); S.step=Math.max(1,S.step); S.max=Math.max(S.max,1); save(); render();
-    if(isNew) report(); };
+    report(); };
   $('#reset') && ($('#reset').onclick=()=>{ if(confirmInline()) { S=fresh(); save(); render(); } });
 }
 function confirmInline(){ const b=$('#reset'); if(b.dataset.c){ return true;} b.dataset.c=1; b.textContent='Click again to erase all progress'; return false; }
@@ -820,6 +820,8 @@ function showKey(out){
 }
 
 render();
+// re-sync progress whenever a student reopens the app
+if(S.name && S.step>0) report();
 // "Teacher view" link on the Unit 6 landing page adds ?teacher → open the answer key
 if(new URLSearchParams(location.search).has('teacher')) $('#teacherBtn').click();
 </script>
